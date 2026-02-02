@@ -1,12 +1,3 @@
-# 📚 QUANTOM UI LIBRARY - DOCUMENTAÇÃO COMPLETA
-
-## 🚀 Instalação
-
-### 1. Upload no GitHub
-1. Crie um repositório público no GitHub
-2. Faça upload do arquivo `QuantomLibrary.lua`
-3. Clique no arquivo e depois em "Raw"
-4. Copie o link (exemplo: `https://raw.githubusercontent.com/usuario/repo/main/QuantomLibrary.lua`)
 
 ### 2. Carregar no Script
 ```lua
