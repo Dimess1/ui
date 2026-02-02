@@ -291,7 +291,7 @@ function QuantomLib:CreateWindow(config)
     FloatingButton.Position = UDim2.new(1, -70, 0, 100)
     FloatingButton.BackgroundColor3 = Theme.Primary
     FloatingButton.BorderSizePixel = 0
-    FloatingButton.Visible = isMobile or false
+    FloatingButton.Visible = isMobile
     FloatingButton.ZIndex = 1000
     FloatingButton.Parent = ScreenGui
 
@@ -453,6 +453,45 @@ function QuantomLib:CreateWindow(config)
     StatusText.TextXAlignment = Enum.TextXAlignment.Right
     StatusText.ZIndex = 3
     StatusText.Parent = Header
+
+    if not isMobile then
+        local dragging = false
+        local dragInput
+        local dragStart
+        local startPos
+
+        Header.InputBegan:Connect(function(input)
+            if input.UserInputType == Enum.UserInputType.MouseButton1 then
+                dragging = true
+                dragStart = input.Position
+                startPos = MainContainer.Position
+
+                input.Changed:Connect(function()
+                    if input.UserInputState == Enum.UserInputState.End then
+                        dragging = false
+                    end
+                end)
+            end
+        end)
+
+        Header.InputChanged:Connect(function(input)
+            if input.UserInputType == Enum.UserInputType.MouseMovement then
+                dragInput = input
+            end
+        end)
+
+        UserInputService.InputChanged:Connect(function(input)
+            if input == dragInput and dragging then
+                local delta = input.Position - dragStart
+                MainContainer.Position = UDim2.new(
+                    startPos.X.Scale,
+                    startPos.X.Offset + delta.X,
+                    startPos.Y.Scale,
+                    startPos.Y.Offset + delta.Y
+                )
+            end
+        end)
+    end
 
     local buttonSize = isMobile and 35 or 30
 
