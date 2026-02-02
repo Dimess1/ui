@@ -663,7 +663,7 @@ function QuantomLib:CreateWindow(config)
             end
         end)
 
-        CategoryButton.MouseButton1Click:Connect(function()
+        local function activateTab()
             for _, cat in pairs(Window.Categories) do
                 cat.ContentScroll.Visible = false
                 local btn = Sidebar:FindFirstChild(cat.Name)
@@ -689,7 +689,9 @@ function QuantomLib:CreateWindow(config)
             TweenService:Create(Label, TweenInfo.new(0.2), {TextColor3 = Theme.Text}):Play()
             TweenService:Create(Icon, TweenInfo.new(0.2), {TextColor3 = Theme.Primary}):Play()
             TweenService:Create(Indicator, TweenInfo.new(0.2), {Size = UDim2.new(0, 3, 0, catHeight)}):Play()
-        end)
+        end
+
+        CategoryButton.MouseButton1Click:Connect(activateTab)
 
         function Tab:AddSection(title)
             local SectionLabel = Instance.new("TextLabel")
@@ -1163,7 +1165,8 @@ function QuantomLib:CreateWindow(config)
         table.insert(Window.Categories, Tab)
 
         if #Window.Categories == 1 then
-            CategoryButton.MouseButton1Click:Fire()
+            task.wait(0.1)
+            activateTab()
         end
 
         return Tab
