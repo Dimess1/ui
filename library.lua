@@ -1269,7 +1269,7 @@ function QuantomLib:CreateUserProfile(config)
     local ProfileContainer = Instance.new("Frame")
     ProfileContainer.Name = "UserProfile"
     ProfileContainer.Size = UDim2.new(1, -20, 0, isMobile and 65 or 60)
-    ProfileContainer.Position = UDim2.new(0, 10, 1, -(isMobile and 75 or 70))
+    ProfileContainer.Position = UDim2.new(0, 10, 1, -(isMobile and 70 or 65))
     ProfileContainer.BackgroundColor3 = Theme.Surface
     ProfileContainer.BorderSizePixel = 0
     ProfileContainer.ZIndex = 3
@@ -1349,8 +1349,8 @@ function QuantomLib:CreateUserProfile(config)
 
     local SettingsButton = Instance.new("TextButton")
     SettingsButton.Name = "SettingsButton"
-    SettingsButton.Size = UDim2.new(0, isMobile and 36 or 34, 0, isMobile and 36 or 34)
-    SettingsButton.Position = UDim2.new(1, -(isMobile and 42 or 40), 0.5, -(isMobile and 18 or 17))
+    SettingsButton.Size = UDim2.new(0, isMobile and 30 or 28, 0, isMobile and 30 or 28)
+    SettingsButton.Position = UDim2.new(1, -(isMobile and 36 or 34), 0.5, -(isMobile and 15 or 14))
     SettingsButton.BackgroundColor3 = Theme.SurfaceHover
     SettingsButton.BackgroundTransparency = 0
     SettingsButton.AutoButtonColor = false
@@ -1367,7 +1367,7 @@ function QuantomLib:CreateUserProfile(config)
     SettingsIcon.BackgroundTransparency = 1
     SettingsIcon.Text = "⚙"
     SettingsIcon.Font = Enum.Font.GothamBold
-    SettingsIcon.TextSize = isMobile and 18 or 16
+    SettingsIcon.TextSize = isMobile and 14 or 13
     SettingsIcon.TextColor3 = Theme.TextMuted
     SettingsIcon.ZIndex = 5
     SettingsIcon.Parent = SettingsButton
