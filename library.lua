@@ -1237,6 +1237,20 @@ function QuantomLib:CreateWindow(config)
         end
     end)
 
+    -- Auto-create User Profile
+    Window.UserProfile = QuantomLib:CreateUserProfile({
+        Parent = Sidebar,
+        UserName = Player.Name,
+        DisplayName = Player.DisplayName,
+        OnSettingsClick = function(menu)
+            Window:Notify({
+                Title = "Settings",
+                Message = "Menu de configurações",
+                Type = "Info"
+            })
+        end
+    })
+
     return Window
 end
 
@@ -1247,13 +1261,11 @@ end
 function QuantomLib:CreateUserProfile(config)
     config = config or {}
 
-    -- User info
     local Player = Players.LocalPlayer
     local userId = Player.UserId
     local userName = config.UserName or Player.Name
     local displayName = config.DisplayName or Player.DisplayName
 
-    -- Profile Container
     local ProfileContainer = Instance.new("Frame")
     ProfileContainer.Name = "UserProfile"
     ProfileContainer.Size = UDim2.new(1, -20, 0, isMobile and 65 or 60)
@@ -1273,7 +1285,6 @@ function QuantomLib:CreateUserProfile(config)
     ProfileStroke.Transparency = 0.5
     ProfileStroke.Parent = ProfileContainer
 
-    -- Avatar Container
     local AvatarFrame = Instance.new("Frame")
     AvatarFrame.Size = UDim2.new(0, isMobile and 42 or 40, 0, isMobile and 42 or 40)
     AvatarFrame.Position = UDim2.new(0, 10, 0.5, -(isMobile and 21 or 20))
@@ -1292,7 +1303,6 @@ function QuantomLib:CreateUserProfile(config)
     AvatarStroke.Transparency = 0
     AvatarStroke.Parent = AvatarFrame
 
-    -- Avatar Image
     local AvatarImage = Instance.new("ImageLabel")
     AvatarImage.Size = UDim2.new(1, 0, 1, 0)
     AvatarImage.BackgroundTransparency = 1
@@ -1304,7 +1314,6 @@ function QuantomLib:CreateUserProfile(config)
     AvatarImgCorner.CornerRadius = UDim.new(1, 0)
     AvatarImgCorner.Parent = AvatarImage
 
-    -- User Info Container
     local InfoContainer = Instance.new("Frame")
     InfoContainer.Size = UDim2.new(1, -(isMobile and 110 or 100), 1, 0)
     InfoContainer.Position = UDim2.new(0, isMobile and 60 or 58, 0, 0)
@@ -1312,7 +1321,6 @@ function QuantomLib:CreateUserProfile(config)
     InfoContainer.ZIndex = 4
     InfoContainer.Parent = ProfileContainer
 
-    -- Display Name
     local DisplayNameLabel = Instance.new("TextLabel")
     DisplayNameLabel.Size = UDim2.new(1, 0, 0, isMobile and 18 or 16)
     DisplayNameLabel.Position = UDim2.new(0, 0, 0, isMobile and 12 or 14)
@@ -1326,7 +1334,6 @@ function QuantomLib:CreateUserProfile(config)
     DisplayNameLabel.ZIndex = 5
     DisplayNameLabel.Parent = InfoContainer
 
-    -- Username (@username)
     local UsernameLabel = Instance.new("TextLabel")
     UsernameLabel.Size = UDim2.new(1, 0, 0, isMobile and 14 or 13)
     UsernameLabel.Position = UDim2.new(0, 0, 0, isMobile and 30 or 30)
@@ -1340,7 +1347,6 @@ function QuantomLib:CreateUserProfile(config)
     UsernameLabel.ZIndex = 5
     UsernameLabel.Parent = InfoContainer
 
-    -- Settings Button
     local SettingsButton = Instance.new("TextButton")
     SettingsButton.Name = "SettingsButton"
     SettingsButton.Size = UDim2.new(0, isMobile and 36 or 34, 0, isMobile and 36 or 34)
@@ -1366,7 +1372,6 @@ function QuantomLib:CreateUserProfile(config)
     SettingsIcon.ZIndex = 5
     SettingsIcon.Parent = SettingsButton
 
-    -- Hover Effects
     SettingsButton.MouseEnter:Connect(function()
         TweenService:Create(SettingsButton, TweenInfo.new(0.2), {
             BackgroundColor3 = Theme.Primary
@@ -1387,7 +1392,6 @@ function QuantomLib:CreateUserProfile(config)
         }):Play()
     end)
 
-    -- Settings Menu
     local SettingsMenu = {
         Container = ProfileContainer,
         Button = SettingsButton,
