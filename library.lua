@@ -1268,12 +1268,12 @@ function QuantomLib:CreateUserProfile(config)
 
     local ProfileContainer = Instance.new("Frame")
     ProfileContainer.Name = "UserProfile"
-    ProfileContainer.Size = UDim2.new(1, -20, 0, isMobile and 65 or 60)
-    ProfileContainer.Position = UDim2.new(0, 10, 1, -(isMobile and 70 or 65))
+    ProfileContainer.Size = UDim2.new(0, 260, 0, isMobile and 65 or 60)
+    ProfileContainer.Position = UDim2.new(0, 10, 1, -(isMobile and 75 or 70))
     ProfileContainer.BackgroundColor3 = Theme.Surface
     ProfileContainer.BorderSizePixel = 0
     ProfileContainer.ZIndex = 3
-    ProfileContainer.Parent = config.Parent
+    ProfileContainer.Parent = MainContainer
 
     local ProfileCorner = Instance.new("UICorner")
     ProfileCorner.CornerRadius = UDim.new(0, 8)
