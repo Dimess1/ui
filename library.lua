@@ -1239,7 +1239,7 @@ function QuantomLib:CreateWindow(config)
 
     -- Auto-create User Profile
     Window.UserProfile = QuantomLib:CreateUserProfile({
-        Parent = Sidebar,
+        Parent = MainContainer,
         UserName = Player.Name,
         DisplayName = Player.DisplayName,
         OnSettingsClick = function(menu)
@@ -1273,7 +1273,7 @@ function QuantomLib:CreateUserProfile(config)
     ProfileContainer.BackgroundColor3 = Theme.Surface
     ProfileContainer.BorderSizePixel = 0
     ProfileContainer.ZIndex = 3
-    ProfileContainer.Parent = MainContainer
+    ProfileContainer.Parent = config.Parent
 
     local ProfileCorner = Instance.new("UICorner")
     ProfileCorner.CornerRadius = UDim.new(0, 8)
