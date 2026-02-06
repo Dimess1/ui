@@ -1490,7 +1490,7 @@ function QuantomLib:CreateWindow(config)
 
         
         -- ═══════════════════════════════════════════════════════════
-        --                    NOVOS COMPONENTES
+        --                    NOVOS COMPONENTES (7)
         -- ═══════════════════════════════════════════════════════════
 
         function Tab:AddLabel(config)
@@ -1707,7 +1707,7 @@ function QuantomLib:CreateWindow(config)
             MultiDropdownButton.Size = UDim2.new(1, -120, 0, isMobile and 26 or 22)
             MultiDropdownButton.Position = UDim2.new(0, 110, 0.5, isMobile and -13 or -11)
             MultiDropdownButton.BackgroundColor3 = Theme.SurfaceLight
-            MultiDropdownButton.Text = "0 selecionados"
+            MultiDropdownButton.Text = "0 selected"
             MultiDropdownButton.Font = Enum.Font.Gotham
             MultiDropdownButton.TextSize = isMobile and 10 or 11
             MultiDropdownButton.TextColor3 = Theme.Text
@@ -1821,7 +1821,7 @@ function QuantomLib:CreateWindow(config)
                         CheckboxStroke.Color = Theme.Success
                     end
 
-                    MultiDropdownButton.Text = #selectedOptions .. " selecionados"
+                    MultiDropdownButton.Text = #selectedOptions .. " selected"
 
                     if config.Callback then
                         config.Callback(selectedOptions)
@@ -2111,6 +2111,379 @@ function QuantomLib:CreateWindow(config)
 
         return WatermarkFrame
     end
+
+    
+    -- ═══════════════════════════════════════════════════════════
+    --                CONFIG SYSTEM (AUTO TAB - SEMPRE ÚLTIMA)
+    -- ═══════════════════════════════════════════════════════════
+
+    local HttpService = game:GetService("HttpService")
+    local ConfigFolder = "QuantomConfigs"
+
+    if not isfolder(ConfigFolder) then
+        makefolder(ConfigFolder)
+    end
+
+    local function GetAllFlags()
+        local flags = {}
+        for flag, element in pairs(Window.Flags) do
+            if element.GetValue then
+                local value = element:GetValue()
+                flags[flag] = {
+                    Value = value,
+                    Type = typeof(value)
+                }
+            end
+        end
+        return flags
+    end
+
+    local function LoadConfig(configName)
+        local path = ConfigFolder .. "/" .. configName .. ".json"
+        if not isfile(path) then
+            print("[Config Error] Config não encontrado!")
+            return false
+        end
+
+        local content = readfile(path)
+        local success, data = pcall(function()
+            return HttpService:JSONDecode(content)
+        end)
+
+        if not success then
+            print("[Config Error] Erro ao ler config!")
+            return false
+        end
+
+        for flag, flagData in pairs(data.Flags or {}) do
+            if Window.Flags[flag] and Window.Flags[flag].SetValue then
+                pcall(function()
+                    Window.Flags[flag]:SetValue(flagData.Value)
+                end)
+            end
+        end
+
+        print("[✅ Config] Loaded: " .. configName)
+        return true
+    end
+
+    local function SaveConfig(configName)
+        if configName == "" or not configName then
+            print("[Config Error] Nome inválido!")
+            return false
+        end
+
+        local flags = GetAllFlags()
+        local configData = {
+            Name = configName,
+            Author = game.Players.LocalPlayer.Name,
+            Date = os.date("%d/%m/%Y %H:%M"),
+            Flags = flags
+        }
+
+        local path = ConfigFolder .. "/" .. configName .. ".json"
+        local success, encoded = pcall(function()
+            return HttpService:JSONEncode(configData)
+        end)
+
+        if not success then
+            print("[Config Error] Erro ao salvar!")
+            return false
+        end
+
+        writefile(path, encoded)
+        print("[✅ Config] Saved: " .. configName)
+        return true
+    end
+
+    local function DeleteConfig(configName)
+        local path = ConfigFolder .. "/" .. configName .. ".json"
+        if not isfile(path) then
+            print("[Config Error] Config não encontrado!")
+            return false
+        end
+
+        delfile(path)
+        print("[⚠️ Config] Deleted: " .. configName)
+        return true
+    end
+
+    local function GetConfigs()
+        local configs = {}
+        if not isfolder(ConfigFolder) then
+            return configs
+        end
+
+        local files = listfiles(ConfigFolder)
+        for _, file in ipairs(files) do
+            local name = file:match("([^/\\]+)%.json$")
+            if name then
+                local content = readfile(file)
+                local success, data = pcall(function()
+                    return HttpService:JSONDecode(content)
+                end)
+
+                if success then
+                    table.insert(configs, {
+                        Name = name,
+                        Author = data.Author or "Unknown",
+                        Date = data.Date or "Unknown"
+                    })
+                end
+            end
+        end
+
+        return configs
+    end
+
+    task.defer(function()
+        task.wait(0.5)
+
+        local ConfigTab = Window:CreateTab({
+            Name = "Config",
+            Icon = "💾"
+        })
+
+        ConfigTab:AddSection("SAVE CONFIG")
+
+        local configNameInput = "MyConfig"
+        ConfigTab:AddTextbox({
+            Name = "Config Name",
+            Default = "MyConfig",
+            Placeholder = "Enter name",
+            Callback = function(value)
+                configNameInput = value
+            end
+        })
+
+        ConfigTab:AddButton({
+            Name = "💾 Save Config",
+            Callback = function()
+                SaveConfig(configNameInput)
+                task.wait(0.1)
+                RefreshConfigList()
+            end
+        })
+
+        ConfigTab:AddDivider()
+
+        ConfigTab:AddSection("LOAD & DELETE")
+
+        local configListFrame = Instance.new("Frame")
+        configListFrame.Size = UDim2.new(1, 0, 0, isMobile and 240 or 220)
+        configListFrame.BackgroundColor3 = Theme.SurfaceLight
+        configListFrame.BorderSizePixel = 0
+        configListFrame.ZIndex = 3
+        configListFrame.Parent = ConfigTab.ContentFrame
+
+        local configListCorner = Instance.new("UICorner")
+        configListCorner.CornerRadius = UDim.new(0, 8)
+        configListCorner.Parent = configListFrame
+
+        local configScroll = Instance.new("ScrollingFrame")
+        configScroll.Size = UDim2.new(1, -12, 1, -12)
+        configScroll.Position = UDim2.new(0, 6, 0, 6)
+        configScroll.BackgroundTransparency = 1
+        configScroll.BorderSizePixel = 0
+        configScroll.ScrollBarThickness = 4
+        configScroll.ScrollBarImageColor3 = Theme.Primary
+        configScroll.ZIndex = 4
+        configScroll.Parent = configListFrame
+
+        local configLayout = Instance.new("UIListLayout")
+        configLayout.Padding = UDim.new(0, 6)
+        configLayout.SortOrder = Enum.SortOrder.LayoutOrder
+        configLayout.Parent = configScroll
+
+        configLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+            configScroll.CanvasSize = UDim2.new(0, 0, 0, configLayout.AbsoluteContentSize.Y + 10)
+        end)
+
+        function RefreshConfigList()
+            for _, child in ipairs(configScroll:GetChildren()) do
+                if child:IsA("Frame") or child:IsA("TextLabel") then
+                    child:Destroy()
+                end
+            end
+
+            local configs = GetConfigs()
+
+            if #configs == 0 then
+                local noConfigLabel = Instance.new("TextLabel")
+                noConfigLabel.Size = UDim2.new(1, 0, 0, 50)
+                noConfigLabel.BackgroundTransparency = 1
+                noConfigLabel.Text = "📂 No configs found\n\nCreate one above!"
+                noConfigLabel.Font = Enum.Font.Gotham
+                noConfigLabel.TextSize = isMobile and 10 or 11
+                noConfigLabel.TextColor3 = Theme.TextMuted
+                noConfigLabel.ZIndex = 5
+                noConfigLabel.Parent = configScroll
+                return
+            end
+
+            for _, config in ipairs(configs) do
+                local configItem = Instance.new("Frame")
+                configItem.Size = UDim2.new(1, -5, 0, isMobile and 70 or 65)
+                configItem.BackgroundColor3 = Theme.Surface
+                configItem.BorderSizePixel = 0
+                configItem.ZIndex = 5
+                configItem.Parent = configScroll
+
+                local configItemCorner = Instance.new("UICorner")
+                configItemCorner.CornerRadius = UDim.new(0, 6)
+                configItemCorner.Parent = configItem
+
+                local configNameLabel = Instance.new("TextLabel")
+                configNameLabel.Size = UDim2.new(1, -115, 0, 22)
+                configNameLabel.Position = UDim2.new(0, 10, 0, 8)
+                configNameLabel.BackgroundTransparency = 1
+                configNameLabel.Text = "📁 " .. config.Name
+                configNameLabel.Font = Enum.Font.GothamBold
+                configNameLabel.TextSize = isMobile and 11 or 12
+                configNameLabel.TextColor3 = Theme.Text
+                configNameLabel.TextXAlignment = Enum.TextXAlignment.Left
+                configNameLabel.ZIndex = 6
+                configNameLabel.Parent = configItem
+
+                local configInfoLabel = Instance.new("TextLabel")
+                configInfoLabel.Size = UDim2.new(1, -115, 0, 18)
+                configInfoLabel.Position = UDim2.new(0, 10, 0, 30)
+                configInfoLabel.BackgroundTransparency = 1
+                configInfoLabel.Text = "👤 " .. config.Author
+                configInfoLabel.Font = Enum.Font.Gotham
+                configInfoLabel.TextSize = isMobile and 9 or 10
+                configInfoLabel.TextColor3 = Theme.TextSecondary
+                configInfoLabel.TextXAlignment = Enum.TextXAlignment.Left
+                configInfoLabel.ZIndex = 6
+                configInfoLabel.Parent = configItem
+
+                local configDateLabel = Instance.new("TextLabel")
+                configDateLabel.Size = UDim2.new(1, -115, 0, 16)
+                configDateLabel.Position = UDim2.new(0, 10, 0, 46)
+                configDateLabel.BackgroundTransparency = 1
+                configDateLabel.Text = "📅 " .. config.Date
+                configDateLabel.Font = Enum.Font.Gotham
+                configDateLabel.TextSize = isMobile and 8 or 9
+                configDateLabel.TextColor3 = Theme.TextMuted
+                configDateLabel.TextXAlignment = Enum.TextXAlignment.Left
+                configDateLabel.ZIndex = 6
+                configDateLabel.Parent = configItem
+
+                local loadButton = Instance.new("TextButton")
+                loadButton.Size = UDim2.new(0, isMobile and 45 or 48, 0, isMobile and 60 or 55)
+                loadButton.Position = UDim2.new(1, isMobile and -100 or -103, 0, 5)
+                loadButton.BackgroundColor3 = Theme.Success
+                loadButton.Text = "📥\nLoad"
+                loadButton.Font = Enum.Font.GothamBold
+                loadButton.TextSize = isMobile and 9 or 10
+                loadButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+                loadButton.AutoButtonColor = false
+                loadButton.ZIndex = 6
+                loadButton.Parent = configItem
+
+                local loadCorner = Instance.new("UICorner")
+                loadCorner.CornerRadius = UDim.new(0, 6)
+                loadCorner.Parent = loadButton
+
+                loadButton.MouseEnter:Connect(function()
+                    TweenService:Create(loadButton, TweenInfo.new(0.15), {
+                        BackgroundColor3 = Color3.fromRGB(0, 190, 110)
+                    }):Play()
+                end)
+
+                loadButton.MouseLeave:Connect(function()
+                    TweenService:Create(loadButton, TweenInfo.new(0.15), {
+                        BackgroundColor3 = Theme.Success
+                    }):Play()
+                end)
+
+                loadButton.MouseButton1Click:Connect(function()
+                    LoadConfig(config.Name)
+                end)
+
+                local deleteButton = Instance.new("TextButton")
+                deleteButton.Size = UDim2.new(0, isMobile and 45 or 48, 0, isMobile and 60 or 55)
+                deleteButton.Position = UDim2.new(1, isMobile and -50 or -50, 0, 5)
+                deleteButton.BackgroundColor3 = Theme.Error
+                deleteButton.Text = "🗑️\nDel"
+                deleteButton.Font = Enum.Font.GothamBold
+                deleteButton.TextSize = isMobile and 9 or 10
+                deleteButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+                deleteButton.AutoButtonColor = false
+                deleteButton.ZIndex = 6
+                deleteButton.Parent = configItem
+
+                local deleteCorner = Instance.new("UICorner")
+                deleteCorner.CornerRadius = UDim.new(0, 6)
+                deleteCorner.Parent = deleteButton
+
+                deleteButton.MouseEnter:Connect(function()
+                    TweenService:Create(deleteButton, TweenInfo.new(0.15), {
+                        BackgroundColor3 = Color3.fromRGB(230, 60, 60)
+                    }):Play()
+                end)
+
+                deleteButton.MouseLeave:Connect(function()
+                    TweenService:Create(deleteButton, TweenInfo.new(0.15), {
+                        BackgroundColor3 = Theme.Error
+                    }):Play()
+                end)
+
+                deleteButton.MouseButton1Click:Connect(function()
+                    DeleteConfig(config.Name)
+                    task.wait(0.1)
+                    RefreshConfigList()
+                end)
+            end
+        end
+
+        ConfigTab:AddButton({
+            Name = "🔄 Refresh List",
+            Callback = function()
+                RefreshConfigList()
+            end
+        })
+
+        ConfigTab:AddDivider()
+
+        ConfigTab:AddSection("AUTO-LOAD")
+
+        local autoLoadConfig = ""
+        ConfigTab:AddTextbox({
+            Name = "Auto-Load Config",
+            Default = "",
+            Placeholder = "Config name",
+            Callback = function(value)
+                autoLoadConfig = value
+                if value ~= "" then
+                    writefile(ConfigFolder .. "/_autoload.txt", value)
+                end
+            end
+        })
+
+        ConfigTab:AddButton({
+            Name = "⚡ Load Now",
+            Callback = function()
+                if autoLoadConfig ~= "" then
+                    LoadConfig(autoLoadConfig)
+                else
+                    print("[Config] No config name set!")
+                end
+            end
+        })
+
+        if isfile(ConfigFolder .. "/_autoload.txt") then
+            local autoName = readfile(ConfigFolder .. "/_autoload.txt")
+            if autoName ~= "" and isfile(ConfigFolder .. "/" .. autoName .. ".json") then
+                task.wait(1)
+                LoadConfig(autoName)
+                autoLoadConfig = autoName
+            end
+        end
+
+        task.wait(0.2)
+        RefreshConfigList()
+    end)
 
     table.insert(Window.Categories, Tab)
 
