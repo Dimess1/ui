@@ -1202,6 +1202,178 @@ function QuantomLib:CreateWindow(config)
         end
 
 
+        function Tab:AddKeybind(config)
+            local currentKey = config.Default or Enum.KeyCode.E
+            local blacklistedKeys = {
+                Enum.KeyCode.W, Enum.KeyCode.A, Enum.KeyCode.S, Enum.KeyCode.D,
+                Enum.KeyCode.Space, Enum.KeyCode.LeftShift, Enum.KeyCode.LeftControl
+            }
+
+            local keybindChanging = false
+
+            local KeybindFrame = Instance.new("Frame")
+            KeybindFrame.Size = UDim2.new(1, 0, 0, isMobile and 36 or 32)
+            KeybindFrame.BackgroundColor3 = Theme.Surface
+            KeybindFrame.BorderSizePixel = 0
+            KeybindFrame.ZIndex = 3
+            KeybindFrame.Parent = ContentFrame
+
+            local KeybindCorner = Instance.new("UICorner")
+            KeybindCorner.CornerRadius = UDim.new(0, 6)
+            KeybindCorner.Parent = KeybindFrame
+
+            local KeybindLabel = Instance.new("TextLabel")
+            KeybindLabel.Size = UDim2.new(0.55, 0, 1, 0)
+            KeybindLabel.Position = UDim2.new(0, 12, 0, 0)
+            KeybindLabel.BackgroundTransparency = 1
+            KeybindLabel.Text = config.Name or "Keybind"
+            KeybindLabel.Font = Enum.Font.GothamMedium
+            KeybindLabel.TextSize = isMobile and 11 or 12
+            KeybindLabel.TextColor3 = Theme.Text
+            KeybindLabel.TextXAlignment = Enum.TextXAlignment.Left
+            KeybindLabel.ZIndex = 4
+            KeybindLabel.Parent = KeybindFrame
+
+            -- Botão do Keybind
+            local KeybindButton = Instance.new("TextButton")
+            KeybindButton.Size = UDim2.new(0, isMobile and 75 or 70, 0, isMobile and 26 or 22)
+            KeybindButton.Position = UDim2.new(1, isMobile and -85 or -80, 0.5, isMobile and -13 or -11)
+            KeybindButton.BackgroundColor3 = Theme.SurfaceLight
+            KeybindButton.Text = currentKey.Name
+            KeybindButton.Font = Enum.Font.GothamBold
+            KeybindButton.TextSize = isMobile and 10 or 11
+            KeybindButton.TextColor3 = Theme.Primary
+            KeybindButton.AutoButtonColor = false
+            KeybindButton.ZIndex = 4
+            KeybindButton.Parent = KeybindFrame
+
+            local KeybindBtnCorner = Instance.new("UICorner")
+            KeybindBtnCorner.CornerRadius = UDim.new(0, 6)
+            KeybindBtnCorner.Parent = KeybindButton
+
+            local KeybindStroke = Instance.new("UIStroke")
+            KeybindStroke.Color = Theme.Primary
+            KeybindStroke.Thickness = 0
+            KeybindStroke.Transparency = 0.5
+            KeybindStroke.Parent = KeybindButton
+
+            -- Hover effects
+            KeybindButton.MouseEnter:Connect(function()
+                if not keybindChanging then
+                    TweenService:Create(KeybindButton, TweenInfo.new(0.2), {
+                        BackgroundColor3 = Theme.SurfaceHover
+                    }):Play()
+                    TweenService:Create(KeybindStroke, TweenInfo.new(0.2), {
+                        Thickness = 2
+                    }):Play()
+                end
+            end)
+
+            KeybindButton.MouseLeave:Connect(function()
+                if not keybindChanging then
+                    TweenService:Create(KeybindButton, TweenInfo.new(0.2), {
+                        BackgroundColor3 = Theme.SurfaceLight
+                    }):Play()
+                    TweenService:Create(KeybindStroke, TweenInfo.new(0.2), {
+                        Thickness = 0
+                    }):Play()
+                end
+            end)
+
+            -- Click para mudar keybind
+            KeybindButton.MouseButton1Click:Connect(function()
+                if keybindChanging then return end
+
+                keybindChanging = true
+                KeybindButton.Text = "..."
+                KeybindButton.TextColor3 = Theme.Warning
+                TweenService:Create(KeybindButton, TweenInfo.new(0.2), {
+                    BackgroundColor3 = Theme.Primary
+                }):Play()
+                TweenService:Create(KeybindStroke, TweenInfo.new(0.2), {
+                    Thickness = 2,
+                    Color = Theme.Warning
+                }):Play()
+
+                local connection
+                connection = UserInputService.InputBegan:Connect(function(input, gameProcessed)
+                    if input.UserInputType == Enum.UserInputType.Keyboard then
+                        local key = input.KeyCode
+
+                        -- Verificar se a tecla é válida
+                        local isBlacklisted = false
+                        for _, blacklisted in ipairs(blacklistedKeys) do
+                            if key == blacklisted then
+                                isBlacklisted = true
+                                break
+                            end
+                        end
+
+                        if isBlacklisted then
+                            Window:Notify({
+                                Title = "Keybind Inválido",
+                                Message = "Essa tecla não pode ser usada!",
+                                Type = "Error",
+                                Duration = 2
+                            })
+                            KeybindButton.Text = currentKey.Name
+                            KeybindButton.TextColor3 = Theme.Primary
+                        else
+                            currentKey = key
+                            KeybindButton.Text = key.Name
+                            KeybindButton.TextColor3 = Theme.Success
+
+                            Window:Notify({
+                                Title = "Keybind Alterado",
+                                Message = "Nova tecla: " .. key.Name,
+                                Type = "Success",
+                                Duration = 2
+                            })
+
+                            task.wait(0.5)
+                            KeybindButton.TextColor3 = Theme.Primary
+                        end
+
+                        TweenService:Create(KeybindButton, TweenInfo.new(0.2), {
+                            BackgroundColor3 = Theme.SurfaceLight
+                        }):Play()
+                        TweenService:Create(KeybindStroke, TweenInfo.new(0.2), {
+                            Thickness = 0,
+                            Color = Theme.Primary
+                        }):Play()
+
+                        keybindChanging = false
+                        connection:Disconnect()
+                    end
+                end)
+            end)
+
+            -- Detectar quando a tecla é pressionada
+            UserInputService.InputBegan:Connect(function(input, gameProcessed)
+                if input.UserInputType == Enum.UserInputType.Keyboard and input.KeyCode == currentKey then
+                    if not gameProcessed and config.Callback then
+                        -- Animação de ativação
+                        TweenService:Create(KeybindButton, TweenInfo.new(0.1), {
+                            Size = UDim2.new(0, (isMobile and 75 or 70) + 5, 0, (isMobile and 26 or 22) + 5)
+                        }):Play()
+                        task.wait(0.1)
+                        TweenService:Create(KeybindButton, TweenInfo.new(0.2, Enum.EasingStyle.Elastic), {
+                            Size = UDim2.new(0, isMobile and 75 or 70, 0, isMobile and 26 or 22)
+                        }):Play()
+
+                        config.Callback()
+                    end
+                end
+            end)
+
+            return {
+                SetKey = function(self, key)
+                    currentKey = key
+                    KeybindButton.Text = key.Name
+                end
+            }
+        end
+
         function Tab:AddColorPicker(config)
             local currentColor = config.Default or Color3.fromRGB(255, 255, 255)
 
@@ -1488,1004 +1660,7 @@ function QuantomLib:CreateWindow(config)
             }
         end
 
-        
-        -- ═══════════════════════════════════════════════════════════
-        --                    NOVOS COMPONENTES (7)
-        -- ═══════════════════════════════════════════════════════════
-
-        function Tab:AddLabel(config)
-            local LabelFrame = Instance.new("Frame")
-            LabelFrame.Size = UDim2.new(1, 0, 0, isMobile and 28 or 24)
-            LabelFrame.BackgroundTransparency = 1
-            LabelFrame.ZIndex = 3
-            LabelFrame.Parent = ContentFrame
-
-            local Label = Instance.new("TextLabel")
-            Label.Size = UDim2.new(1, -24, 1, 0)
-            Label.Position = UDim2.new(0, 12, 0, 0)
-            Label.BackgroundTransparency = 1
-            Label.Text = config.Text or "Label"
-            Label.Font = Enum.Font.Gotham
-            Label.TextSize = isMobile and 11 or 12
-            Label.TextColor3 = config.Color or Theme.TextSecondary
-            Label.TextXAlignment = Enum.TextXAlignment.Left
-            Label.TextWrapped = true
-            Label.ZIndex = 4
-            Label.Parent = LabelFrame
-
-            return {
-                SetText = function(self, text)
-                    Label.Text = text
-                end,
-                SetColor = function(self, color)
-                    Label.TextColor3 = color
-                end
-            }
-        end
-
-        function Tab:AddParagraph(config)
-            local ParagraphFrame = Instance.new("Frame")
-            ParagraphFrame.Size = UDim2.new(1, 0, 0, isMobile and 70 or 65)
-            ParagraphFrame.BackgroundColor3 = Theme.Surface
-            ParagraphFrame.BorderSizePixel = 0
-            ParagraphFrame.ZIndex = 3
-            ParagraphFrame.Parent = ContentFrame
-
-            local ParagraphCorner = Instance.new("UICorner")
-            ParagraphCorner.CornerRadius = UDim.new(0, 6)
-            ParagraphCorner.Parent = ParagraphFrame
-
-            local TitleLabel = Instance.new("TextLabel")
-            TitleLabel.Size = UDim2.new(1, -24, 0, 18)
-            TitleLabel.Position = UDim2.new(0, 12, 0, 8)
-            TitleLabel.BackgroundTransparency = 1
-            TitleLabel.Text = config.Title or "Paragraph"
-            TitleLabel.Font = Enum.Font.GothamBold
-            TitleLabel.TextSize = isMobile and 11 or 12
-            TitleLabel.TextColor3 = Theme.Text
-            TitleLabel.TextXAlignment = Enum.TextXAlignment.Left
-            TitleLabel.ZIndex = 4
-            TitleLabel.Parent = ParagraphFrame
-
-            local ContentLabel = Instance.new("TextLabel")
-            ContentLabel.Size = UDim2.new(1, -24, 1, -32)
-            ContentLabel.Position = UDim2.new(0, 12, 0, 26)
-            ContentLabel.BackgroundTransparency = 1
-            ContentLabel.Text = config.Content or ""
-            ContentLabel.Font = Enum.Font.Gotham
-            ContentLabel.TextSize = isMobile and 10 or 11
-            ContentLabel.TextColor3 = Theme.TextSecondary
-            ContentLabel.TextXAlignment = Enum.TextXAlignment.Left
-            ContentLabel.TextYAlignment = Enum.TextYAlignment.Top
-            ContentLabel.TextWrapped = true
-            ContentLabel.ZIndex = 4
-            ContentLabel.Parent = ParagraphFrame
-
-            return {
-                SetTitle = function(self, title)
-                    TitleLabel.Text = title
-                end,
-                SetContent = function(self, content)
-                    ContentLabel.Text = content
-                end
-            }
-        end
-
-        function Tab:AddDivider()
-            local DividerFrame = Instance.new("Frame")
-            DividerFrame.Size = UDim2.new(1, 0, 0, isMobile and 12 or 10)
-            DividerFrame.BackgroundTransparency = 1
-            DividerFrame.ZIndex = 3
-            DividerFrame.Parent = ContentFrame
-
-            local Divider = Instance.new("Frame")
-            Divider.Size = UDim2.new(1, -24, 0, 1)
-            Divider.Position = UDim2.new(0, 12, 0.5, 0)
-            Divider.BackgroundColor3 = Theme.Border
-            Divider.BackgroundTransparency = 0.7
-            Divider.BorderSizePixel = 0
-            Divider.ZIndex = 4
-            Divider.Parent = DividerFrame
-        end
-
-        function Tab:AddInput(config)
-            local InputFrame = Instance.new("Frame")
-            InputFrame.Size = UDim2.new(1, 0, 0, isMobile and 36 or 32)
-            InputFrame.BackgroundColor3 = Theme.Surface
-            InputFrame.BorderSizePixel = 0
-            InputFrame.ZIndex = 3
-            InputFrame.Parent = ContentFrame
-
-            local InputCorner = Instance.new("UICorner")
-            InputCorner.CornerRadius = UDim.new(0, 6)
-            InputCorner.Parent = InputFrame
-
-            local InputLabel = Instance.new("TextLabel")
-            InputLabel.Size = UDim2.new(0.5, 0, 1, 0)
-            InputLabel.Position = UDim2.new(0, 12, 0, 0)
-            InputLabel.BackgroundTransparency = 1
-            InputLabel.Text = config.Name or "Input"
-            InputLabel.Font = Enum.Font.GothamMedium
-            InputLabel.TextSize = isMobile and 11 or 12
-            InputLabel.TextColor3 = Theme.Text
-            InputLabel.TextXAlignment = Enum.TextXAlignment.Left
-            InputLabel.ZIndex = 4
-            InputLabel.Parent = InputFrame
-
-            local InputBox = Instance.new("TextBox")
-            InputBox.Size = UDim2.new(0, isMobile and 80 or 75, 0, isMobile and 26 or 22)
-            InputBox.Position = UDim2.new(1, isMobile and -90 or -85, 0.5, isMobile and -13 or -11)
-            InputBox.BackgroundColor3 = Theme.SurfaceLight
-            InputBox.Text = tostring(config.Default or 0)
-            InputBox.PlaceholderText = config.Placeholder or "0"
-            InputBox.Font = Enum.Font.GothamBold
-            InputBox.TextSize = isMobile and 10 or 11
-            InputBox.TextColor3 = Theme.Text
-            InputBox.PlaceholderColor3 = Theme.TextMuted
-            InputBox.ClearButtonMode = Enum.ClearButtonMode.Never
-            InputBox.ZIndex = 4
-            InputBox.Parent = InputFrame
-
-            local InputCorner2 = Instance.new("UICorner")
-            InputCorner2.CornerRadius = UDim.new(0, 6)
-            InputCorner2.Parent = InputBox
-
-            local InputStroke = Instance.new("UIStroke")
-            InputStroke.Color = Theme.Border
-            InputStroke.Thickness = 1
-            InputStroke.Transparency = 0.5
-            InputStroke.Parent = InputBox
-
-            InputBox.Focused:Connect(function()
-                TweenService:Create(InputStroke, TweenInfo.new(0.2), {
-                    Color = Theme.Primary,
-                    Thickness = 2,
-                    Transparency = 0.3
-                }):Play()
-            end)
-
-            InputBox.FocusLost:Connect(function()
-                TweenService:Create(InputStroke, TweenInfo.new(0.2), {
-                    Color = Theme.Border,
-                    Thickness = 1,
-                    Transparency = 0.5
-                }):Play()
-
-                local value = tonumber(InputBox.Text)
-                if value then
-                    if config.Min and value < config.Min then
-                        value = config.Min
-                    end
-                    if config.Max and value > config.Max then
-                        value = config.Max
-                    end
-                    InputBox.Text = tostring(value)
-
-                    if config.Callback then
-                        config.Callback(value)
-                    end
-                else
-                    InputBox.Text = tostring(config.Default or 0)
-                end
-            end)
-
-            return {
-                SetValue = function(self, value)
-                    InputBox.Text = tostring(value)
-                end
-            }
-        end
-
-        function Tab:AddMultiDropdown(config)
-            local selectedOptions = {}
-            local dropdownOpen = false
-
-            local MultiDropdownFrame = Instance.new("Frame")
-            MultiDropdownFrame.Size = UDim2.new(1, 0, 0, isMobile and 36 or 32)
-            MultiDropdownFrame.BackgroundColor3 = Theme.Surface
-            MultiDropdownFrame.BorderSizePixel = 0
-            MultiDropdownFrame.ZIndex = 3
-            MultiDropdownFrame.Parent = ContentFrame
-
-            local MultiDropdownCorner = Instance.new("UICorner")
-            MultiDropdownCorner.CornerRadius = UDim.new(0, 6)
-            MultiDropdownCorner.Parent = MultiDropdownFrame
-
-            local MultiDropdownLabel = Instance.new("TextLabel")
-            MultiDropdownLabel.Size = UDim2.new(0, 100, 1, 0)
-            MultiDropdownLabel.Position = UDim2.new(0, 12, 0, 0)
-            MultiDropdownLabel.BackgroundTransparency = 1
-            MultiDropdownLabel.Text = config.Name or "Multi Dropdown"
-            MultiDropdownLabel.Font = Enum.Font.GothamMedium
-            MultiDropdownLabel.TextSize = isMobile and 11 or 12
-            MultiDropdownLabel.TextColor3 = Theme.Text
-            MultiDropdownLabel.TextXAlignment = Enum.TextXAlignment.Left
-            MultiDropdownLabel.ZIndex = 4
-            MultiDropdownLabel.Parent = MultiDropdownFrame
-
-            local MultiDropdownButton = Instance.new("TextButton")
-            MultiDropdownButton.Size = UDim2.new(1, -120, 0, isMobile and 26 or 22)
-            MultiDropdownButton.Position = UDim2.new(0, 110, 0.5, isMobile and -13 or -11)
-            MultiDropdownButton.BackgroundColor3 = Theme.SurfaceLight
-            MultiDropdownButton.Text = "0 selected"
-            MultiDropdownButton.Font = Enum.Font.Gotham
-            MultiDropdownButton.TextSize = isMobile and 10 or 11
-            MultiDropdownButton.TextColor3 = Theme.Text
-            MultiDropdownButton.TextXAlignment = Enum.TextXAlignment.Left
-            MultiDropdownButton.AutoButtonColor = false
-            MultiDropdownButton.ZIndex = 4
-            MultiDropdownButton.Parent = MultiDropdownFrame
-
-            local MultiDropdownBtnCorner = Instance.new("UICorner")
-            MultiDropdownBtnCorner.CornerRadius = UDim.new(0, 6)
-            MultiDropdownBtnCorner.Parent = MultiDropdownButton
-
-            local MultiDropdownPadding = Instance.new("UIPadding")
-            MultiDropdownPadding.PaddingLeft = UDim.new(0, 8)
-            MultiDropdownPadding.Parent = MultiDropdownButton
-
-            local Arrow = Instance.new("TextLabel")
-            Arrow.Size = UDim2.new(0, 20, 1, 0)
-            Arrow.Position = UDim2.new(1, -24, 0, 0)
-            Arrow.BackgroundTransparency = 1
-            Arrow.Text = "▼"
-            Arrow.Font = Enum.Font.Gotham
-            Arrow.TextSize = isMobile and 8 or 9
-            Arrow.TextColor3 = Theme.TextMuted
-            Arrow.ZIndex = 5
-            Arrow.Parent = MultiDropdownButton
-
-            local OptionsList = Instance.new("ScrollingFrame")
-            OptionsList.Size = UDim2.new(1, -120, 0, 0)
-            OptionsList.Position = UDim2.new(0, 110, 1, 4)
-            OptionsList.BackgroundColor3 = Theme.SurfaceLight
-            OptionsList.BorderSizePixel = 0
-            OptionsList.Visible = false
-            OptionsList.ZIndex = 10
-            OptionsList.ClipsDescendants = true
-            OptionsList.ScrollBarThickness = 4
-            OptionsList.ScrollBarImageColor3 = Theme.Primary
-            OptionsList.Parent = MultiDropdownFrame
-
-            local OptionsCorner = Instance.new("UICorner")
-            OptionsCorner.CornerRadius = UDim.new(0, 6)
-            OptionsCorner.Parent = OptionsList
-
-            local OptionsLayout = Instance.new("UIListLayout")
-            OptionsLayout.SortOrder = Enum.SortOrder.LayoutOrder
-            OptionsLayout.Parent = OptionsList
-
-            for _, option in ipairs(config.Options or {}) do
-                local OptionButton = Instance.new("TextButton")
-                OptionButton.Size = UDim2.new(1, 0, 0, isMobile and 28 or 24)
-                OptionButton.BackgroundColor3 = Theme.SurfaceLight
-                OptionButton.Text = ""
-                OptionButton.AutoButtonColor = false
-                OptionButton.ZIndex = 11
-                OptionButton.Parent = OptionsList
-
-                local Checkbox = Instance.new("TextLabel")
-                Checkbox.Size = UDim2.new(0, 16, 0, 16)
-                Checkbox.Position = UDim2.new(0, 8, 0.5, -8)
-                Checkbox.BackgroundColor3 = Theme.Surface
-                Checkbox.Text = ""
-                Checkbox.Font = Enum.Font.GothamBold
-                Checkbox.TextSize = 12
-                Checkbox.TextColor3 = Theme.Success
-                Checkbox.ZIndex = 12
-                Checkbox.Parent = OptionButton
-
-                local CheckboxCorner = Instance.new("UICorner")
-                CheckboxCorner.CornerRadius = UDim.new(0, 4)
-                CheckboxCorner.Parent = Checkbox
-
-                local CheckboxStroke = Instance.new("UIStroke")
-                CheckboxStroke.Color = Theme.Border
-                CheckboxStroke.Thickness = 1
-                CheckboxStroke.Parent = Checkbox
-
-                local OptionLabel = Instance.new("TextLabel")
-                OptionLabel.Size = UDim2.new(1, -32, 1, 0)
-                OptionLabel.Position = UDim2.new(0, 28, 0, 0)
-                OptionLabel.BackgroundTransparency = 1
-                OptionLabel.Text = option
-                OptionLabel.Font = Enum.Font.Gotham
-                OptionLabel.TextSize = isMobile and 10 or 11
-                OptionLabel.TextColor3 = Theme.Text
-                OptionLabel.TextXAlignment = Enum.TextXAlignment.Left
-                OptionLabel.ZIndex = 12
-                OptionLabel.Parent = OptionButton
-
-                OptionButton.MouseEnter:Connect(function()
-                    TweenService:Create(OptionButton, TweenInfo.new(0.1), {
-                        BackgroundColor3 = Theme.Surface
-                    }):Play()
-                end)
-
-                OptionButton.MouseLeave:Connect(function()
-                    TweenService:Create(OptionButton, TweenInfo.new(0.1), {
-                        BackgroundColor3 = Theme.SurfaceLight
-                    }):Play()
-                end)
-
-                OptionButton.MouseButton1Click:Connect(function()
-                    local isSelected = table.find(selectedOptions, option)
-
-                    if isSelected then
-                        table.remove(selectedOptions, isSelected)
-                        Checkbox.Text = ""
-                        CheckboxStroke.Color = Theme.Border
-                    else
-                        table.insert(selectedOptions, option)
-                        Checkbox.Text = "✓"
-                        CheckboxStroke.Color = Theme.Success
-                    end
-
-                    MultiDropdownButton.Text = #selectedOptions .. " selected"
-
-                    if config.Callback then
-                        config.Callback(selectedOptions)
-                    end
-                end)
-            end
-
-            OptionsLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
-                OptionsList.CanvasSize = UDim2.new(0, 0, 0, OptionsLayout.AbsoluteContentSize.Y)
-            end)
-
-            MultiDropdownButton.MouseButton1Click:Connect(function()
-                dropdownOpen = not dropdownOpen
-
-                if dropdownOpen then
-                    OptionsList.Visible = true
-                    local optionCount = #(config.Options or {})
-                    local maxHeight = math.min(optionCount * (isMobile and 28 or 24), isMobile and 140 or 120)
-                    TweenService:Create(OptionsList, TweenInfo.new(0.2), {
-                        Size = UDim2.new(1, -120, 0, maxHeight)
-                    }):Play()
-                else
-                    TweenService:Create(OptionsList, TweenInfo.new(0.2), {
-                        Size = UDim2.new(1, -120, 0, 0)
-                    }):Play()
-                    task.wait(0.2)
-                    OptionsList.Visible = false
-                end
-            end)
-
-            return {
-                GetSelected = function(self)
-                    return selectedOptions
-                end
-            }
-        end
-
-        function Tab:AddToggleKeybind(config)
-            local toggleState = config.Default or false
-            local currentKey = config.Key or Enum.KeyCode.E
-            local blacklistedKeys = {
-                Enum.KeyCode.W, Enum.KeyCode.A, Enum.KeyCode.S, Enum.KeyCode.D,
-                Enum.KeyCode.Space, Enum.KeyCode.LeftShift, Enum.KeyCode.LeftControl
-            }
-            local keybindChanging = false
-
-            local ToggleKeybindFrame = Instance.new("Frame")
-            ToggleKeybindFrame.Size = UDim2.new(1, 0, 0, isMobile and 36 or 32)
-            ToggleKeybindFrame.BackgroundColor3 = Theme.Surface
-            ToggleKeybindFrame.BorderSizePixel = 0
-            ToggleKeybindFrame.ZIndex = 3
-            ToggleKeybindFrame.Parent = ContentFrame
-
-            local ToggleKeybindCorner = Instance.new("UICorner")
-            ToggleKeybindCorner.CornerRadius = UDim.new(0, 6)
-            ToggleKeybindCorner.Parent = ToggleKeybindFrame
-
-            local ToggleKeybindLabel = Instance.new("TextLabel")
-            ToggleKeybindLabel.Size = UDim2.new(0.45, 0, 1, 0)
-            ToggleKeybindLabel.Position = UDim2.new(0, 12, 0, 0)
-            ToggleKeybindLabel.BackgroundTransparency = 1
-            ToggleKeybindLabel.Text = config.Name or "Toggle"
-            ToggleKeybindLabel.Font = Enum.Font.GothamMedium
-            ToggleKeybindLabel.TextSize = isMobile and 11 or 12
-            ToggleKeybindLabel.TextColor3 = Theme.Text
-            ToggleKeybindLabel.TextXAlignment = Enum.TextXAlignment.Left
-            ToggleKeybindLabel.ZIndex = 4
-            ToggleKeybindLabel.Parent = ToggleKeybindFrame
-
-            -- Keybind Button
-            local KeybindButton = Instance.new("TextButton")
-            KeybindButton.Size = UDim2.new(0, isMobile and 50 or 45, 0, isMobile and 22 or 18)
-            KeybindButton.Position = UDim2.new(1, isMobile and -60 or -55, 0.5, isMobile and -11 or -9)
-            KeybindButton.BackgroundColor3 = Theme.SurfaceLight
-            KeybindButton.Text = currentKey.Name
-            KeybindButton.Font = Enum.Font.GothamBold
-            KeybindButton.TextSize = isMobile and 9 or 10
-            KeybindButton.TextColor3 = Theme.Primary
-            KeybindButton.AutoButtonColor = false
-            KeybindButton.ZIndex = 4
-            KeybindButton.Parent = ToggleKeybindFrame
-
-            local KeybindBtnCorner = Instance.new("UICorner")
-            KeybindBtnCorner.CornerRadius = UDim.new(0, 4)
-            KeybindBtnCorner.Parent = KeybindButton
-
-            -- Toggle Button
-            local ToggleButton = Instance.new("TextButton")
-            ToggleButton.Size = UDim2.new(0, isMobile and 38 or 34, 0, isMobile and 20 or 16)
-            ToggleButton.Position = UDim2.new(1, isMobile and -105 or -95, 0.5, isMobile and -10 or -8)
-            ToggleButton.BackgroundColor3 = toggleState and Theme.Toggle or Theme.Border
-            ToggleButton.Text = ""
-            ToggleButton.AutoButtonColor = false
-            ToggleButton.ZIndex = 4
-            ToggleButton.Parent = ToggleKeybindFrame
-
-            local ToggleBtnCorner = Instance.new("UICorner")
-            ToggleBtnCorner.CornerRadius = UDim.new(1, 0)
-            ToggleBtnCorner.Parent = ToggleButton
-
-            local ToggleCircle = Instance.new("Frame")
-            ToggleCircle.Size = UDim2.new(0, isMobile and 16 or 12, 0, isMobile and 16 or 12)
-            ToggleCircle.Position = toggleState and UDim2.new(1, isMobile and -18 or -14, 0.5, isMobile and -8 or -6) or UDim2.new(0, 2, 0.5, isMobile and -8 or -6)
-            ToggleCircle.BackgroundColor3 = Theme.Text
-            ToggleCircle.BorderSizePixel = 0
-            ToggleCircle.ZIndex = 5
-            ToggleCircle.Parent = ToggleButton
-
-            local CircleCorner = Instance.new("UICorner")
-            CircleCorner.CornerRadius = UDim.new(1, 0)
-            CircleCorner.Parent = ToggleCircle
-
-            ToggleButton.MouseButton1Click:Connect(function()
-                toggleState = not toggleState
-                TweenService:Create(ToggleButton, TweenInfo.new(0.2), {
-                    BackgroundColor3 = toggleState and Theme.Toggle or Theme.Border
-                }):Play()
-                local endPos = toggleState and UDim2.new(1, isMobile and -18 or -14, 0.5, isMobile and -8 or -6) or UDim2.new(0, 2, 0.5, isMobile and -8 or -6)
-                TweenService:Create(ToggleCircle, TweenInfo.new(0.2, Enum.EasingStyle.Quad), {
-                    Position = endPos
-                }):Play()
-
-                if config.Callback then
-                    config.Callback(toggleState)
-                end
-            end)
-
-            KeybindButton.MouseButton1Click:Connect(function()
-                if keybindChanging then return end
-
-                keybindChanging = true
-                KeybindButton.Text = "..."
-                KeybindButton.TextColor3 = Theme.Warning
-
-                local connection
-                connection = UserInputService.InputBegan:Connect(function(input)
-                    if input.UserInputType == Enum.UserInputType.Keyboard then
-                        local key = input.KeyCode
-                        local isBlacklisted = table.find(blacklistedKeys, key)
-
-                        if not isBlacklisted then
-                            currentKey = key
-                            KeybindButton.Text = key.Name
-                        end
-
-                        KeybindButton.TextColor3 = Theme.Primary
-                        keybindChanging = false
-                        connection:Disconnect()
-                    end
-                end)
-            end)
-
-            UserInputService.InputBegan:Connect(function(input)
-                if input.UserInputType == Enum.UserInputType.Keyboard and input.KeyCode == currentKey and toggleState then
-                    if config.Callback then
-                        config.Callback(toggleState)
-                    end
-                end
-            end)
-
-            return {
-                SetState = function(self, state)
-                    toggleState = state
-                    ToggleButton.BackgroundColor3 = toggleState and Theme.Toggle or Theme.Border
-                    ToggleCircle.Position = toggleState and UDim2.new(1, isMobile and -18 or -14, 0.5, isMobile and -8 or -6) or UDim2.new(0, 2, 0.5, isMobile and -8 or -6)
-                end,
-                SetKey = function(self, key)
-                    currentKey = key
-                    KeybindButton.Text = key.Name
-                end
-            }
-        end
-
-        
-    -- ═══════════════════════════════════════════════════════════
-    --                      WATERMARK SYSTEM
-    -- ═══════════════════════════════════════════════════════════
-
-    function Window:CreateWatermark(config)
-        local WatermarkFrame = Instance.new("Frame")
-        WatermarkFrame.Size = UDim2.new(0, isMobile and 200 or 220, 0, isMobile and 80 or 75)
-        WatermarkFrame.Position = UDim2.new(1, isMobile and -210 or -230, 0, 10)
-        WatermarkFrame.BackgroundColor3 = Theme.Surface
-        WatermarkFrame.BorderSizePixel = 0
-        WatermarkFrame.ZIndex = 1000
-        WatermarkFrame.Parent = ScreenGui
-
-        local WatermarkCorner = Instance.new("UICorner")
-        WatermarkCorner.CornerRadius = UDim.new(0, 8)
-        WatermarkCorner.Parent = WatermarkFrame
-
-        local WatermarkStroke = Instance.new("UIStroke")
-        WatermarkStroke.Color = Theme.Primary
-        WatermarkStroke.Thickness = 2
-        WatermarkStroke.Transparency = 0.5
-        WatermarkStroke.Parent = WatermarkFrame
-
-        local Title = Instance.new("TextLabel")
-        Title.Size = UDim2.new(1, -16, 0, 20)
-        Title.Position = UDim2.new(0, 8, 0, 8)
-        Title.BackgroundTransparency = 1
-        Title.Text = config.Title or "QUANTOM.GG"
-        Title.Font = Enum.Font.GothamBold
-        Title.TextSize = isMobile and 12 or 13
-        Title.TextColor3 = Theme.Primary
-        Title.TextXAlignment = Enum.TextXAlignment.Left
-        Title.ZIndex = 1001
-        Title.Parent = WatermarkFrame
-
-        local FPSLabel = Instance.new("TextLabel")
-        FPSLabel.Size = UDim2.new(1, -16, 0, 16)
-        FPSLabel.Position = UDim2.new(0, 8, 0, 30)
-        FPSLabel.BackgroundTransparency = 1
-        FPSLabel.Text = "FPS: 0"
-        FPSLabel.Font = Enum.Font.Gotham
-        FPSLabel.TextSize = isMobile and 10 or 11
-        FPSLabel.TextColor3 = Theme.Text
-        FPSLabel.TextXAlignment = Enum.TextXAlignment.Left
-        FPSLabel.ZIndex = 1001
-        FPSLabel.Parent = WatermarkFrame
-
-        local PingLabel = Instance.new("TextLabel")
-        PingLabel.Size = UDim2.new(1, -16, 0, 16)
-        PingLabel.Position = UDim2.new(0, 8, 0, 46)
-        PingLabel.BackgroundTransparency = 1
-        PingLabel.Text = "Ping: 0ms"
-        PingLabel.Font = Enum.Font.Gotham
-        PingLabel.TextSize = isMobile and 10 or 11
-        PingLabel.TextColor3 = Theme.Text
-        PingLabel.TextXAlignment = Enum.TextXAlignment.Left
-        PingLabel.ZIndex = 1001
-        PingLabel.Parent = WatermarkFrame
-
-        -- Dragging
-        local dragging = false
-        local dragInput, dragStart, startPos
-
-        WatermarkFrame.InputBegan:Connect(function(input)
-            if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-                dragging = true
-                dragStart = input.Position
-                startPos = WatermarkFrame.Position
-                input.Changed:Connect(function()
-                    if input.UserInputState == Enum.UserInputState.End then
-                        dragging = false
-                    end
-                end)
-            end
-        end)
-
-        WatermarkFrame.InputChanged:Connect(function(input)
-            if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
-                dragInput = input
-            end
-        end)
-
-        UserInputService.InputChanged:Connect(function(input)
-            if input == dragInput and dragging then
-                local delta = input.Position - dragStart
-                WatermarkFrame.Position = UDim2.new(
-                    startPos.X.Scale,
-                    startPos.X.Offset + delta.X,
-                    startPos.Y.Scale,
-                    startPos.Y.Offset + delta.Y
-                )
-            end
-        end)
-
-        -- FPS Counter
-        local lastUpdate = tick()
-        local fps = 0
-        RunService.RenderStepped:Connect(function()
-            local now = tick()
-            fps = math.floor(1 / (now - lastUpdate))
-            lastUpdate = now
-            FPSLabel.Text = "FPS: " .. fps
-        end)
-
-        -- Ping
-        task.spawn(function()
-            while WatermarkFrame.Parent do
-                local ping = math.floor(Stats.Network.ServerStatsItem["Data Ping"]:GetValue())
-                PingLabel.Text = "Ping: " .. ping .. "ms"
-                task.wait(1)
-            end
-        end)
-
-        return WatermarkFrame
-    end
-
-    
-    -- ═══════════════════════════════════════════════════════════
-    --                CONFIG SYSTEM (AUTO TAB - SEMPRE ÚLTIMA)
-    -- ═══════════════════════════════════════════════════════════
-
-    local HttpService = game:GetService("HttpService")
-    local ConfigFolder = "QuantomConfigs"
-
-    if not isfolder(ConfigFolder) then
-        makefolder(ConfigFolder)
-    end
-
-    local function GetAllFlags()
-        local flags = {}
-        for flag, element in pairs(Window.Flags) do
-            if element.GetValue then
-                local value = element:GetValue()
-                flags[flag] = {
-                    Value = value,
-                    Type = typeof(value)
-                }
-            end
-        end
-        return flags
-    end
-
-    local function LoadConfig(configName)
-        local path = ConfigFolder .. "/" .. configName .. ".json"
-        if not isfile(path) then
-            print("[Config Error] Config não encontrado!")
-            return false
-        end
-
-        local content = readfile(path)
-        local success, data = pcall(function()
-            return HttpService:JSONDecode(content)
-        end)
-
-        if not success then
-            print("[Config Error] Erro ao ler config!")
-            return false
-        end
-
-        for flag, flagData in pairs(data.Flags or {}) do
-            if Window.Flags[flag] and Window.Flags[flag].SetValue then
-                pcall(function()
-                    Window.Flags[flag]:SetValue(flagData.Value)
-                end)
-            end
-        end
-
-        print("[✅ Config] Loaded: " .. configName)
-        return true
-    end
-
-    local function SaveConfig(configName)
-        if configName == "" or not configName then
-            print("[Config Error] Nome inválido!")
-            return false
-        end
-
-        local flags = GetAllFlags()
-        local configData = {
-            Name = configName,
-            Author = game.Players.LocalPlayer.Name,
-            Date = os.date("%d/%m/%Y %H:%M"),
-            Flags = flags
-        }
-
-        local path = ConfigFolder .. "/" .. configName .. ".json"
-        local success, encoded = pcall(function()
-            return HttpService:JSONEncode(configData)
-        end)
-
-        if not success then
-            print("[Config Error] Erro ao salvar!")
-            return false
-        end
-
-        writefile(path, encoded)
-        print("[✅ Config] Saved: " .. configName)
-        return true
-    end
-
-    local function DeleteConfig(configName)
-        local path = ConfigFolder .. "/" .. configName .. ".json"
-        if not isfile(path) then
-            print("[Config Error] Config não encontrado!")
-            return false
-        end
-
-        delfile(path)
-        print("[⚠️ Config] Deleted: " .. configName)
-        return true
-    end
-
-    local function GetConfigs()
-        local configs = {}
-        if not isfolder(ConfigFolder) then
-            return configs
-        end
-
-        local files = listfiles(ConfigFolder)
-        for _, file in ipairs(files) do
-            local name = file:match("([^/\\]+)%.json$")
-            if name then
-                local content = readfile(file)
-                local success, data = pcall(function()
-                    return HttpService:JSONDecode(content)
-                end)
-
-                if success then
-                    table.insert(configs, {
-                        Name = name,
-                        Author = data.Author or "Unknown",
-                        Date = data.Date or "Unknown"
-                    })
-                end
-            end
-        end
-
-        return configs
-    end
-
-    task.defer(function()
-        task.wait(0.5)
-
-        local ConfigTab = Window:CreateTab({
-            Name = "Config",
-            Icon = "💾"
-        })
-
-        ConfigTab:AddSection("SAVE CONFIG")
-
-        local configNameInput = "MyConfig"
-        ConfigTab:AddTextbox({
-            Name = "Config Name",
-            Default = "MyConfig",
-            Placeholder = "Enter name",
-            Callback = function(value)
-                configNameInput = value
-            end
-        })
-
-        ConfigTab:AddButton({
-            Name = "💾 Save Config",
-            Callback = function()
-                SaveConfig(configNameInput)
-                task.wait(0.1)
-                RefreshConfigList()
-            end
-        })
-
-        ConfigTab:AddDivider()
-
-        ConfigTab:AddSection("LOAD & DELETE")
-
-        local configListFrame = Instance.new("Frame")
-        configListFrame.Size = UDim2.new(1, 0, 0, isMobile and 240 or 220)
-        configListFrame.BackgroundColor3 = Theme.SurfaceLight
-        configListFrame.BorderSizePixel = 0
-        configListFrame.ZIndex = 3
-        configListFrame.Parent = ConfigTab.ContentFrame
-
-        local configListCorner = Instance.new("UICorner")
-        configListCorner.CornerRadius = UDim.new(0, 8)
-        configListCorner.Parent = configListFrame
-
-        local configScroll = Instance.new("ScrollingFrame")
-        configScroll.Size = UDim2.new(1, -12, 1, -12)
-        configScroll.Position = UDim2.new(0, 6, 0, 6)
-        configScroll.BackgroundTransparency = 1
-        configScroll.BorderSizePixel = 0
-        configScroll.ScrollBarThickness = 4
-        configScroll.ScrollBarImageColor3 = Theme.Primary
-        configScroll.ZIndex = 4
-        configScroll.Parent = configListFrame
-
-        local configLayout = Instance.new("UIListLayout")
-        configLayout.Padding = UDim.new(0, 6)
-        configLayout.SortOrder = Enum.SortOrder.LayoutOrder
-        configLayout.Parent = configScroll
-
-        configLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
-            configScroll.CanvasSize = UDim2.new(0, 0, 0, configLayout.AbsoluteContentSize.Y + 10)
-        end)
-
-        function RefreshConfigList()
-            for _, child in ipairs(configScroll:GetChildren()) do
-                if child:IsA("Frame") or child:IsA("TextLabel") then
-                    child:Destroy()
-                end
-            end
-
-            local configs = GetConfigs()
-
-            if #configs == 0 then
-                local noConfigLabel = Instance.new("TextLabel")
-                noConfigLabel.Size = UDim2.new(1, 0, 0, 50)
-                noConfigLabel.BackgroundTransparency = 1
-                noConfigLabel.Text = "📂 No configs found\n\nCreate one above!"
-                noConfigLabel.Font = Enum.Font.Gotham
-                noConfigLabel.TextSize = isMobile and 10 or 11
-                noConfigLabel.TextColor3 = Theme.TextMuted
-                noConfigLabel.ZIndex = 5
-                noConfigLabel.Parent = configScroll
-                return
-            end
-
-            for _, config in ipairs(configs) do
-                local configItem = Instance.new("Frame")
-                configItem.Size = UDim2.new(1, -5, 0, isMobile and 70 or 65)
-                configItem.BackgroundColor3 = Theme.Surface
-                configItem.BorderSizePixel = 0
-                configItem.ZIndex = 5
-                configItem.Parent = configScroll
-
-                local configItemCorner = Instance.new("UICorner")
-                configItemCorner.CornerRadius = UDim.new(0, 6)
-                configItemCorner.Parent = configItem
-
-                local configNameLabel = Instance.new("TextLabel")
-                configNameLabel.Size = UDim2.new(1, -115, 0, 22)
-                configNameLabel.Position = UDim2.new(0, 10, 0, 8)
-                configNameLabel.BackgroundTransparency = 1
-                configNameLabel.Text = "📁 " .. config.Name
-                configNameLabel.Font = Enum.Font.GothamBold
-                configNameLabel.TextSize = isMobile and 11 or 12
-                configNameLabel.TextColor3 = Theme.Text
-                configNameLabel.TextXAlignment = Enum.TextXAlignment.Left
-                configNameLabel.ZIndex = 6
-                configNameLabel.Parent = configItem
-
-                local configInfoLabel = Instance.new("TextLabel")
-                configInfoLabel.Size = UDim2.new(1, -115, 0, 18)
-                configInfoLabel.Position = UDim2.new(0, 10, 0, 30)
-                configInfoLabel.BackgroundTransparency = 1
-                configInfoLabel.Text = "👤 " .. config.Author
-                configInfoLabel.Font = Enum.Font.Gotham
-                configInfoLabel.TextSize = isMobile and 9 or 10
-                configInfoLabel.TextColor3 = Theme.TextSecondary
-                configInfoLabel.TextXAlignment = Enum.TextXAlignment.Left
-                configInfoLabel.ZIndex = 6
-                configInfoLabel.Parent = configItem
-
-                local configDateLabel = Instance.new("TextLabel")
-                configDateLabel.Size = UDim2.new(1, -115, 0, 16)
-                configDateLabel.Position = UDim2.new(0, 10, 0, 46)
-                configDateLabel.BackgroundTransparency = 1
-                configDateLabel.Text = "📅 " .. config.Date
-                configDateLabel.Font = Enum.Font.Gotham
-                configDateLabel.TextSize = isMobile and 8 or 9
-                configDateLabel.TextColor3 = Theme.TextMuted
-                configDateLabel.TextXAlignment = Enum.TextXAlignment.Left
-                configDateLabel.ZIndex = 6
-                configDateLabel.Parent = configItem
-
-                local loadButton = Instance.new("TextButton")
-                loadButton.Size = UDim2.new(0, isMobile and 45 or 48, 0, isMobile and 60 or 55)
-                loadButton.Position = UDim2.new(1, isMobile and -100 or -103, 0, 5)
-                loadButton.BackgroundColor3 = Theme.Success
-                loadButton.Text = "📥\nLoad"
-                loadButton.Font = Enum.Font.GothamBold
-                loadButton.TextSize = isMobile and 9 or 10
-                loadButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-                loadButton.AutoButtonColor = false
-                loadButton.ZIndex = 6
-                loadButton.Parent = configItem
-
-                local loadCorner = Instance.new("UICorner")
-                loadCorner.CornerRadius = UDim.new(0, 6)
-                loadCorner.Parent = loadButton
-
-                loadButton.MouseEnter:Connect(function()
-                    TweenService:Create(loadButton, TweenInfo.new(0.15), {
-                        BackgroundColor3 = Color3.fromRGB(0, 190, 110)
-                    }):Play()
-                end)
-
-                loadButton.MouseLeave:Connect(function()
-                    TweenService:Create(loadButton, TweenInfo.new(0.15), {
-                        BackgroundColor3 = Theme.Success
-                    }):Play()
-                end)
-
-                loadButton.MouseButton1Click:Connect(function()
-                    LoadConfig(config.Name)
-                end)
-
-                local deleteButton = Instance.new("TextButton")
-                deleteButton.Size = UDim2.new(0, isMobile and 45 or 48, 0, isMobile and 60 or 55)
-                deleteButton.Position = UDim2.new(1, isMobile and -50 or -50, 0, 5)
-                deleteButton.BackgroundColor3 = Theme.Error
-                deleteButton.Text = "🗑️\nDel"
-                deleteButton.Font = Enum.Font.GothamBold
-                deleteButton.TextSize = isMobile and 9 or 10
-                deleteButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-                deleteButton.AutoButtonColor = false
-                deleteButton.ZIndex = 6
-                deleteButton.Parent = configItem
-
-                local deleteCorner = Instance.new("UICorner")
-                deleteCorner.CornerRadius = UDim.new(0, 6)
-                deleteCorner.Parent = deleteButton
-
-                deleteButton.MouseEnter:Connect(function()
-                    TweenService:Create(deleteButton, TweenInfo.new(0.15), {
-                        BackgroundColor3 = Color3.fromRGB(230, 60, 60)
-                    }):Play()
-                end)
-
-                deleteButton.MouseLeave:Connect(function()
-                    TweenService:Create(deleteButton, TweenInfo.new(0.15), {
-                        BackgroundColor3 = Theme.Error
-                    }):Play()
-                end)
-
-                deleteButton.MouseButton1Click:Connect(function()
-                    DeleteConfig(config.Name)
-                    task.wait(0.1)
-                    RefreshConfigList()
-                end)
-            end
-        end
-
-        ConfigTab:AddButton({
-            Name = "🔄 Refresh List",
-            Callback = function()
-                RefreshConfigList()
-            end
-        })
-
-        ConfigTab:AddDivider()
-
-        ConfigTab:AddSection("AUTO-LOAD")
-
-        local autoLoadConfig = ""
-        ConfigTab:AddTextbox({
-            Name = "Auto-Load Config",
-            Default = "",
-            Placeholder = "Config name",
-            Callback = function(value)
-                autoLoadConfig = value
-                if value ~= "" then
-                    writefile(ConfigFolder .. "/_autoload.txt", value)
-                end
-            end
-        })
-
-        ConfigTab:AddButton({
-            Name = "⚡ Load Now",
-            Callback = function()
-                if autoLoadConfig ~= "" then
-                    LoadConfig(autoLoadConfig)
-                else
-                    print("[Config] No config name set!")
-                end
-            end
-        })
-
-        if isfile(ConfigFolder .. "/_autoload.txt") then
-            local autoName = readfile(ConfigFolder .. "/_autoload.txt")
-            if autoName ~= "" and isfile(ConfigFolder .. "/" .. autoName .. ".json") then
-                task.wait(1)
-                LoadConfig(autoName)
-                autoLoadConfig = autoName
-            end
-        end
-
-        task.wait(0.2)
-        RefreshConfigList()
-    end)
-
-    table.insert(Window.Categories, Tab)
+        table.insert(Window.Categories, Tab)
 
         if #Window.Categories == 1 then
             task.wait(0.1)
