@@ -32,6 +32,49 @@ local Theme = {
     Toggle = Color3.fromRGB(70, 140, 230)
 }
 
+-- Loading Screen
+local function ShowLoadingScreen()
+    local LoadingGui = Instance.new("ScreenGui")
+    LoadingGui.Name = "QuantomLoading"
+    LoadingGui.ResetOnSpawn = false
+    LoadingGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+    LoadingGui.Parent = PlayerGui
+
+    local LoadingFrame = Instance.new("Frame")
+    LoadingFrame.Size = UDim2.new(1, 0, 1, 0)
+    LoadingFrame.BackgroundColor3 = Color3.fromRGB(12, 12, 14)
+    LoadingFrame.BorderSizePixel = 0
+    LoadingFrame.ZIndex = 10000
+    LoadingFrame.Parent = LoadingGui
+
+    local LogoImage = Instance.new("ImageLabel")
+    LogoImage.Size = UDim2.new(0, 120, 0, 120)
+    LogoImage.Position = UDim2.new(0.5, -60, 0.5, -60)
+    LogoImage.BackgroundTransparency = 1
+    LogoImage.Image = "rbxassetid://100628717029507"
+    LogoImage.ImageTransparency = 1
+    LogoImage.ZIndex = 10001
+    LogoImage.Parent = LoadingFrame
+
+    TweenService:Create(LogoImage, TweenInfo.new(0.5, Enum.EasingStyle.Sine, Enum.EasingDirection.Out), {
+        ImageTransparency = 0
+    }):Play()
+
+    task.delay(4.5, function()
+        TweenService:Create(LogoImage, TweenInfo.new(0.5, Enum.EasingStyle.Sine, Enum.EasingDirection.In), {
+            ImageTransparency = 1
+        }):Play()
+        TweenService:Create(LoadingFrame, TweenInfo.new(0.5, Enum.EasingStyle.Sine, Enum.EasingDirection.In), {
+            BackgroundTransparency = 1
+        }):Play()
+
+        task.wait(0.5)
+        LoadingGui:Destroy()
+    end)
+end
+
+ShowLoadingScreen()
+
 local NotificationQueue = {}
 local NotificationContainer = nil
 
