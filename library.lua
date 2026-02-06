@@ -1201,6 +1201,293 @@ function QuantomLib:CreateWindow(config)
             }
         end
 
+
+        function Tab:AddColorPicker(config)
+            local currentColor = config.Default or Color3.fromRGB(255, 255, 255)
+
+            local ColorPickerFrame = Instance.new("Frame")
+            ColorPickerFrame.Size = UDim2.new(1, 0, 0, isMobile and 36 or 32)
+            ColorPickerFrame.BackgroundColor3 = Theme.Surface
+            ColorPickerFrame.BorderSizePixel = 0
+            ColorPickerFrame.ZIndex = 3
+            ColorPickerFrame.Parent = ContentFrame
+
+            local ColorPickerCorner = Instance.new("UICorner")
+            ColorPickerCorner.CornerRadius = UDim.new(0, 4)
+            ColorPickerCorner.Parent = ColorPickerFrame
+
+            local ColorLabel = Instance.new("TextLabel")
+            ColorLabel.Size = UDim2.new(0.6, 0, 1, 0)
+            ColorLabel.Position = UDim2.new(0, 12, 0, 0)
+            ColorLabel.BackgroundTransparency = 1
+            ColorLabel.Text = config.Name or "Color Picker"
+            ColorLabel.Font = Enum.Font.Gotham
+            ColorLabel.TextSize = isMobile and 11 or 12
+            ColorLabel.TextColor3 = Theme.Text
+            ColorLabel.TextXAlignment = Enum.TextXAlignment.Left
+            ColorLabel.ZIndex = 4
+            ColorLabel.Parent = ColorPickerFrame
+
+            local ColorDisplay = Instance.new("TextButton")
+            ColorDisplay.Size = UDim2.new(0, isMobile and 60 or 50, 0, isMobile and 26 or 22)
+            ColorDisplay.Position = UDim2.new(1, isMobile and -70 or -60, 0.5, isMobile and -13 or -11)
+            ColorDisplay.BackgroundColor3 = currentColor
+            ColorDisplay.Text = ""
+            ColorDisplay.AutoButtonColor = false
+            ColorDisplay.ZIndex = 4
+            ColorDisplay.Parent = ColorPickerFrame
+
+            local DisplayCorner = Instance.new("UICorner")
+            DisplayCorner.CornerRadius = UDim.new(0, 4)
+            DisplayCorner.Parent = ColorDisplay
+
+            local DisplayStroke = Instance.new("UIStroke")
+            DisplayStroke.Color = Theme.Border
+            DisplayStroke.Thickness = 1
+            DisplayStroke.Transparency = 0.5
+            DisplayStroke.Parent = ColorDisplay
+
+            local ColorPickerPopup = Instance.new("Frame")
+            ColorPickerPopup.Size = UDim2.new(0, isMobile and 200 or 220, 0, isMobile and 200 or 220)
+            ColorPickerPopup.Position = UDim2.new(1, -10, 0, 0)
+            ColorPickerPopup.BackgroundColor3 = Theme.Surface
+            ColorPickerPopup.BorderSizePixel = 0
+            ColorPickerPopup.Visible = false
+            ColorPickerPopup.ZIndex = 100
+            ColorPickerPopup.Parent = ColorPickerFrame
+
+            local PopupCorner = Instance.new("UICorner")
+            PopupCorner.CornerRadius = UDim.new(0, 6)
+            PopupCorner.Parent = ColorPickerPopup
+
+            local PopupStroke = Instance.new("UIStroke")
+            PopupStroke.Color = Theme.Border
+            PopupStroke.Thickness = 1
+            PopupStroke.Transparency = 0.3
+            PopupStroke.Parent = ColorPickerPopup
+
+            local ColorCanvas = Instance.new("ImageButton")
+            ColorCanvas.Size = UDim2.new(1, -20, 1, -60)
+            ColorCanvas.Position = UDim2.new(0, 10, 0, 10)
+            ColorCanvas.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
+            ColorCanvas.BorderSizePixel = 0
+            ColorCanvas.ZIndex = 101
+            ColorCanvas.Parent = ColorPickerPopup
+
+            local CanvasCorner = Instance.new("UICorner")
+            CanvasCorner.CornerRadius = UDim.new(0, 4)
+            CanvasCorner.Parent = ColorCanvas
+
+            local WhiteGradient = Instance.new("Frame")
+            WhiteGradient.Size = UDim2.new(1, 0, 1, 0)
+            WhiteGradient.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+            WhiteGradient.BackgroundTransparency = 0
+            WhiteGradient.BorderSizePixel = 0
+            WhiteGradient.ZIndex = 102
+            WhiteGradient.Parent = ColorCanvas
+
+            local WhiteCorner = Instance.new("UICorner")
+            WhiteCorner.CornerRadius = UDim.new(0, 4)
+            WhiteCorner.Parent = WhiteGradient
+
+            local WhiteGrad = Instance.new("UIGradient")
+            WhiteGrad.Transparency = NumberSequence.new{
+                NumberSequenceKeypoint.new(0, 0),
+                NumberSequenceKeypoint.new(1, 1)
+            }
+            WhiteGrad.Rotation = 0
+            WhiteGrad.Parent = WhiteGradient
+
+            local BlackGradient = Instance.new("Frame")
+            BlackGradient.Size = UDim2.new(1, 0, 1, 0)
+            BlackGradient.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+            BlackGradient.BackgroundTransparency = 0
+            BlackGradient.BorderSizePixel = 0
+            BlackGradient.ZIndex = 103
+            BlackGradient.Parent = ColorCanvas
+
+            local BlackCorner = Instance.new("UICorner")
+            BlackCorner.CornerRadius = UDim.new(0, 4)
+            BlackCorner.Parent = BlackGradient
+
+            local BlackGrad = Instance.new("UIGradient")
+            BlackGrad.Transparency = NumberSequence.new{
+                NumberSequenceKeypoint.new(0, 1),
+                NumberSequenceKeypoint.new(1, 0)
+            }
+            BlackGrad.Rotation = 90
+            BlackGrad.Parent = BlackGradient
+
+            local HueSlider = Instance.new("ImageButton")
+            HueSlider.Size = UDim2.new(1, -20, 0, isMobile and 20 or 16)
+            HueSlider.Position = UDim2.new(0, 10, 1, isMobile and -35 or -30)
+            HueSlider.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+            HueSlider.BorderSizePixel = 0
+            HueSlider.ZIndex = 101
+            HueSlider.Parent = ColorPickerPopup
+
+            local HueCorner = Instance.new("UICorner")
+            HueCorner.CornerRadius = UDim.new(0, 4)
+            HueCorner.Parent = HueSlider
+
+            local HueGradient = Instance.new("UIGradient")
+            HueGradient.Color = ColorSequence.new{
+                ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 0, 0)),
+                ColorSequenceKeypoint.new(0.17, Color3.fromRGB(255, 255, 0)),
+                ColorSequenceKeypoint.new(0.33, Color3.fromRGB(0, 255, 0)),
+                ColorSequenceKeypoint.new(0.5, Color3.fromRGB(0, 255, 255)),
+                ColorSequenceKeypoint.new(0.67, Color3.fromRGB(0, 0, 255)),
+                ColorSequenceKeypoint.new(0.83, Color3.fromRGB(255, 0, 255)),
+                ColorSequenceKeypoint.new(1, Color3.fromRGB(255, 0, 0))
+            }
+            HueGradient.Rotation = 0
+            HueGradient.Parent = HueSlider
+
+            local currentHue = 0
+            local currentSat = 1
+            local currentVal = 1
+
+            local function updateColor()
+                local color = Color3.fromHSV(currentHue, currentSat, currentVal)
+                currentColor = color
+                ColorDisplay.BackgroundColor3 = color
+
+                if config.Callback then
+                    config.Callback(color)
+                end
+            end
+
+            local function rgbToHsv(color)
+                local r, g, b = color.R, color.G, color.B
+                local max = math.max(r, g, b)
+                local min = math.min(r, g, b)
+                local delta = max - min
+
+                local h, s, v = 0, 0, max
+
+                if delta > 0 then
+                    if max == r then
+                        h = ((g - b) / delta) % 6
+                    elseif max == g then
+                        h = (b - r) / delta + 2
+                    else
+                        h = (r - g) / delta + 4
+                    end
+                    h = h / 6
+                    s = delta / max
+                end
+
+                return h, s, v
+            end
+
+            currentHue, currentSat, currentVal = rgbToHsv(currentColor)
+            ColorCanvas.BackgroundColor3 = Color3.fromHSV(currentHue, 1, 1)
+
+            local canvasDragging = false
+            ColorCanvas.InputBegan:Connect(function(input)
+                if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+                    canvasDragging = true
+                    local pos = ColorCanvas.AbsolutePosition
+                    local size = ColorCanvas.AbsoluteSize
+                    local mousePos = input.Position
+
+                    local x = math.clamp(mousePos.X - pos.X, 0, size.X) / size.X
+                    local y = math.clamp(mousePos.Y - pos.Y, 0, size.Y) / size.Y
+
+                    currentSat = x
+                    currentVal = 1 - y
+                    updateColor()
+                end
+            end)
+
+            ColorCanvas.InputEnded:Connect(function(input)
+                if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+                    canvasDragging = false
+                end
+            end)
+
+            UserInputService.InputChanged:Connect(function(input)
+                if canvasDragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+                    local pos = ColorCanvas.AbsolutePosition
+                    local size = ColorCanvas.AbsoluteSize
+                    local mousePos = input.Position
+
+                    local x = math.clamp(mousePos.X - pos.X, 0, size.X) / size.X
+                    local y = math.clamp(mousePos.Y - pos.Y, 0, size.Y) / size.Y
+
+                    currentSat = x
+                    currentVal = 1 - y
+                    updateColor()
+                end
+            end)
+
+            local hueDragging = false
+            HueSlider.InputBegan:Connect(function(input)
+                if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+                    hueDragging = true
+                    local pos = HueSlider.AbsolutePosition.X
+                    local size = HueSlider.AbsoluteSize.X
+                    local mousePos = input.Position.X
+
+                    currentHue = math.clamp((mousePos - pos) / size, 0, 1)
+                    ColorCanvas.BackgroundColor3 = Color3.fromHSV(currentHue, 1, 1)
+                    updateColor()
+                end
+            end)
+
+            HueSlider.InputEnded:Connect(function(input)
+                if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+                    hueDragging = false
+                end
+            end)
+
+            UserInputService.InputChanged:Connect(function(input)
+                if hueDragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+                    local pos = HueSlider.AbsolutePosition.X
+                    local size = HueSlider.AbsoluteSize.X
+                    local mousePos = input.Position.X
+
+                    currentHue = math.clamp((mousePos - pos) / size, 0, 1)
+                    ColorCanvas.BackgroundColor3 = Color3.fromHSV(currentHue, 1, 1)
+                    updateColor()
+                end
+            end)
+
+            ColorDisplay.MouseButton1Click:Connect(function()
+                ColorPickerPopup.Visible = not ColorPickerPopup.Visible
+            end)
+
+            UserInputService.InputBegan:Connect(function(input)
+                if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+                    if ColorPickerPopup.Visible then
+                        local mousePos = input.Position
+                        local popupPos = ColorPickerPopup.AbsolutePosition
+                        local popupSize = ColorPickerPopup.AbsoluteSize
+
+                        if mousePos.X < popupPos.X or mousePos.X > popupPos.X + popupSize.X or
+                           mousePos.Y < popupPos.Y or mousePos.Y > popupPos.Y + popupSize.Y then
+                            local displayPos = ColorDisplay.AbsolutePosition
+                            local displaySize = ColorDisplay.AbsoluteSize
+
+                            if not (mousePos.X >= displayPos.X and mousePos.X <= displayPos.X + displaySize.X and
+                                   mousePos.Y >= displayPos.Y and mousePos.Y <= displayPos.Y + displaySize.Y) then
+                                ColorPickerPopup.Visible = false
+                            end
+                        end
+                    end
+                end
+            end)
+
+            return {
+                SetValue = function(self, color)
+                    currentColor = color
+                    ColorDisplay.BackgroundColor3 = color
+                    currentHue, currentSat, currentVal = rgbToHsv(color)
+                    ColorCanvas.BackgroundColor3 = Color3.fromHSV(currentHue, 1, 1)
+                end
+            }
+        end
+
         table.insert(Window.Categories, Tab)
 
         if #Window.Categories == 1 then
