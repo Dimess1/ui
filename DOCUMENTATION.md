@@ -187,6 +187,35 @@ local MyDropdown = Tab:AddDropdown({...})
 MyDropdown:SetValue("Gun")
 ```
 
+
+### 7️⃣ AddColorPicker (Seletor de Cor)
+
+```lua
+Tab:AddColorPicker({
+    Name = "ESP Color",
+    Default = Color3.fromRGB(255, 0, 0),
+    Callback = function(color)
+        _G.ESPColor = color
+        print("Cor selecionada:", color)
+    end
+})
+```
+
+**Parâmetros:**
+
+- `Name` (string) - Nome do color picker
+- `Default` (Color3) - Cor inicial
+- `Callback` (function) - Função executada ao mudar a cor
+
+**Métodos:**
+
+```lua
+local MyColorPicker = Tab:AddColorPicker({...})
+MyColorPicker:SetValue(Color3.fromRGB(0, 255, 0))
+```
+
+---
+
 ---
 
 ## 🔔 Sistema de Notificações
