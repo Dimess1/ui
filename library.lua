@@ -1205,16 +1205,27 @@ function QuantomLib:CreateWindow(config)
         function Tab:AddColorPicker(config)
             local currentColor = config.Default or Color3.fromRGB(66, 135, 245)
 
-            -- PALETA ELEGANTE (16 cores selecionadas profissionalmente)
+            -- PALETA MINIMALISTA (12 cores essenciais)
             local ColorPalette = {
-                -- Linha 1: Vermelhos e Rosas
-                {Color3.fromRGB(239, 68, 68), Color3.fromRGB(244, 114, 182), Color3.fromRGB(167, 139, 250), Color3.fromRGB(59, 130, 246)},
-                -- Linha 2: Verdes e Amarelos  
-                {Color3.fromRGB(34, 197, 94), Color3.fromRGB(163, 230, 53), Color3.fromRGB(250, 204, 21), Color3.fromRGB(251, 146, 60)},
-                -- Linha 3: Azuis e Roxos
-                {Color3.fromRGB(14, 165, 233), Color3.fromRGB(99, 102, 241), Color3.fromRGB(139, 92, 246), Color3.fromRGB(217, 70, 239)},
+                -- Linha 1: Cores Primárias
+                Color3.fromRGB(239, 68, 68),   -- Vermelho
+                Color3.fromRGB(34, 197, 94),   -- Verde  
+                Color3.fromRGB(59, 130, 246),  -- Azul
+
+                -- Linha 2: Cores Secundárias
+                Color3.fromRGB(251, 146, 60),  -- Laranja
+                Color3.fromRGB(250, 204, 21),  -- Amarelo
+                Color3.fromRGB(139, 92, 246),  -- Roxo
+
+                -- Linha 3: Cores Adicionais
+                Color3.fromRGB(244, 114, 182), -- Rosa
+                Color3.fromRGB(14, 165, 233),  -- Ciano
+                Color3.fromRGB(163, 230, 53),  -- Lima
+
                 -- Linha 4: Neutros
-                {Color3.fromRGB(255, 255, 255), Color3.fromRGB(209, 213, 219), Color3.fromRGB(107, 114, 128), Color3.fromRGB(31, 41, 55)}
+                Color3.fromRGB(255, 255, 255), -- Branco
+                Color3.fromRGB(156, 163, 175), -- Cinza
+                Color3.fromRGB(31, 41, 55)     -- Preto
             }
 
             local ColorPickerFrame = Instance.new("Frame")
@@ -1229,7 +1240,7 @@ function QuantomLib:CreateWindow(config)
             ColorPickerCorner.Parent = ColorPickerFrame
 
             local ColorLabel = Instance.new("TextLabel")
-            ColorLabel.Size = UDim2.new(0.6, 0, 1, 0)
+            ColorLabel.Size = UDim2.new(0.55, 0, 1, 0)
             ColorLabel.Position = UDim2.new(0, 12, 0, 0)
             ColorLabel.BackgroundTransparency = 1
             ColorLabel.Text = config.Name or "Color"
@@ -1240,10 +1251,10 @@ function QuantomLib:CreateWindow(config)
             ColorLabel.ZIndex = 4
             ColorLabel.Parent = ColorPickerFrame
 
-            -- PREVIEW DA COR ATUAL (maior e mais bonito)
+            -- PREVIEW COMPACTO
             local ColorDisplay = Instance.new("TextButton")
-            ColorDisplay.Size = UDim2.new(0, isMobile and 70 or 65, 0, isMobile and 28 or 24)
-            ColorDisplay.Position = UDim2.new(1, isMobile and -80 or -75, 0.5, isMobile and -14 or -12)
+            ColorDisplay.Size = UDim2.new(0, isMobile and 65 or 60, 0, isMobile and 26 or 22)
+            ColorDisplay.Position = UDim2.new(1, isMobile and -75 or -70, 0.5, isMobile and -13 or -11)
             ColorDisplay.BackgroundColor3 = currentColor
             ColorDisplay.Text = ""
             ColorDisplay.AutoButtonColor = false
@@ -1257,75 +1268,85 @@ function QuantomLib:CreateWindow(config)
             local DisplayStroke = Instance.new("UIStroke")
             DisplayStroke.Color = Theme.Primary
             DisplayStroke.Thickness = 2
-            DisplayStroke.Transparency = 0.5
+            DisplayStroke.Transparency = 0.6
             DisplayStroke.Parent = ColorDisplay
 
-            -- POPUP ELEGANTE E CENTRALIZADO
+            -- POPUP MINIMALISTA
             local ColorPickerPopup = Instance.new("Frame")
-            ColorPickerPopup.Size = UDim2.new(0, isMobile and 280 or 320, 0, isMobile and 240 or 260)
-            ColorPickerPopup.Position = UDim2.new(0.5, isMobile and -140 or -160, 0.5, isMobile and -120 or -130)
+            ColorPickerPopup.Size = UDim2.new(0, isMobile and 260 or 280, 0, isMobile and 310 or 330)
+            ColorPickerPopup.Position = UDim2.new(0.5, isMobile and -130 or -140, 0.5, isMobile and -155 or -165)
             ColorPickerPopup.BackgroundColor3 = Theme.Surface
             ColorPickerPopup.BorderSizePixel = 0
             ColorPickerPopup.Visible = false
-            ColorPickerPopup.ZIndex = 500
+            ColorPickerPopup.ZIndex = 600
             ColorPickerPopup.Parent = ScreenGui
 
             local PopupCorner = Instance.new("UICorner")
-            PopupCorner.CornerRadius = UDim.new(0, 12)
+            PopupCorner.CornerRadius = UDim.new(0, 14)
             PopupCorner.Parent = ColorPickerPopup
 
             local PopupStroke = Instance.new("UIStroke")
             PopupStroke.Color = Theme.Primary
-            PopupStroke.Thickness = 2
-            PopupStroke.Transparency = 0.3
+            PopupStroke.Thickness = 2.5
+            PopupStroke.Transparency = 0.2
             PopupStroke.Parent = ColorPickerPopup
 
-            -- HEADER (draggable)
+            -- SOMBRA (efeito de profundidade)
+            local Shadow = Instance.new("ImageLabel")
+            Shadow.Size = UDim2.new(1, 20, 1, 20)
+            Shadow.Position = UDim2.new(0, -10, 0, -10)
+            Shadow.BackgroundTransparency = 1
+            Shadow.Image = "rbxasset://textures/ui/GuiImagePlaceholder.png"
+            Shadow.ImageTransparency = 0.9
+            Shadow.ZIndex = 599
+            Shadow.Parent = ColorPickerPopup
+
+            -- HEADER
             local PopupHeader = Instance.new("Frame")
-            PopupHeader.Size = UDim2.new(1, 0, 0, isMobile and 42 or 45)
+            PopupHeader.Size = UDim2.new(1, 0, 0, isMobile and 45 or 48)
             PopupHeader.Position = UDim2.new(0, 0, 0, 0)
             PopupHeader.BackgroundColor3 = Theme.Primary
-            PopupHeader.BackgroundTransparency = 0.9
+            PopupHeader.BackgroundTransparency = 0.88
             PopupHeader.BorderSizePixel = 0
-            PopupHeader.ZIndex = 501
+            PopupHeader.ZIndex = 601
             PopupHeader.Parent = ColorPickerPopup
 
             local HeaderCorner = Instance.new("UICorner")
-            HeaderCorner.CornerRadius = UDim.new(0, 12)
+            HeaderCorner.CornerRadius = UDim.new(0, 14)
             HeaderCorner.Parent = PopupHeader
 
             local HeaderFix = Instance.new("Frame")
-            HeaderFix.Size = UDim2.new(1, 0, 0, 12)
-            HeaderFix.Position = UDim2.new(0, 0, 1, -12)
+            HeaderFix.Size = UDim2.new(1, 0, 0, 14)
+            HeaderFix.Position = UDim2.new(0, 0, 1, -14)
             HeaderFix.BackgroundColor3 = Theme.Primary
-            HeaderFix.BackgroundTransparency = 0.9
+            HeaderFix.BackgroundTransparency = 0.88
             HeaderFix.BorderSizePixel = 0
-            HeaderFix.ZIndex = 501
+            HeaderFix.ZIndex = 601
             HeaderFix.Parent = PopupHeader
 
             local PopupTitle = Instance.new("TextLabel")
-            PopupTitle.Size = UDim2.new(1, -50, 1, 0)
-            PopupTitle.Position = UDim2.new(0, 16, 0, 0)
+            PopupTitle.Size = UDim2.new(1, -55, 1, 0)
+            PopupTitle.Position = UDim2.new(0, 18, 0, 0)
             PopupTitle.BackgroundTransparency = 1
-            PopupTitle.Text = "🎨  " .. (config.Name or "Selecionar Cor")
+            PopupTitle.Text = "🎨 " .. (config.Name or "Cor")
             PopupTitle.Font = Enum.Font.GothamBold
-            PopupTitle.TextSize = isMobile and 12 or 14
+            PopupTitle.TextSize = isMobile and 13 or 15
             PopupTitle.TextColor3 = Theme.Text
             PopupTitle.TextXAlignment = Enum.TextXAlignment.Left
-            PopupTitle.ZIndex = 502
+            PopupTitle.ZIndex = 602
             PopupTitle.Parent = PopupHeader
 
             local CloseButton = Instance.new("TextButton")
-            CloseButton.Size = UDim2.new(0, isMobile and 32 or 34, 0, isMobile and 32 or 34)
-            CloseButton.Position = UDim2.new(1, isMobile and -38 or -40, 0.5, isMobile and -16 or -17)
-            CloseButton.BackgroundColor3 = Theme.Surface
+            CloseButton.Size = UDim2.new(0, isMobile and 34 or 36, 0, isMobile and 34 or 36)
+            CloseButton.Position = UDim2.new(1, isMobile and -40 or -42, 0.5, isMobile and -17 or -18)
+            CloseButton.BackgroundColor3 = Color3.fromRGB(50, 50, 55)
             CloseButton.BackgroundTransparency = 0.3
             CloseButton.Text = "×"
             CloseButton.Font = Enum.Font.GothamBold
-            CloseButton.TextSize = isMobile and 20 or 22
+            CloseButton.TextSize = isMobile and 22 or 24
             CloseButton.TextColor3 = Theme.TextMuted
             CloseButton.AutoButtonColor = false
-            CloseButton.ZIndex = 502
+            CloseButton.ZIndex = 602
             CloseButton.Parent = PopupHeader
 
             local CloseCorner = Instance.new("UICorner")
@@ -1335,26 +1356,19 @@ function QuantomLib:CreateWindow(config)
             CloseButton.MouseEnter:Connect(function()
                 TweenService:Create(CloseButton, TweenInfo.new(0.2), {
                     BackgroundColor3 = Color3.fromRGB(239, 68, 68),
-                    BackgroundTransparency = 0,
-                    TextColor3 = Color3.fromRGB(255, 255, 255)
+                    BackgroundTransparency = 0
                 }):Play()
             end)
 
             CloseButton.MouseLeave:Connect(function()
                 TweenService:Create(CloseButton, TweenInfo.new(0.2), {
-                    BackgroundColor3 = Theme.Surface,
-                    BackgroundTransparency = 0.3,
-                    TextColor3 = Theme.TextMuted
+                    BackgroundColor3 = Color3.fromRGB(50, 50, 55),
+                    BackgroundTransparency = 0.3
                 }):Play()
             end)
 
             CloseButton.MouseButton1Click:Connect(function()
-                TweenService:Create(ColorPickerPopup, TweenInfo.new(0.2), {
-                    Size = UDim2.new(0, 0, 0, 0)
-                }):Play()
-                task.wait(0.2)
                 ColorPickerPopup.Visible = false
-                ColorPickerPopup.Size = UDim2.new(0, isMobile and 280 or 320, 0, isMobile and 240 or 260)
             end)
 
             -- DRAG SYSTEM
@@ -1366,7 +1380,6 @@ function QuantomLib:CreateWindow(config)
                     dragging = true
                     dragStart = input.Position
                     startPos = ColorPickerPopup.Position
-
                     input.Changed:Connect(function()
                         if input.UserInputState == Enum.UserInputState.End then
                             dragging = false
@@ -1393,23 +1406,23 @@ function QuantomLib:CreateWindow(config)
                 end
             end)
 
-            -- PREVIEW GRANDE DA COR SELECIONADA
+            -- PREVIEW GRANDE
             local ColorPreview = Instance.new("Frame")
-            ColorPreview.Size = UDim2.new(1, -32, 0, isMobile and 50 or 55)
-            ColorPreview.Position = UDim2.new(0, 16, 0, isMobile and 52 or 55)
+            ColorPreview.Size = UDim2.new(1, -36, 0, isMobile and 60 or 65)
+            ColorPreview.Position = UDim2.new(0, 18, 0, isMobile and 57 or 60)
             ColorPreview.BackgroundColor3 = currentColor
             ColorPreview.BorderSizePixel = 0
-            ColorPreview.ZIndex = 501
+            ColorPreview.ZIndex = 601
             ColorPreview.Parent = ColorPickerPopup
 
             local PreviewCorner = Instance.new("UICorner")
-            PreviewCorner.CornerRadius = UDim.new(0, 8)
+            PreviewCorner.CornerRadius = UDim.new(0, 10)
             PreviewCorner.Parent = ColorPreview
 
             local PreviewStroke = Instance.new("UIStroke")
             PreviewStroke.Color = Theme.Border
-            PreviewStroke.Thickness = 1.5
-            PreviewStroke.Transparency = 0.5
+            PreviewStroke.Thickness = 2
+            PreviewStroke.Transparency = 0.4
             PreviewStroke.Parent = ColorPreview
 
             local PreviewLabel = Instance.new("TextLabel")
@@ -1417,156 +1430,149 @@ function QuantomLib:CreateWindow(config)
             PreviewLabel.BackgroundTransparency = 1
             PreviewLabel.Text = "COR ATUAL"
             PreviewLabel.Font = Enum.Font.GothamBold
-            PreviewLabel.TextSize = isMobile and 10 or 11
+            PreviewLabel.TextSize = isMobile and 11 or 12
             PreviewLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
-            PreviewLabel.TextStrokeTransparency = 0.5
-            PreviewLabel.ZIndex = 502
+            PreviewLabel.TextStrokeTransparency = 0.4
+            PreviewLabel.ZIndex = 602
             PreviewLabel.Parent = ColorPreview
 
-            -- GRID DE CORES (16 cores organizadas)
+            -- DIVISOR
+            local Divider = Instance.new("Frame")
+            Divider.Size = UDim2.new(1, -36, 0, 1)
+            Divider.Position = UDim2.new(0, 18, 0, isMobile and 127 or 135)
+            Divider.BackgroundColor3 = Theme.Border
+            Divider.BackgroundTransparency = 0.7
+            Divider.BorderSizePixel = 0
+            Divider.ZIndex = 601
+            Divider.Parent = ColorPickerPopup
+
+            -- GRID 3x4 (12 cores)
             local ColorGrid = Instance.new("Frame")
-            ColorGrid.Size = UDim2.new(1, -32, 1, isMobile and -118 or -126)
-            ColorGrid.Position = UDim2.new(0, 16, 0, isMobile and 110 or 118)
+            ColorGrid.Size = UDim2.new(1, -36, 1, isMobile and -145 or -153)
+            ColorGrid.Position = UDim2.new(0, 18, 0, isMobile and 135 or 143)
             ColorGrid.BackgroundTransparency = 1
-            ColorGrid.ZIndex = 501
+            ColorGrid.ZIndex = 601
             ColorGrid.Parent = ColorPickerPopup
 
             local GridLayout = Instance.new("UIGridLayout")
-            GridLayout.CellSize = UDim2.new(0, isMobile and 58 or 68, 0, isMobile and 22 or 24)
-            GridLayout.CellPadding = UDim2.new(0, isMobile and 6 or 8, 0, isMobile and 6 or 8)
+            GridLayout.CellSize = UDim2.new(0, isMobile and 68 or 73, 0, isMobile and 35 or 38)
+            GridLayout.CellPadding = UDim2.new(0, isMobile and 8 or 10, 0, isMobile and 8 or 10)
             GridLayout.FillDirection = Enum.FillDirection.Horizontal
             GridLayout.SortOrder = Enum.SortOrder.LayoutOrder
             GridLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
             GridLayout.Parent = ColorGrid
 
-            -- Criar botões de cor (16 cores elegantes)
-            for rowIndex, row in ipairs(ColorPalette) do
-                for colIndex, color in ipairs(row) do
-                    local ColorButton = Instance.new("TextButton")
-                    ColorButton.Size = UDim2.new(1, 0, 1, 0)
-                    ColorButton.BackgroundColor3 = color
-                    ColorButton.Text = ""
-                    ColorButton.AutoButtonColor = false
-                    ColorButton.ZIndex = 502
-                    ColorButton.LayoutOrder = (rowIndex - 1) * 4 + colIndex
-                    ColorButton.Parent = ColorGrid
+            -- Criar 12 botões
+            for index, color in ipairs(ColorPalette) do
+                local ColorButton = Instance.new("TextButton")
+                ColorButton.Size = UDim2.new(1, 0, 1, 0)
+                ColorButton.BackgroundColor3 = color
+                ColorButton.Text = ""
+                ColorButton.AutoButtonColor = false
+                ColorButton.ZIndex = 602
+                ColorButton.LayoutOrder = index
+                ColorButton.Parent = ColorGrid
 
-                    local BtnCorner = Instance.new("UICorner")
-                    BtnCorner.CornerRadius = UDim.new(0, 6)
-                    BtnCorner.Parent = ColorButton
+                local BtnCorner = Instance.new("UICorner")
+                BtnCorner.CornerRadius = UDim.new(0, 8)
+                BtnCorner.Parent = ColorButton
 
-                    local BtnStroke = Instance.new("UIStroke")
-                    BtnStroke.Color = Color3.fromRGB(255, 255, 255)
-                    BtnStroke.Thickness = 0
-                    BtnStroke.Transparency = 0
-                    BtnStroke.Parent = ColorButton
+                local BtnStroke = Instance.new("UIStroke")
+                BtnStroke.Color = Color3.fromRGB(255, 255, 255)
+                BtnStroke.Thickness = 0
+                BtnStroke.Transparency = 0
+                BtnStroke.Parent = ColorButton
 
-                    -- Indicador de seleção
-                    local CheckMark = Instance.new("TextLabel")
-                    CheckMark.Size = UDim2.new(1, 0, 1, 0)
-                    CheckMark.BackgroundTransparency = 1
-                    CheckMark.Text = "✓"
-                    CheckMark.Font = Enum.Font.GothamBold
-                    CheckMark.TextSize = isMobile and 14 or 16
-                    CheckMark.TextColor3 = Color3.fromRGB(255, 255, 255)
-                    CheckMark.TextStrokeTransparency = 0.3
-                    CheckMark.Visible = false
-                    CheckMark.ZIndex = 503
-                    CheckMark.Parent = ColorButton
+                local CheckMark = Instance.new("TextLabel")
+                CheckMark.Size = UDim2.new(1, 0, 1, 0)
+                CheckMark.BackgroundTransparency = 1
+                CheckMark.Text = "✓"
+                CheckMark.Font = Enum.Font.GothamBold
+                CheckMark.TextSize = isMobile and 16 or 18
+                CheckMark.TextColor3 = Color3.fromRGB(255, 255, 255)
+                CheckMark.TextStrokeTransparency = 0.2
+                CheckMark.Visible = false
+                CheckMark.ZIndex = 603
+                CheckMark.Parent = ColorButton
 
-                    if color == currentColor then
-                        CheckMark.Visible = true
-                        BtnStroke.Thickness = 2
+                if color == currentColor then
+                    CheckMark.Visible = true
+                    BtnStroke.Thickness = 3
+                end
+
+                ColorButton.MouseEnter:Connect(function()
+                    if color ~= currentColor then
+                        TweenService:Create(BtnStroke, TweenInfo.new(0.15), {
+                            Thickness = 3,
+                            Color = Theme.Primary
+                        }):Play()
+                        TweenService:Create(ColorButton, TweenInfo.new(0.15, Enum.EasingStyle.Back), {
+                            Size = UDim2.new(1, 3, 1, 3)
+                        }):Play()
                     end
+                end)
 
-                    ColorButton.MouseEnter:Connect(function()
-                        if color ~= currentColor then
-                            TweenService:Create(BtnStroke, TweenInfo.new(0.15), {
-                                Thickness = 2,
-                                Color = Theme.Primary
-                            }):Play()
-                        end
-                    end)
+                ColorButton.MouseLeave:Connect(function()
+                    if color ~= currentColor then
+                        TweenService:Create(BtnStroke, TweenInfo.new(0.15), {
+                            Thickness = 0
+                        }):Play()
+                        TweenService:Create(ColorButton, TweenInfo.new(0.15), {
+                            Size = UDim2.new(1, 0, 1, 0)
+                        }):Play()
+                    end
+                end)
 
-                    ColorButton.MouseLeave:Connect(function()
-                        if color ~= currentColor then
-                            TweenService:Create(BtnStroke, TweenInfo.new(0.15), {
-                                Thickness = 0
-                            }):Play()
-                        end
-                    end)
-
-                    ColorButton.MouseButton1Click:Connect(function()
-                        -- Remover check de todas as cores
-                        for _, btn in ipairs(ColorGrid:GetChildren()) do
-                            if btn:IsA("TextButton") then
-                                local check = btn:FindFirstChild("TextLabel")
-                                local stroke = btn:FindFirstChild("UIStroke")
-                                if check then check.Visible = false end
-                                if stroke then stroke.Thickness = 0 end
+                ColorButton.MouseButton1Click:Connect(function()
+                    for _, btn in ipairs(ColorGrid:GetChildren()) do
+                        if btn:IsA("TextButton") then
+                            local check = btn:FindFirstChild("TextLabel")
+                            local stroke = btn:FindFirstChild("UIStroke")
+                            if check then check.Visible = false end
+                            if stroke then 
+                                stroke.Thickness = 0
+                                TweenService:Create(btn, TweenInfo.new(0.2), {Size = UDim2.new(1, 0, 1, 0)}):Play()
                             end
                         end
+                    end
 
-                        -- Adicionar check na cor selecionada
-                        CheckMark.Visible = true
-                        BtnStroke.Thickness = 2
-                        BtnStroke.Color = Color3.fromRGB(255, 255, 255)
+                    CheckMark.Visible = true
+                    BtnStroke.Thickness = 3
+                    BtnStroke.Color = Color3.fromRGB(255, 255, 255)
 
-                        currentColor = color
-                        ColorDisplay.BackgroundColor3 = color
-                        ColorPreview.BackgroundColor3 = color
+                    currentColor = color
+                    ColorDisplay.BackgroundColor3 = color
+                    ColorPreview.BackgroundColor3 = color
 
-                        -- Animação no preview
-                        TweenService:Create(ColorPreview, TweenInfo.new(0.3, Enum.EasingStyle.Back), {
-                            Size = UDim2.new(1, -28, 0, (isMobile and 50 or 55) + 5)
-                        }):Play()
-                        task.wait(0.15)
-                        TweenService:Create(ColorPreview, TweenInfo.new(0.25, Enum.EasingStyle.Elastic), {
-                            Size = UDim2.new(1, -32, 0, isMobile and 50 or 55)
-                        }):Play()
+                    local r, g, b = math.floor(color.R * 255), math.floor(color.G * 255), math.floor(color.B * 255)
+                    PreviewLabel.Text = string.format("RGB(%d, %d, %d)", r, g, b)
 
-                        -- RGB info
-                        local r = math.floor(color.R * 255)
-                        local g = math.floor(color.G * 255)
-                        local b = math.floor(color.B * 255)
-                        PreviewLabel.Text = string.format("RGB(%d, %d, %d)", r, g, b)
+                    TweenService:Create(ColorPreview, TweenInfo.new(0.25, Enum.EasingStyle.Back), {
+                        Size = UDim2.new(1, -32, 0, (isMobile and 60 or 65) + 6)
+                    }):Play()
+                    task.wait(0.12)
+                    TweenService:Create(ColorPreview, TweenInfo.new(0.3, Enum.EasingStyle.Elastic), {
+                        Size = UDim2.new(1, -36, 0, isMobile and 60 or 65)
+                    }):Play()
 
-                        if config.Callback then
-                            task.spawn(function()
-                                config.Callback(color)
-                            end)
-                        end
-                    end)
-                end
+                    if config.Callback then
+                        task.spawn(function() config.Callback(color) end)
+                    end
+                end)
             end
 
             ColorDisplay.MouseEnter:Connect(function()
-                TweenService:Create(DisplayStroke, TweenInfo.new(0.2), {
-                    Transparency = 0.2
-                }):Play()
+                TweenService:Create(DisplayStroke, TweenInfo.new(0.2), {Transparency = 0.3}):Play()
             end)
 
             ColorDisplay.MouseLeave:Connect(function()
-                TweenService:Create(DisplayStroke, TweenInfo.new(0.2), {
-                    Transparency = 0.5
-                }):Play()
+                TweenService:Create(DisplayStroke, TweenInfo.new(0.2), {Transparency = 0.6}):Play()
             end)
 
             ColorDisplay.MouseButton1Click:Connect(function()
+                ColorPickerPopup.Visible = not ColorPickerPopup.Visible
                 if ColorPickerPopup.Visible then
-                    TweenService:Create(ColorPickerPopup, TweenInfo.new(0.2), {
-                        Size = UDim2.new(0, 0, 0, 0)
-                    }):Play()
-                    task.wait(0.2)
-                    ColorPickerPopup.Visible = false
-                    ColorPickerPopup.Size = UDim2.new(0, isMobile and 280 or 320, 0, isMobile and 240 or 260)
-                else
-                    ColorPickerPopup.Visible = true
-                    ColorPickerPopup.Size = UDim2.new(0, 0, 0, 0)
-                    ColorPickerPopup.Position = UDim2.new(0.5, isMobile and -140 or -160, 0.5, isMobile and -120 or -130)
-                    TweenService:Create(ColorPickerPopup, TweenInfo.new(0.3, Enum.EasingStyle.Back), {
-                        Size = UDim2.new(0, isMobile and 280 or 320, 0, isMobile and 240 or 260)
-                    }):Play()
+                    ColorPickerPopup.Position = UDim2.new(0.5, isMobile and -130 or -140, 0.5, isMobile and -155 or -165)
                 end
             end)
 
