@@ -1205,7 +1205,7 @@ function QuantomLib:CreateWindow(config)
         function Tab:AddColorPicker(config)
             local currentColor = config.Default or Color3.fromRGB(66, 135, 245)
 
-            -- PALETA MINIMALISTA (12 cores essenciais)
+            -- PALETA COM 11 CORES (SEM CINZA)
             local ColorPalette = {
                 -- Linha 1: Cores Primárias
                 Color3.fromRGB(239, 68, 68),   -- Vermelho
@@ -1222,9 +1222,8 @@ function QuantomLib:CreateWindow(config)
                 Color3.fromRGB(14, 165, 233),  -- Ciano
                 Color3.fromRGB(163, 230, 53),  -- Lima
 
-                -- Linha 4: Neutros
+                -- Linha 4: Neutros (SEM CINZA)
                 Color3.fromRGB(255, 255, 255), -- Branco
-                Color3.fromRGB(156, 163, 175), -- Cinza
                 Color3.fromRGB(31, 41, 55)     -- Preto
             }
 
@@ -1251,7 +1250,7 @@ function QuantomLib:CreateWindow(config)
             ColorLabel.ZIndex = 4
             ColorLabel.Parent = ColorPickerFrame
 
-            -- PREVIEW COMPACTO
+            -- PREVIEW
             local ColorDisplay = Instance.new("TextButton")
             ColorDisplay.Size = UDim2.new(0, isMobile and 65 or 60, 0, isMobile and 26 or 22)
             ColorDisplay.Position = UDim2.new(1, isMobile and -75 or -70, 0.5, isMobile and -13 or -11)
@@ -1271,10 +1270,10 @@ function QuantomLib:CreateWindow(config)
             DisplayStroke.Transparency = 0.6
             DisplayStroke.Parent = ColorDisplay
 
-            -- POPUP MINIMALISTA
+            -- POPUP MAIOR (aumentado em 15%)
             local ColorPickerPopup = Instance.new("Frame")
-            ColorPickerPopup.Size = UDim2.new(0, isMobile and 260 or 280, 0, isMobile and 310 or 330)
-            ColorPickerPopup.Position = UDim2.new(0.5, isMobile and -130 or -140, 0.5, isMobile and -155 or -165)
+            ColorPickerPopup.Size = UDim2.new(0, isMobile and 300 or 330, 0, isMobile and 355 or 380)
+            ColorPickerPopup.Position = UDim2.new(0.5, isMobile and -150 or -165, 0.5, isMobile and -177 or -190)
             ColorPickerPopup.BackgroundColor3 = Theme.Surface
             ColorPickerPopup.BorderSizePixel = 0
             ColorPickerPopup.Visible = false
@@ -1291,19 +1290,9 @@ function QuantomLib:CreateWindow(config)
             PopupStroke.Transparency = 0.2
             PopupStroke.Parent = ColorPickerPopup
 
-            -- SOMBRA (efeito de profundidade)
-            local Shadow = Instance.new("ImageLabel")
-            Shadow.Size = UDim2.new(1, 20, 1, 20)
-            Shadow.Position = UDim2.new(0, -10, 0, -10)
-            Shadow.BackgroundTransparency = 1
-            Shadow.Image = "rbxasset://textures/ui/GuiImagePlaceholder.png"
-            Shadow.ImageTransparency = 0.9
-            Shadow.ZIndex = 599
-            Shadow.Parent = ColorPickerPopup
-
             -- HEADER
             local PopupHeader = Instance.new("Frame")
-            PopupHeader.Size = UDim2.new(1, 0, 0, isMobile and 45 or 48)
+            PopupHeader.Size = UDim2.new(1, 0, 0, isMobile and 48 or 50)
             PopupHeader.Position = UDim2.new(0, 0, 0, 0)
             PopupHeader.BackgroundColor3 = Theme.Primary
             PopupHeader.BackgroundTransparency = 0.88
@@ -1337,13 +1326,13 @@ function QuantomLib:CreateWindow(config)
             PopupTitle.Parent = PopupHeader
 
             local CloseButton = Instance.new("TextButton")
-            CloseButton.Size = UDim2.new(0, isMobile and 34 or 36, 0, isMobile and 34 or 36)
-            CloseButton.Position = UDim2.new(1, isMobile and -40 or -42, 0.5, isMobile and -17 or -18)
+            CloseButton.Size = UDim2.new(0, isMobile and 36 or 38, 0, isMobile and 36 or 38)
+            CloseButton.Position = UDim2.new(1, isMobile and -42 or -44, 0.5, isMobile and -18 or -19)
             CloseButton.BackgroundColor3 = Color3.fromRGB(50, 50, 55)
             CloseButton.BackgroundTransparency = 0.3
             CloseButton.Text = "×"
             CloseButton.Font = Enum.Font.GothamBold
-            CloseButton.TextSize = isMobile and 22 or 24
+            CloseButton.TextSize = isMobile and 24 or 26
             CloseButton.TextColor3 = Theme.TextMuted
             CloseButton.AutoButtonColor = false
             CloseButton.ZIndex = 602
@@ -1406,10 +1395,10 @@ function QuantomLib:CreateWindow(config)
                 end
             end)
 
-            -- PREVIEW GRANDE
+            -- PREVIEW GRANDE (também maior)
             local ColorPreview = Instance.new("Frame")
-            ColorPreview.Size = UDim2.new(1, -36, 0, isMobile and 60 or 65)
-            ColorPreview.Position = UDim2.new(0, 18, 0, isMobile and 57 or 60)
+            ColorPreview.Size = UDim2.new(1, -36, 0, isMobile and 70 or 75)
+            ColorPreview.Position = UDim2.new(0, 18, 0, isMobile and 60 or 62)
             ColorPreview.BackgroundColor3 = currentColor
             ColorPreview.BorderSizePixel = 0
             ColorPreview.ZIndex = 601
@@ -1430,7 +1419,7 @@ function QuantomLib:CreateWindow(config)
             PreviewLabel.BackgroundTransparency = 1
             PreviewLabel.Text = "COR ATUAL"
             PreviewLabel.Font = Enum.Font.GothamBold
-            PreviewLabel.TextSize = isMobile and 11 or 12
+            PreviewLabel.TextSize = isMobile and 12 or 13
             PreviewLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
             PreviewLabel.TextStrokeTransparency = 0.4
             PreviewLabel.ZIndex = 602
@@ -1439,30 +1428,30 @@ function QuantomLib:CreateWindow(config)
             -- DIVISOR
             local Divider = Instance.new("Frame")
             Divider.Size = UDim2.new(1, -36, 0, 1)
-            Divider.Position = UDim2.new(0, 18, 0, isMobile and 127 or 135)
+            Divider.Position = UDim2.new(0, 18, 0, isMobile and 142 or 147)
             Divider.BackgroundColor3 = Theme.Border
             Divider.BackgroundTransparency = 0.7
             Divider.BorderSizePixel = 0
             Divider.ZIndex = 601
             Divider.Parent = ColorPickerPopup
 
-            -- GRID 3x4 (12 cores)
+            -- GRID MAIOR (11 cores, layout ajustado)
             local ColorGrid = Instance.new("Frame")
-            ColorGrid.Size = UDim2.new(1, -36, 1, isMobile and -145 or -153)
-            ColorGrid.Position = UDim2.new(0, 18, 0, isMobile and 135 or 143)
+            ColorGrid.Size = UDim2.new(1, -36, 1, isMobile and -160 or -165)
+            ColorGrid.Position = UDim2.new(0, 18, 0, isMobile and 150 or 155)
             ColorGrid.BackgroundTransparency = 1
             ColorGrid.ZIndex = 601
             ColorGrid.Parent = ColorPickerPopup
 
             local GridLayout = Instance.new("UIGridLayout")
-            GridLayout.CellSize = UDim2.new(0, isMobile and 68 or 73, 0, isMobile and 35 or 38)
-            GridLayout.CellPadding = UDim2.new(0, isMobile and 8 or 10, 0, isMobile and 8 or 10)
+            GridLayout.CellSize = UDim2.new(0, isMobile and 80 or 85, 0, isMobile and 42 or 45)
+            GridLayout.CellPadding = UDim2.new(0, isMobile and 10 or 12, 0, isMobile and 10 or 12)
             GridLayout.FillDirection = Enum.FillDirection.Horizontal
             GridLayout.SortOrder = Enum.SortOrder.LayoutOrder
             GridLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
             GridLayout.Parent = ColorGrid
 
-            -- Criar 12 botões
+            -- Criar 11 botões
             for index, color in ipairs(ColorPalette) do
                 local ColorButton = Instance.new("TextButton")
                 ColorButton.Size = UDim2.new(1, 0, 1, 0)
@@ -1488,7 +1477,7 @@ function QuantomLib:CreateWindow(config)
                 CheckMark.BackgroundTransparency = 1
                 CheckMark.Text = "✓"
                 CheckMark.Font = Enum.Font.GothamBold
-                CheckMark.TextSize = isMobile and 16 or 18
+                CheckMark.TextSize = isMobile and 18 or 20
                 CheckMark.TextColor3 = Color3.fromRGB(255, 255, 255)
                 CheckMark.TextStrokeTransparency = 0.2
                 CheckMark.Visible = false
@@ -1507,7 +1496,7 @@ function QuantomLib:CreateWindow(config)
                             Color = Theme.Primary
                         }):Play()
                         TweenService:Create(ColorButton, TweenInfo.new(0.15, Enum.EasingStyle.Back), {
-                            Size = UDim2.new(1, 3, 1, 3)
+                            Size = UDim2.new(1, 4, 1, 4)
                         }):Play()
                     end
                 end)
@@ -1548,11 +1537,11 @@ function QuantomLib:CreateWindow(config)
                     PreviewLabel.Text = string.format("RGB(%d, %d, %d)", r, g, b)
 
                     TweenService:Create(ColorPreview, TweenInfo.new(0.25, Enum.EasingStyle.Back), {
-                        Size = UDim2.new(1, -32, 0, (isMobile and 60 or 65) + 6)
+                        Size = UDim2.new(1, -32, 0, (isMobile and 70 or 75) + 6)
                     }):Play()
                     task.wait(0.12)
                     TweenService:Create(ColorPreview, TweenInfo.new(0.3, Enum.EasingStyle.Elastic), {
-                        Size = UDim2.new(1, -36, 0, isMobile and 60 or 65)
+                        Size = UDim2.new(1, -36, 0, isMobile and 70 or 75)
                     }):Play()
 
                     if config.Callback then
@@ -1572,7 +1561,7 @@ function QuantomLib:CreateWindow(config)
             ColorDisplay.MouseButton1Click:Connect(function()
                 ColorPickerPopup.Visible = not ColorPickerPopup.Visible
                 if ColorPickerPopup.Visible then
-                    ColorPickerPopup.Position = UDim2.new(0.5, isMobile and -130 or -140, 0.5, isMobile and -155 or -165)
+                    ColorPickerPopup.Position = UDim2.new(0.5, isMobile and -150 or -165, 0.5, isMobile and -177 or -190)
                 end
             end)
 
