@@ -1,7 +1,7 @@
 
 ### 2. Carregar no Script
 ```lua
-local QuantomLib = loadstring(game:HttpGet('SEU-LINK-RAW-AQUI'))()
+local QuantomLib = loadstring(game:HttpGet('https://raw.githubusercontent.com/Dimess1/ui/refs/heads/main/library.lua'))()
 ```
 
 ---
