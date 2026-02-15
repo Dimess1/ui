@@ -1,15 +1,39 @@
+
 local QuantomLib = {}
 
 local TweenService = game:GetService("TweenService")
 local UserInputService = game:GetService("UserInputService")
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
+local HttpService = game:GetService("HttpService")
 
 local Player = Players.LocalPlayer
 local PlayerGui = Player:WaitForChild("PlayerGui")
 
 local isMobile = UserInputService.TouchEnabled and not UserInputService.KeyboardEnabled
 local viewportSize = workspace.CurrentCamera.ViewportSize
+
+
+local function randomName(length)
+    length = length or 16
+    local chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+    local result = ""
+    for i = 1, length do
+        local rand = math.random(1, #chars)
+        result = result .. chars:sub(rand, rand)
+    end
+    return result
+end
+
+
+local STEALTH_NAMES = {
+    ScreenGui = randomName(12),
+    MainContainer = randomName(14),
+    Header = randomName(10),
+    Sidebar = randomName(11),
+    ContentArea = randomName(13),
+    FloatingButton = randomName(15)
+}
 
 local Theme = {
     Background = Color3.fromRGB(12, 12, 14),
@@ -39,12 +63,19 @@ local function CreateNotificationContainer()
     if NotificationContainer then return end
 
     NotificationContainer = Instance.new("Frame")
-    NotificationContainer.Name = "QuantomNotifications"
+    NotificationContainer.Name = randomName(16)
     NotificationContainer.Size = UDim2.new(0, isMobile and 280 or 320, 0, 0)
     NotificationContainer.Position = UDim2.new(1, -(isMobile and 290 or 330), 0, 10)
     NotificationContainer.BackgroundTransparency = 1
     NotificationContainer.ZIndex = 9999
-    NotificationContainer.Parent = PlayerGui:FindFirstChild("QuantomUI") or PlayerGui
+    
+    -- Procurar pela ScreenGui stealth
+    local screenGui = PlayerGui:FindFirstChild(STEALTH_NAMES.ScreenGui)
+    if not screenGui then
+        screenGui = PlayerGui:GetChildren()[#PlayerGui:GetChildren()] -- Pegar a última criada
+    end
+    
+    NotificationContainer.Parent = screenGui or PlayerGui
 
     local NotificationList = Instance.new("UIListLayout")
     NotificationList.Padding = UDim.new(0, 8)
@@ -76,6 +107,7 @@ local function CreateNotification(config)
     end
 
     local NotificationFrame = Instance.new("Frame")
+    NotificationFrame.Name = randomName(12)
     NotificationFrame.Size = UDim2.new(1, 0, 0, isMobile and 70 or 65)
     NotificationFrame.BackgroundColor3 = Theme.Surface
     NotificationFrame.BorderSizePixel = 0
@@ -95,6 +127,7 @@ local function CreateNotification(config)
     NotifStroke.Parent = NotificationFrame
 
     local LeftAccent = Instance.new("Frame")
+    LeftAccent.Name = randomName(8)
     LeftAccent.Size = UDim2.new(0, 4, 1, 0)
     LeftAccent.Position = UDim2.new(0, 0, 0, 0)
     LeftAccent.BackgroundColor3 = notifColor
@@ -103,6 +136,7 @@ local function CreateNotification(config)
     LeftAccent.Parent = NotificationFrame
 
     local IconFrame = Instance.new("Frame")
+    IconFrame.Name = randomName(10)
     IconFrame.Size = UDim2.new(0, isMobile and 32 or 36, 0, isMobile and 32 or 36)
     IconFrame.Position = UDim2.new(0, 12, 0.5, -(isMobile and 16 or 18))
     IconFrame.BackgroundColor3 = notifColor
@@ -116,6 +150,7 @@ local function CreateNotification(config)
     IconCorner.Parent = IconFrame
 
     local IconLabel = Instance.new("TextLabel")
+    IconLabel.Name = randomName(9)
     IconLabel.Size = UDim2.new(1, 0, 1, 0)
     IconLabel.BackgroundTransparency = 1
     IconLabel.Text = notifIcon
@@ -126,6 +161,7 @@ local function CreateNotification(config)
     IconLabel.Parent = IconFrame
 
     local TitleLabel = Instance.new("TextLabel")
+    TitleLabel.Name = randomName(11)
     TitleLabel.Size = UDim2.new(1, -(isMobile and 90 or 95), 0, 18)
     TitleLabel.Position = UDim2.new(0, isMobile and 52 or 56, 0, isMobile and 12 or 10)
     TitleLabel.BackgroundTransparency = 1
@@ -139,6 +175,7 @@ local function CreateNotification(config)
     TitleLabel.Parent = NotificationFrame
 
     local MessageLabel = Instance.new("TextLabel")
+    MessageLabel.Name = randomName(13)
     MessageLabel.Size = UDim2.new(1, -(isMobile and 90 or 95), 0, isMobile and 32 or 30)
     MessageLabel.Position = UDim2.new(0, isMobile and 52 or 56, 0, isMobile and 28 or 26)
     MessageLabel.BackgroundTransparency = 1
@@ -153,6 +190,7 @@ local function CreateNotification(config)
     MessageLabel.Parent = NotificationFrame
 
     local CloseButton = Instance.new("TextButton")
+    CloseButton.Name = randomName(10)
     CloseButton.Size = UDim2.new(0, isMobile and 28 or 24, 0, isMobile and 28 or 24)
     CloseButton.Position = UDim2.new(1, -(isMobile and 34 or 30), 0, isMobile and 6 or 6)
     CloseButton.BackgroundTransparency = 1
@@ -164,6 +202,7 @@ local function CreateNotification(config)
     CloseButton.Parent = NotificationFrame
 
     local TimeBar = Instance.new("Frame")
+    TimeBar.Name = randomName(8)
     TimeBar.Size = UDim2.new(1, 0, 0, 2)
     TimeBar.Position = UDim2.new(0, 0, 1, -2)
     TimeBar.BackgroundColor3 = notifColor
@@ -246,12 +285,15 @@ function QuantomLib:CreateWindow(config)
     Window.Version = config.Version or "v1.0.0"
     Window.Categories = {}
 
-    if PlayerGui:FindFirstChild("QuantomUI") then
-        PlayerGui:FindFirstChild("QuantomUI"):Destroy()
+    -- Remover UI antiga se existir
+    for _, gui in ipairs(PlayerGui:GetChildren()) do
+        if gui:IsA("ScreenGui") and gui.Name == STEALTH_NAMES.ScreenGui then
+            gui:Destroy()
+        end
     end
 
     local ScreenGui = Instance.new("ScreenGui")
-    ScreenGui.Name = "QuantomUI"
+    ScreenGui.Name = STEALTH_NAMES.ScreenGui
     ScreenGui.ResetOnSpawn = false
     ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
     ScreenGui.Parent = PlayerGui
@@ -266,7 +308,7 @@ function QuantomLib:CreateWindow(config)
     end
 
     local MainContainer = Instance.new("Frame")
-    MainContainer.Name = "MainContainer"
+    MainContainer.Name = STEALTH_NAMES.MainContainer
     MainContainer.Size = UDim2.new(0, uiWidth, 0, uiHeight)
     MainContainer.Position = UDim2.new(0.5, -uiWidth/2, 0.5, -uiHeight/2)
     MainContainer.BackgroundColor3 = Theme.Background
@@ -286,7 +328,7 @@ function QuantomLib:CreateWindow(config)
     MainStroke.Parent = MainContainer
 
     local FloatingButton = Instance.new("ImageButton")
-    FloatingButton.Name = "FloatingButton"
+    FloatingButton.Name = STEALTH_NAMES.FloatingButton
     FloatingButton.Size = UDim2.new(0, isMobile and 60 or 50, 0, isMobile and 60 or 50)
     FloatingButton.Position = UDim2.new(1, -70, 0, 100)
     FloatingButton.BackgroundColor3 = Theme.Primary
@@ -300,6 +342,7 @@ function QuantomLib:CreateWindow(config)
     FloatCorner.Parent = FloatingButton
 
     local FloatIcon = Instance.new("TextLabel")
+    FloatIcon.Name = randomName(10)
     FloatIcon.Size = UDim2.new(1, 0, 1, 0)
     FloatIcon.BackgroundTransparency = 1
     FloatIcon.Text = "Q"
@@ -353,7 +396,7 @@ function QuantomLib:CreateWindow(config)
     end)
 
     local BackgroundEffects = Instance.new("Frame")
-    BackgroundEffects.Name = "BackgroundEffects"
+    BackgroundEffects.Name = randomName(12)
     BackgroundEffects.Size = UDim2.new(1, 0, 1, 0)
     BackgroundEffects.BackgroundTransparency = 1
     BackgroundEffects.ClipsDescendants = true
@@ -362,6 +405,7 @@ function QuantomLib:CreateWindow(config)
 
     for i = 1, isMobile and 8 or 15 do
         local particle = Instance.new("Frame")
+        particle.Name = randomName(8)
         particle.Size = UDim2.new(0, math.random(2, 5), 0, math.random(2, 5))
         particle.Position = UDim2.new(math.random(), 0, math.random(), 0)
         particle.BackgroundColor3 = Theme.Primary
@@ -384,6 +428,7 @@ function QuantomLib:CreateWindow(config)
     end
 
     local BackgroundGradient = Instance.new("Frame")
+    BackgroundGradient.Name = randomName(14)
     BackgroundGradient.Size = UDim2.new(1, 0, 1, 0)
     BackgroundGradient.BackgroundColor3 = Theme.Primary
     BackgroundGradient.BackgroundTransparency = 0.97
@@ -411,7 +456,7 @@ function QuantomLib:CreateWindow(config)
 
     local headerHeight = isMobile and 50 or 45
     local Header = Instance.new("Frame")
-    Header.Name = "Header"
+    Header.Name = STEALTH_NAMES.Header
     Header.Size = UDim2.new(1, 0, 0, headerHeight)
     Header.BackgroundColor3 = Theme.Sidebar
     Header.BorderSizePixel = 0
@@ -423,6 +468,7 @@ function QuantomLib:CreateWindow(config)
     HeaderCorner.Parent = Header
 
     local HeaderFix = Instance.new("Frame")
+    HeaderFix.Name = randomName(10)
     HeaderFix.Size = UDim2.new(1, 0, 0, 6)
     HeaderFix.Position = UDim2.new(0, 0, 1, -6)
     HeaderFix.BackgroundColor3 = Theme.Sidebar
@@ -431,6 +477,7 @@ function QuantomLib:CreateWindow(config)
     HeaderFix.Parent = Header
 
     local LogoText = Instance.new("TextLabel")
+    LogoText.Name = randomName(12)
     LogoText.Size = UDim2.new(0, 120, 1, 0)
     LogoText.Position = UDim2.new(0, 15, 0, 0)
     LogoText.BackgroundTransparency = 1
@@ -443,6 +490,7 @@ function QuantomLib:CreateWindow(config)
     LogoText.Parent = Header
 
     local StatusText = Instance.new("TextLabel")
+    StatusText.Name = randomName(11)
     StatusText.Size = UDim2.new(0, 80, 1, 0)
     StatusText.Position = UDim2.new(1, isMobile and -155 or -165, 0, 0)
     StatusText.BackgroundTransparency = 1
@@ -496,6 +544,7 @@ function QuantomLib:CreateWindow(config)
     local buttonSize = isMobile and 35 or 30
 
     local MinimizeButton = Instance.new("TextButton")
+    MinimizeButton.Name = randomName(14)
     MinimizeButton.Size = UDim2.new(0, buttonSize, 0, buttonSize)
     MinimizeButton.Position = UDim2.new(1, isMobile and -80 or -76, 0.5, -buttonSize/2)
     MinimizeButton.BackgroundColor3 = Theme.Surface
@@ -533,6 +582,7 @@ function QuantomLib:CreateWindow(config)
     end)
 
     local CloseButton = Instance.new("TextButton")
+    CloseButton.Name = randomName(13)
     CloseButton.Size = UDim2.new(0, buttonSize, 0, buttonSize)
     CloseButton.Position = UDim2.new(1, isMobile and -38 or -38, 0.5, -buttonSize/2)
     CloseButton.BackgroundColor3 = Theme.Surface
@@ -571,6 +621,7 @@ function QuantomLib:CreateWindow(config)
 
     local sidebarWidth = isMobile and 100 or 160
     local Sidebar = Instance.new("Frame")
+    Sidebar.Name = STEALTH_NAMES.Sidebar
     Sidebar.Size = UDim2.new(0, sidebarWidth, 1, -headerHeight)
     Sidebar.Position = UDim2.new(0, 0, 0, headerHeight)
     Sidebar.BackgroundColor3 = Theme.Sidebar
@@ -589,6 +640,7 @@ function QuantomLib:CreateWindow(config)
     SidebarPadding.Parent = Sidebar
 
     local ContentArea = Instance.new("Frame")
+    ContentArea.Name = STEALTH_NAMES.ContentArea
     ContentArea.Size = UDim2.new(1, -sidebarWidth, 1, -headerHeight)
     ContentArea.Position = UDim2.new(0, sidebarWidth, 0, headerHeight)
     ContentArea.BackgroundColor3 = Theme.Background
@@ -611,7 +663,7 @@ function QuantomLib:CreateWindow(config)
         local catHeight = isMobile and 36 or 38
 
         local CategoryButton = Instance.new("TextButton")
-        CategoryButton.Name = Tab.Name
+        CategoryButton.Name = randomName(15)
         CategoryButton.Size = UDim2.new(1, 0, 0, catHeight)
         CategoryButton.BackgroundColor3 = Theme.Surface
         CategoryButton.BackgroundTransparency = 1
@@ -624,6 +676,7 @@ function QuantomLib:CreateWindow(config)
 
         local iconSize = isMobile and 14 or 18
         local Icon = Instance.new("TextLabel")
+        Icon.Name = randomName(10)
         Icon.Size = UDim2.new(0, iconSize, 0, iconSize)
         Icon.Position = UDim2.new(0, isMobile and 10 or 15, 0.5, -iconSize/2)
         Icon.BackgroundTransparency = 1
@@ -635,6 +688,7 @@ function QuantomLib:CreateWindow(config)
         Icon.Parent = CategoryButton
 
         local Label = Instance.new("TextLabel")
+        Label.Name = randomName(11)
         Label.Size = UDim2.new(1, isMobile and -32 or -45, 1, 0)
         Label.Position = UDim2.new(0, isMobile and 28 or 40, 0, 0)
         Label.BackgroundTransparency = 1
@@ -647,6 +701,7 @@ function QuantomLib:CreateWindow(config)
         Label.Parent = CategoryButton
 
         local Indicator = Instance.new("Frame")
+        Indicator.Name = randomName(9)
         Indicator.Size = UDim2.new(0, 0, 0, catHeight)
         Indicator.Position = UDim2.new(0, 0, 0, 0)
         Indicator.BackgroundColor3 = Theme.Primary
@@ -656,7 +711,7 @@ function QuantomLib:CreateWindow(config)
 
         local contentPadding = isMobile and 8 or 10
         local ContentScroll = Instance.new("ScrollingFrame")
-        ContentScroll.Name = Tab.Name .. "Content"
+        ContentScroll.Name = randomName(16)
         ContentScroll.Size = UDim2.new(1, -contentPadding*2, 1, -contentPadding*2)
         ContentScroll.Position = UDim2.new(0, contentPadding, 0, contentPadding)
         ContentScroll.BackgroundTransparency = 1
@@ -670,7 +725,7 @@ function QuantomLib:CreateWindow(config)
         ContentScroll.Parent = ContentArea
 
         local ContentFrame = Instance.new("Frame")
-        ContentFrame.Name = Tab.Name .. "Inner"
+        ContentFrame.Name = randomName(14)
         ContentFrame.Size = UDim2.new(1, 0, 1, 0)
         ContentFrame.BackgroundTransparency = 1
         ContentFrame.ZIndex = 3
@@ -705,19 +760,19 @@ function QuantomLib:CreateWindow(config)
         local function activateTab()
             for _, cat in pairs(Window.Categories) do
                 cat.ContentScroll.Visible = false
-                local btn = Sidebar:FindFirstChild(cat.Name)
-                if btn then
-                    TweenService:Create(btn, TweenInfo.new(0.2), {BackgroundTransparency = 1}):Play()
-                    for _, child in pairs(btn:GetChildren()) do
-                        if child:IsA("TextLabel") then
-                            TweenService:Create(child, TweenInfo.new(0.2), {
-                                TextColor3 = child.Text:match("[A-Z]") and Theme.TextSecondary or Theme.TextMuted
-                            }):Play()
+                local btn = Sidebar:FindFirstChild(function(c) return c:IsA("TextButton") end, true)
+                for _, child in pairs(Sidebar:GetChildren()) do
+                    if child:IsA("TextButton") then
+                        TweenService:Create(child, TweenInfo.new(0.2), {BackgroundTransparency = 1}):Play()
+                        for _, subChild in pairs(child:GetChildren()) do
+                            if subChild:IsA("TextLabel") then
+                                TweenService:Create(subChild, TweenInfo.new(0.2), {
+                                    TextColor3 = subChild.Text:match("[A-Z]") and Theme.TextSecondary or Theme.TextMuted
+                                }):Play()
+                            elseif subChild:IsA("Frame") then
+                                TweenService:Create(subChild, TweenInfo.new(0.2), {Size = UDim2.new(0, 0, 0, catHeight)}):Play()
+                            end
                         end
-                    end
-                    local ind = btn:FindFirstChild("Frame")
-                    if ind then
-                        TweenService:Create(ind, TweenInfo.new(0.2), {Size = UDim2.new(0, 0, 0, catHeight)}):Play()
                     end
                 end
             end
@@ -734,6 +789,7 @@ function QuantomLib:CreateWindow(config)
 
         function Tab:AddSection(title)
             local SectionLabel = Instance.new("TextLabel")
+            SectionLabel.Name = randomName(13)
             SectionLabel.Size = UDim2.new(1, 0, 0, isMobile and 20 or 22)
             SectionLabel.BackgroundTransparency = 1
             SectionLabel.Text = title:upper()
@@ -749,6 +805,7 @@ function QuantomLib:CreateWindow(config)
             local toggleState = config.Default or false
 
             local ToggleFrame = Instance.new("Frame")
+            ToggleFrame.Name = randomName(14)
             ToggleFrame.Size = UDim2.new(1, 0, 0, isMobile and 36 or 32)
             ToggleFrame.BackgroundColor3 = Theme.Surface
             ToggleFrame.BorderSizePixel = 0
@@ -760,6 +817,7 @@ function QuantomLib:CreateWindow(config)
             ToggleCorner.Parent = ToggleFrame
 
             local ToggleLabel = Instance.new("TextLabel")
+            ToggleLabel.Name = randomName(12)
             ToggleLabel.Size = UDim2.new(1, -60, 1, 0)
             ToggleLabel.Position = UDim2.new(0, 12, 0, 0)
             ToggleLabel.BackgroundTransparency = 1
@@ -772,6 +830,7 @@ function QuantomLib:CreateWindow(config)
             ToggleLabel.Parent = ToggleFrame
 
             local ToggleButton = Instance.new("TextButton")
+            ToggleButton.Name = randomName(13)
             ToggleButton.Size = UDim2.new(0, isMobile and 42 or 38, 0, isMobile and 22 or 18)
             ToggleButton.Position = UDim2.new(1, isMobile and -52 or -48, 0.5, isMobile and -11 or -9)
             ToggleButton.BackgroundColor3 = toggleState and Theme.Toggle or Theme.Border
@@ -785,6 +844,7 @@ function QuantomLib:CreateWindow(config)
             ToggleBtnCorner.Parent = ToggleButton
 
             local ToggleCircle = Instance.new("Frame")
+            ToggleCircle.Name = randomName(10)
             ToggleCircle.Size = UDim2.new(0, isMobile and 18 or 14, 0, isMobile and 18 or 14)
             ToggleCircle.Position = toggleState and UDim2.new(1, isMobile and -20 or -16, 0.5, isMobile and -9 or -7) or UDim2.new(0, 2, 0.5, isMobile and -9 or -7)
             ToggleCircle.BackgroundColor3 = Theme.Text
@@ -823,6 +883,7 @@ function QuantomLib:CreateWindow(config)
             local isPressed = false
 
             local ButtonFrame = Instance.new("Frame")
+            ButtonFrame.Name = randomName(14)
             ButtonFrame.Size = UDim2.new(1, 0, 0, isMobile and 36 or 32)
             ButtonFrame.BackgroundColor3 = Theme.Surface
             ButtonFrame.BorderSizePixel = 0
@@ -834,6 +895,7 @@ function QuantomLib:CreateWindow(config)
             ButtonCorner.Parent = ButtonFrame
 
             local ButtonClickable = Instance.new("TextButton")
+            ButtonClickable.Name = randomName(15)
             ButtonClickable.Size = UDim2.new(1, 0, 1, 0)
             ButtonClickable.BackgroundTransparency = 1
             ButtonClickable.Text = ""
@@ -841,6 +903,7 @@ function QuantomLib:CreateWindow(config)
             ButtonClickable.Parent = ButtonFrame
 
             local ButtonLabel = Instance.new("TextLabel")
+            ButtonLabel.Name = randomName(12)
             ButtonLabel.Size = UDim2.new(1, -24, 1, 0)
             ButtonLabel.Position = UDim2.new(0, 12, 0, 0)
             ButtonLabel.BackgroundTransparency = 1
@@ -853,6 +916,7 @@ function QuantomLib:CreateWindow(config)
             ButtonLabel.Parent = ButtonFrame
 
             local ButtonIcon = Instance.new("TextLabel")
+            ButtonIcon.Name = randomName(10)
             ButtonIcon.Size = UDim2.new(0, 16, 0, 16)
             ButtonIcon.Position = UDim2.new(1, -28, 0.5, -8)
             ButtonIcon.BackgroundTransparency = 1
@@ -902,6 +966,7 @@ function QuantomLib:CreateWindow(config)
             local sliderValue = config.Default or config.Min or 0
 
             local SliderFrame = Instance.new("Frame")
+            SliderFrame.Name = randomName(14)
             SliderFrame.Size = UDim2.new(1, 0, 0, isMobile and 50 or 46)
             SliderFrame.BackgroundColor3 = Theme.Surface
             SliderFrame.BorderSizePixel = 0
@@ -913,6 +978,7 @@ function QuantomLib:CreateWindow(config)
             SliderCorner.Parent = SliderFrame
 
             local SliderLabel = Instance.new("TextLabel")
+            SliderLabel.Name = randomName(12)
             SliderLabel.Size = UDim2.new(0.6, 0, 0, 18)
             SliderLabel.Position = UDim2.new(0, 12, 0, 8)
             SliderLabel.BackgroundTransparency = 1
@@ -925,6 +991,7 @@ function QuantomLib:CreateWindow(config)
             SliderLabel.Parent = SliderFrame
 
             local ValueLabel = Instance.new("TextLabel")
+            ValueLabel.Name = randomName(11)
             ValueLabel.Size = UDim2.new(0, 40, 0, 18)
             ValueLabel.Position = UDim2.new(1, -52, 0, 8)
             ValueLabel.BackgroundTransparency = 1
@@ -937,6 +1004,7 @@ function QuantomLib:CreateWindow(config)
             ValueLabel.Parent = SliderFrame
 
             local SliderTrack = Instance.new("Frame")
+            SliderTrack.Name = randomName(13)
             SliderTrack.Size = UDim2.new(1, -24, 0, isMobile and 5 or 4)
             SliderTrack.Position = UDim2.new(0, 12, 1, -12)
             SliderTrack.BackgroundColor3 = Theme.Border
@@ -949,6 +1017,7 @@ function QuantomLib:CreateWindow(config)
             TrackCorner.Parent = SliderTrack
 
             local SliderFill = Instance.new("Frame")
+            SliderFill.Name = randomName(11)
             SliderFill.Size = UDim2.new((sliderValue - config.Min) / (config.Max - config.Min), 0, 1, 0)
             SliderFill.BackgroundColor3 = Theme.Primary
             SliderFill.BorderSizePixel = 0
@@ -1008,6 +1077,7 @@ function QuantomLib:CreateWindow(config)
 
         function Tab:AddTextbox(config)
             local TextboxFrame = Instance.new("Frame")
+            TextboxFrame.Name = randomName(14)
             TextboxFrame.Size = UDim2.new(1, 0, 0, isMobile and 36 or 32)
             TextboxFrame.BackgroundColor3 = Theme.Surface
             TextboxFrame.BorderSizePixel = 0
@@ -1019,6 +1089,7 @@ function QuantomLib:CreateWindow(config)
             TextboxCorner.Parent = TextboxFrame
 
             local TextboxLabel = Instance.new("TextLabel")
+            TextboxLabel.Name = randomName(12)
             TextboxLabel.Size = UDim2.new(0, 80, 1, 0)
             TextboxLabel.Position = UDim2.new(0, 12, 0, 0)
             TextboxLabel.BackgroundTransparency = 1
@@ -1031,6 +1102,7 @@ function QuantomLib:CreateWindow(config)
             TextboxLabel.Parent = TextboxFrame
 
             local TextboxInput = Instance.new("TextBox")
+            TextboxInput.Name = randomName(13)
             TextboxInput.Size = UDim2.new(1, -110, 0, isMobile and 26 or 22)
             TextboxInput.Position = UDim2.new(0, 95, 0.5, isMobile and -13 or -11)
             TextboxInput.BackgroundColor3 = Theme.SurfaceLight
@@ -1062,10 +1134,11 @@ function QuantomLib:CreateWindow(config)
         end
 
         function Tab:AddDropdown(config)
-            local selectedOption = config.Default or config.Options[1] or ""
+            local selectedOption = config.Default or (config.Options and config.Options[1]) or ""
             local dropdownOpen = false
 
             local DropdownFrame = Instance.new("Frame")
+            DropdownFrame.Name = randomName(14)
             DropdownFrame.Size = UDim2.new(1, 0, 0, isMobile and 36 or 32)
             DropdownFrame.BackgroundColor3 = Theme.Surface
             DropdownFrame.BorderSizePixel = 0
@@ -1077,6 +1150,7 @@ function QuantomLib:CreateWindow(config)
             DropdownCorner.Parent = DropdownFrame
 
             local DropdownLabel = Instance.new("TextLabel")
+            DropdownLabel.Name = randomName(12)
             DropdownLabel.Size = UDim2.new(0, 100, 1, 0)
             DropdownLabel.Position = UDim2.new(0, 12, 0, 0)
             DropdownLabel.BackgroundTransparency = 1
@@ -1089,6 +1163,7 @@ function QuantomLib:CreateWindow(config)
             DropdownLabel.Parent = DropdownFrame
 
             local DropdownButton = Instance.new("TextButton")
+            DropdownButton.Name = randomName(13)
             DropdownButton.Size = UDim2.new(1, -120, 0, isMobile and 26 or 22)
             DropdownButton.Position = UDim2.new(0, 110, 0.5, isMobile and -13 or -11)
             DropdownButton.BackgroundColor3 = Theme.SurfaceLight
@@ -1110,6 +1185,7 @@ function QuantomLib:CreateWindow(config)
             DropdownPadding.Parent = DropdownButton
 
             local Arrow = Instance.new("TextLabel")
+            Arrow.Name = randomName(8)
             Arrow.Size = UDim2.new(0, 20, 1, 0)
             Arrow.Position = UDim2.new(1, -24, 0, 0)
             Arrow.BackgroundTransparency = 1
@@ -1121,6 +1197,7 @@ function QuantomLib:CreateWindow(config)
             Arrow.Parent = DropdownButton
 
             local OptionsList = Instance.new("Frame")
+            OptionsList.Name = randomName(13)
             OptionsList.Size = UDim2.new(1, -120, 0, 0)
             OptionsList.Position = UDim2.new(0, 110, 1, 4)
             OptionsList.BackgroundColor3 = Theme.SurfaceLight
@@ -1140,6 +1217,7 @@ function QuantomLib:CreateWindow(config)
 
             for _, option in ipairs(config.Options or {}) do
                 local OptionButton = Instance.new("TextButton")
+                OptionButton.Name = randomName(12)
                 OptionButton.Size = UDim2.new(1, 0, 0, isMobile and 28 or 24)
                 OptionButton.BackgroundColor3 = Theme.SurfaceLight
                 OptionButton.Text = option
@@ -1201,7 +1279,6 @@ function QuantomLib:CreateWindow(config)
             }
         end
 
-
         function Tab:AddKeybind(config)
             local currentKey = config.Default or Enum.KeyCode.E
             local blacklistedKeys = {
@@ -1212,6 +1289,7 @@ function QuantomLib:CreateWindow(config)
             local keybindChanging = false
 
             local KeybindFrame = Instance.new("Frame")
+            KeybindFrame.Name = randomName(14)
             KeybindFrame.Size = UDim2.new(1, 0, 0, isMobile and 36 or 32)
             KeybindFrame.BackgroundColor3 = Theme.Surface
             KeybindFrame.BorderSizePixel = 0
@@ -1223,6 +1301,7 @@ function QuantomLib:CreateWindow(config)
             KeybindCorner.Parent = KeybindFrame
 
             local KeybindLabel = Instance.new("TextLabel")
+            KeybindLabel.Name = randomName(12)
             KeybindLabel.Size = UDim2.new(0.55, 0, 1, 0)
             KeybindLabel.Position = UDim2.new(0, 12, 0, 0)
             KeybindLabel.BackgroundTransparency = 1
@@ -1234,8 +1313,8 @@ function QuantomLib:CreateWindow(config)
             KeybindLabel.ZIndex = 4
             KeybindLabel.Parent = KeybindFrame
 
-            -- Botão do Keybind
             local KeybindButton = Instance.new("TextButton")
+            KeybindButton.Name = randomName(13)
             KeybindButton.Size = UDim2.new(0, isMobile and 75 or 70, 0, isMobile and 26 or 22)
             KeybindButton.Position = UDim2.new(1, isMobile and -85 or -80, 0.5, isMobile and -13 or -11)
             KeybindButton.BackgroundColor3 = Theme.SurfaceLight
@@ -1257,7 +1336,6 @@ function QuantomLib:CreateWindow(config)
             KeybindStroke.Transparency = 0.5
             KeybindStroke.Parent = KeybindButton
 
-            -- Hover effects
             KeybindButton.MouseEnter:Connect(function()
                 if not keybindChanging then
                     TweenService:Create(KeybindButton, TweenInfo.new(0.2), {
@@ -1280,7 +1358,6 @@ function QuantomLib:CreateWindow(config)
                 end
             end)
 
-            -- Click para mudar keybind
             KeybindButton.MouseButton1Click:Connect(function()
                 if keybindChanging then return end
 
@@ -1300,7 +1377,6 @@ function QuantomLib:CreateWindow(config)
                     if input.UserInputType == Enum.UserInputType.Keyboard then
                         local key = input.KeyCode
 
-                        -- Verificar se a tecla é válida
                         local isBlacklisted = false
                         for _, blacklisted in ipairs(blacklistedKeys) do
                             if key == blacklisted then
@@ -1310,7 +1386,7 @@ function QuantomLib:CreateWindow(config)
                         end
 
                         if isBlacklisted then
-                            Window:Notify({
+                            CreateNotification({
                                 Title = "Keybind Inválido",
                                 Message = "Essa tecla não pode ser usada!",
                                 Type = "Error",
@@ -1323,7 +1399,7 @@ function QuantomLib:CreateWindow(config)
                             KeybindButton.Text = key.Name
                             KeybindButton.TextColor3 = Theme.Success
 
-                            Window:Notify({
+                            CreateNotification({
                                 Title = "Keybind Alterado",
                                 Message = "Nova tecla: " .. key.Name,
                                 Type = "Success",
@@ -1348,11 +1424,9 @@ function QuantomLib:CreateWindow(config)
                 end)
             end)
 
-            -- Detectar quando a tecla é pressionada
             UserInputService.InputBegan:Connect(function(input, gameProcessed)
                 if input.UserInputType == Enum.UserInputType.Keyboard and input.KeyCode == currentKey then
                     if not gameProcessed and config.Callback then
-                        -- Animação de ativação
                         TweenService:Create(KeybindButton, TweenInfo.new(0.1), {
                             Size = UDim2.new(0, (isMobile and 75 or 70) + 5, 0, (isMobile and 26 or 22) + 5)
                         }):Play()
@@ -1370,292 +1444,6 @@ function QuantomLib:CreateWindow(config)
                 SetKey = function(self, key)
                     currentKey = key
                     KeybindButton.Text = key.Name
-                end
-            }
-        end
-
-        function Tab:AddColorPicker(config)
-            local currentColor = config.Default or Color3.fromRGB(255, 255, 255)
-
-            local ColorPickerFrame = Instance.new("Frame")
-            ColorPickerFrame.Size = UDim2.new(1, 0, 0, isMobile and 36 or 32)
-            ColorPickerFrame.BackgroundColor3 = Theme.Surface
-            ColorPickerFrame.BorderSizePixel = 0
-            ColorPickerFrame.ZIndex = 3
-            ColorPickerFrame.Parent = ContentFrame
-
-            local ColorPickerCorner = Instance.new("UICorner")
-            ColorPickerCorner.CornerRadius = UDim.new(0, 4)
-            ColorPickerCorner.Parent = ColorPickerFrame
-
-            local ColorLabel = Instance.new("TextLabel")
-            ColorLabel.Size = UDim2.new(0.6, 0, 1, 0)
-            ColorLabel.Position = UDim2.new(0, 12, 0, 0)
-            ColorLabel.BackgroundTransparency = 1
-            ColorLabel.Text = config.Name or "Color Picker"
-            ColorLabel.Font = Enum.Font.Gotham
-            ColorLabel.TextSize = isMobile and 11 or 12
-            ColorLabel.TextColor3 = Theme.Text
-            ColorLabel.TextXAlignment = Enum.TextXAlignment.Left
-            ColorLabel.ZIndex = 4
-            ColorLabel.Parent = ColorPickerFrame
-
-            local ColorDisplay = Instance.new("TextButton")
-            ColorDisplay.Size = UDim2.new(0, isMobile and 60 or 50, 0, isMobile and 26 or 22)
-            ColorDisplay.Position = UDim2.new(1, isMobile and -70 or -60, 0.5, isMobile and -13 or -11)
-            ColorDisplay.BackgroundColor3 = currentColor
-            ColorDisplay.Text = ""
-            ColorDisplay.AutoButtonColor = false
-            ColorDisplay.ZIndex = 4
-            ColorDisplay.Parent = ColorPickerFrame
-
-            local DisplayCorner = Instance.new("UICorner")
-            DisplayCorner.CornerRadius = UDim.new(0, 4)
-            DisplayCorner.Parent = ColorDisplay
-
-            local DisplayStroke = Instance.new("UIStroke")
-            DisplayStroke.Color = Theme.Border
-            DisplayStroke.Thickness = 1
-            DisplayStroke.Transparency = 0.5
-            DisplayStroke.Parent = ColorDisplay
-
-            local ColorPickerPopup = Instance.new("Frame")
-            ColorPickerPopup.Size = UDim2.new(0, isMobile and 200 or 220, 0, isMobile and 200 or 220)
-            ColorPickerPopup.Position = UDim2.new(1, -10, 0, 0)
-            ColorPickerPopup.BackgroundColor3 = Theme.Surface
-            ColorPickerPopup.BorderSizePixel = 0
-            ColorPickerPopup.Visible = false
-            ColorPickerPopup.ZIndex = 100
-            ColorPickerPopup.Parent = ColorPickerFrame
-
-            local PopupCorner = Instance.new("UICorner")
-            PopupCorner.CornerRadius = UDim.new(0, 6)
-            PopupCorner.Parent = ColorPickerPopup
-
-            local PopupStroke = Instance.new("UIStroke")
-            PopupStroke.Color = Theme.Border
-            PopupStroke.Thickness = 1
-            PopupStroke.Transparency = 0.3
-            PopupStroke.Parent = ColorPickerPopup
-
-            local ColorCanvas = Instance.new("ImageButton")
-            ColorCanvas.Size = UDim2.new(1, -20, 1, -60)
-            ColorCanvas.Position = UDim2.new(0, 10, 0, 10)
-            ColorCanvas.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
-            ColorCanvas.BorderSizePixel = 0
-            ColorCanvas.ZIndex = 101
-            ColorCanvas.Parent = ColorPickerPopup
-
-            local CanvasCorner = Instance.new("UICorner")
-            CanvasCorner.CornerRadius = UDim.new(0, 4)
-            CanvasCorner.Parent = ColorCanvas
-
-            local WhiteGradient = Instance.new("Frame")
-            WhiteGradient.Size = UDim2.new(1, 0, 1, 0)
-            WhiteGradient.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-            WhiteGradient.BackgroundTransparency = 0
-            WhiteGradient.BorderSizePixel = 0
-            WhiteGradient.ZIndex = 102
-            WhiteGradient.Parent = ColorCanvas
-
-            local WhiteCorner = Instance.new("UICorner")
-            WhiteCorner.CornerRadius = UDim.new(0, 4)
-            WhiteCorner.Parent = WhiteGradient
-
-            local WhiteGrad = Instance.new("UIGradient")
-            WhiteGrad.Transparency = NumberSequence.new{
-                NumberSequenceKeypoint.new(0, 0),
-                NumberSequenceKeypoint.new(1, 1)
-            }
-            WhiteGrad.Rotation = 0
-            WhiteGrad.Parent = WhiteGradient
-
-            local BlackGradient = Instance.new("Frame")
-            BlackGradient.Size = UDim2.new(1, 0, 1, 0)
-            BlackGradient.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
-            BlackGradient.BackgroundTransparency = 0
-            BlackGradient.BorderSizePixel = 0
-            BlackGradient.ZIndex = 103
-            BlackGradient.Parent = ColorCanvas
-
-            local BlackCorner = Instance.new("UICorner")
-            BlackCorner.CornerRadius = UDim.new(0, 4)
-            BlackCorner.Parent = BlackGradient
-
-            local BlackGrad = Instance.new("UIGradient")
-            BlackGrad.Transparency = NumberSequence.new{
-                NumberSequenceKeypoint.new(0, 1),
-                NumberSequenceKeypoint.new(1, 0)
-            }
-            BlackGrad.Rotation = 90
-            BlackGrad.Parent = BlackGradient
-
-            local HueSlider = Instance.new("ImageButton")
-            HueSlider.Size = UDim2.new(1, -20, 0, isMobile and 20 or 16)
-            HueSlider.Position = UDim2.new(0, 10, 1, isMobile and -35 or -30)
-            HueSlider.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-            HueSlider.BorderSizePixel = 0
-            HueSlider.ZIndex = 101
-            HueSlider.Parent = ColorPickerPopup
-
-            local HueCorner = Instance.new("UICorner")
-            HueCorner.CornerRadius = UDim.new(0, 4)
-            HueCorner.Parent = HueSlider
-
-            local HueGradient = Instance.new("UIGradient")
-            HueGradient.Color = ColorSequence.new{
-                ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 0, 0)),
-                ColorSequenceKeypoint.new(0.17, Color3.fromRGB(255, 255, 0)),
-                ColorSequenceKeypoint.new(0.33, Color3.fromRGB(0, 255, 0)),
-                ColorSequenceKeypoint.new(0.5, Color3.fromRGB(0, 255, 255)),
-                ColorSequenceKeypoint.new(0.67, Color3.fromRGB(0, 0, 255)),
-                ColorSequenceKeypoint.new(0.83, Color3.fromRGB(255, 0, 255)),
-                ColorSequenceKeypoint.new(1, Color3.fromRGB(255, 0, 0))
-            }
-            HueGradient.Rotation = 0
-            HueGradient.Parent = HueSlider
-
-            local currentHue = 0
-            local currentSat = 1
-            local currentVal = 1
-
-            local function updateColor()
-                local color = Color3.fromHSV(currentHue, currentSat, currentVal)
-                currentColor = color
-                ColorDisplay.BackgroundColor3 = color
-
-                if config.Callback then
-                    config.Callback(color)
-                end
-            end
-
-            local function rgbToHsv(color)
-                local r, g, b = color.R, color.G, color.B
-                local max = math.max(r, g, b)
-                local min = math.min(r, g, b)
-                local delta = max - min
-
-                local h, s, v = 0, 0, max
-
-                if delta > 0 then
-                    if max == r then
-                        h = ((g - b) / delta) % 6
-                    elseif max == g then
-                        h = (b - r) / delta + 2
-                    else
-                        h = (r - g) / delta + 4
-                    end
-                    h = h / 6
-                    s = delta / max
-                end
-
-                return h, s, v
-            end
-
-            currentHue, currentSat, currentVal = rgbToHsv(currentColor)
-            ColorCanvas.BackgroundColor3 = Color3.fromHSV(currentHue, 1, 1)
-
-            local canvasDragging = false
-            ColorCanvas.InputBegan:Connect(function(input)
-                if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-                    canvasDragging = true
-                    local pos = ColorCanvas.AbsolutePosition
-                    local size = ColorCanvas.AbsoluteSize
-                    local mousePos = input.Position
-
-                    local x = math.clamp(mousePos.X - pos.X, 0, size.X) / size.X
-                    local y = math.clamp(mousePos.Y - pos.Y, 0, size.Y) / size.Y
-
-                    currentSat = x
-                    currentVal = 1 - y
-                    updateColor()
-                end
-            end)
-
-            ColorCanvas.InputEnded:Connect(function(input)
-                if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-                    canvasDragging = false
-                end
-            end)
-
-            UserInputService.InputChanged:Connect(function(input)
-                if canvasDragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
-                    local pos = ColorCanvas.AbsolutePosition
-                    local size = ColorCanvas.AbsoluteSize
-                    local mousePos = input.Position
-
-                    local x = math.clamp(mousePos.X - pos.X, 0, size.X) / size.X
-                    local y = math.clamp(mousePos.Y - pos.Y, 0, size.Y) / size.Y
-
-                    currentSat = x
-                    currentVal = 1 - y
-                    updateColor()
-                end
-            end)
-
-            local hueDragging = false
-            HueSlider.InputBegan:Connect(function(input)
-                if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-                    hueDragging = true
-                    local pos = HueSlider.AbsolutePosition.X
-                    local size = HueSlider.AbsoluteSize.X
-                    local mousePos = input.Position.X
-
-                    currentHue = math.clamp((mousePos - pos) / size, 0, 1)
-                    ColorCanvas.BackgroundColor3 = Color3.fromHSV(currentHue, 1, 1)
-                    updateColor()
-                end
-            end)
-
-            HueSlider.InputEnded:Connect(function(input)
-                if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-                    hueDragging = false
-                end
-            end)
-
-            UserInputService.InputChanged:Connect(function(input)
-                if hueDragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
-                    local pos = HueSlider.AbsolutePosition.X
-                    local size = HueSlider.AbsoluteSize.X
-                    local mousePos = input.Position.X
-
-                    currentHue = math.clamp((mousePos - pos) / size, 0, 1)
-                    ColorCanvas.BackgroundColor3 = Color3.fromHSV(currentHue, 1, 1)
-                    updateColor()
-                end
-            end)
-
-            ColorDisplay.MouseButton1Click:Connect(function()
-                ColorPickerPopup.Visible = not ColorPickerPopup.Visible
-            end)
-
-            UserInputService.InputBegan:Connect(function(input)
-                if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-                    if ColorPickerPopup.Visible then
-                        local mousePos = input.Position
-                        local popupPos = ColorPickerPopup.AbsolutePosition
-                        local popupSize = ColorPickerPopup.AbsoluteSize
-
-                        if mousePos.X < popupPos.X or mousePos.X > popupPos.X + popupSize.X or
-                           mousePos.Y < popupPos.Y or mousePos.Y > popupPos.Y + popupSize.Y then
-                            local displayPos = ColorDisplay.AbsolutePosition
-                            local displaySize = ColorDisplay.AbsoluteSize
-
-                            if not (mousePos.X >= displayPos.X and mousePos.X <= displayPos.X + displaySize.X and
-                                   mousePos.Y >= displayPos.Y and mousePos.Y <= displayPos.Y + displaySize.Y) then
-                                ColorPickerPopup.Visible = false
-                            end
-                        end
-                    end
-                end
-            end)
-
-            return {
-                SetValue = function(self, color)
-                    currentColor = color
-                    ColorDisplay.BackgroundColor3 = color
-                    currentHue, currentSat, currentVal = rgbToHsv(color)
-                    ColorCanvas.BackgroundColor3 = Color3.fromHSV(currentHue, 1, 1)
                 end
             }
         end
