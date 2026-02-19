@@ -1,5 +1,7 @@
+# QuantomLib — Documentação
 
-### 2. Carregar no Script
+## 📦 Carregar no Script
+
 ```lua
 local QuantomLib = loadstring(game:HttpGet('https://raw.githubusercontent.com/Dimess1/ui/refs/heads/main/library.lua'))()
 ```
@@ -10,14 +12,21 @@ local QuantomLib = loadstring(game:HttpGet('https://raw.githubusercontent.com/Di
 
 ```lua
 local Window = QuantomLib:CreateWindow({
-    Name = "MEU HUB",
-    Version = "v1.0.0"
+    Name       = "MEU HUB",
+    Version    = "v1.0.0",
+    MinimizeKey = Enum.KeyCode.RightShift -- opcional
 })
 ```
 
 **Parâmetros:**
-- `Name` (string) - Nome do hub
-- `Version` (string) - Versão exibida no header
+
+| Parâmetro | Tipo | Descrição |
+|---|---|---|
+| `Name` | string | Nome do hub exibido no header |
+| `Version` | string | Versão exibida no header |
+| `MinimizeKey` | Enum.KeyCode | Tecla padrão para minimizar/abrir (padrão: `RightShift`) |
+
+> A tab **⚙ Config** é criada automaticamente no final da sidebar e permite ao utilizador alterar a keybind de minimizar em runtime.
 
 ---
 
@@ -31,15 +40,15 @@ local Tab = Window:CreateTab({
 ```
 
 **Parâmetros:**
-- `Name` (string) - Nome da tab
-- `Icon` (string) - Ícone emoji
+- `Name` (string) — Nome da tab
+- `Icon` (string) — Ícone emoji
 
 **Exemplo com múltiplas tabs:**
 ```lua
-local MainTab = Window:CreateTab({Name = "Main", Icon = "🏠"})
-local CombatTab = Window:CreateTab({Name = "Combat", Icon = "⚔️"})
+local MainTab   = Window:CreateTab({Name = "Main",    Icon = "🏠"})
+local CombatTab = Window:CreateTab({Name = "Combat",  Icon = "⚔️"})
 local VisualsTab = Window:CreateTab({Name = "Visuals", Icon = "👁"})
-local MiscTab = Window:CreateTab({Name = "Misc", Icon = "⚙️"})
+local MiscTab   = Window:CreateTab({Name = "Misc",    Icon = "🔧"})
 ```
 
 ---
@@ -53,7 +62,7 @@ Tab:AddSection("CONFIGURAÇÕES GERAIS")
 ```
 
 **Parâmetros:**
-- `title` (string) - Texto do separador
+- `title` (string) — Texto do separador em maiúsculas
 
 ---
 
@@ -61,19 +70,18 @@ Tab:AddSection("CONFIGURAÇÕES GERAIS")
 
 ```lua
 Tab:AddToggle({
-    Name = "Auto Farm",
+    Name    = "Auto Farm",
     Default = false,
     Callback = function(value)
         _G.AutoFarm = value
-        print("Auto Farm:", value)
     end
 })
 ```
 
 **Parâmetros:**
-- `Name` (string) - Nome do toggle
-- `Default` (boolean) - Valor inicial (true/false)
-- `Callback` (function) - Função executada ao mudar
+- `Name` (string) — Nome do toggle
+- `Default` (boolean) — Valor inicial
+- `Callback` (function) — Chamada ao mudar estado, recebe `value` (boolean)
 
 **Métodos:**
 ```lua
@@ -83,45 +91,85 @@ MyToggle:SetValue(true)
 
 ---
 
-### 3️⃣ AddButton (Botão)
+### 3️⃣ AddToggleKeybind (Toggle + Tecla de Atalho) 🆕
+
+Elemento combinado numa única linha: toggle à esquerda e keybind à direita. Clicar no toggle **ou** pressionar a tecla atribuída dispara o mesmo callback com o novo estado.
+
+```lua
+Tab:AddToggleKeybind({
+    Name    = "Aimbot",
+    Default = false,
+    Key     = Enum.KeyCode.X,
+    Callback = function(state)
+        _G.AimbotEnabled = state
+        print("Aimbot:", state)
+    end,
+    KeyChanged = function(newKey)        -- opcional
+        print("Nova tecla:", newKey.Name)
+    end
+})
+```
+
+**Parâmetros:**
+
+| Parâmetro | Tipo | Descrição |
+|---|---|---|
+| `Name` | string | Nome do elemento |
+| `Default` | boolean | Estado inicial do toggle |
+| `Key` | Enum.KeyCode | Tecla de atalho padrão |
+| `Callback` | function | Chamada ao mudar estado (toggle ou tecla), recebe `state` (boolean) |
+| `KeyChanged` | function | Chamada quando a tecla é alterada pelo utilizador, recebe `newKey` |
+
+**Métodos:**
+```lua
+local MyTK = Tab:AddToggleKeybind({...})
+MyTK:SetToggle(true)
+MyTK:SetKey(Enum.KeyCode.F)
+MyTK:GetState()  -- retorna boolean
+MyTK:GetKey()    -- retorna Enum.KeyCode
+```
+
+> **Teclas bloqueadas:** W, A, S, D, Space, LeftShift e LeftControl não podem ser atribuídas como keybind.
+
+---
+
+### 4️⃣ AddButton (Botão)
 
 ```lua
 Tab:AddButton({
     Name = "Teleport Spawn",
     Callback = function()
         game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(0, 50, 0)
-        print("Teleportado!")
     end
 })
 ```
 
 **Parâmetros:**
-- `Name` (string) - Nome do botão
-- `Callback` (function) - Função executada ao clicar
+- `Name` (string) — Nome do botão
+- `Callback` (function) — Chamada ao clicar
 
 ---
 
-### 4️⃣ AddSlider (Controle Deslizante)
+### 5️⃣ AddSlider (Controle Deslizante)
 
 ```lua
 Tab:AddSlider({
-    Name = "WalkSpeed",
-    Min = 16,
-    Max = 200,
+    Name    = "WalkSpeed",
+    Min     = 16,
+    Max     = 200,
     Default = 16,
     Callback = function(value)
         game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = value
-        print("Speed:", value)
     end
 })
 ```
 
 **Parâmetros:**
-- `Name` (string) - Nome do slider
-- `Min` (number) - Valor mínimo
-- `Max` (number) - Valor máximo
-- `Default` (number) - Valor inicial
-- `Callback` (function) - Função executada ao mudar
+- `Name` (string) — Nome do slider
+- `Min` (number) — Valor mínimo
+- `Max` (number) — Valor máximo
+- `Default` (number) — Valor inicial
+- `Callback` (function) — Chamada ao mudar, recebe `value` (number)
 
 **Métodos:**
 ```lua
@@ -131,27 +179,24 @@ MySlider:SetValue(100)
 
 ---
 
-### 5️⃣ AddTextbox (Campo de Texto)
+### 6️⃣ AddTextbox (Campo de Texto)
 
 ```lua
 Tab:AddTextbox({
-    Name = "Player Name",
-    Default = "",
+    Name        = "Player Name",
+    Default     = "",
     Placeholder = "Digite o nome...",
     Callback = function(value)
-        local player = game.Players:FindFirstChild(value)
-        if player then
-            print("Jogador encontrado:", player.Name)
-        end
+        print("Texto:", value)
     end
 })
 ```
 
 **Parâmetros:**
-- `Name` (string) - Nome do textbox
-- `Default` (string) - Texto inicial
-- `Placeholder` (string) - Texto placeholder
-- `Callback` (function) - Função executada ao pressionar Enter
+- `Name` (string) — Nome do textbox
+- `Default` (string) — Texto inicial
+- `Placeholder` (string) — Texto exibido quando vazio
+- `Callback` (function) — Chamada ao pressionar Enter, recebe `value` (string)
 
 **Métodos:**
 ```lua
@@ -161,25 +206,25 @@ MyTextbox:SetValue("NovoTexto")
 
 ---
 
-### 6️⃣ AddDropdown (Menu Suspenso)
+### 7️⃣ AddDropdown (Menu Suspenso — Seleção Simples)
 
 ```lua
 Tab:AddDropdown({
-    Name = "Weapon",
+    Name    = "Weapon",
     Options = {"Sword", "Gun", "Knife", "Bomb"},
     Default = "Sword",
     Callback = function(value)
         _G.SelectedWeapon = value
-        print("Arma selecionada:", value)
+        print("Arma:", value)
     end
 })
 ```
 
 **Parâmetros:**
-- `Name` (string) - Nome do dropdown
-- `Options` (table) - Lista de opções
-- `Default` (string) - Opção inicial
-- `Callback` (function) - Função executada ao selecionar
+- `Name` (string) — Nome do dropdown
+- `Options` (table) — Lista de opções
+- `Default` (string) — Opção inicial
+- `Callback` (function) — Chamada ao selecionar, recebe `value` (string)
 
 **Métodos:**
 ```lua
@@ -187,34 +232,96 @@ local MyDropdown = Tab:AddDropdown({...})
 MyDropdown:SetValue("Gun")
 ```
 
+---
 
-### 7️⃣ AddColorPicker (Seletor de Cor)
+### 8️⃣ AddMultiDropdown (Menu Suspenso — Seleção Múltipla) 🆕
+
+Igual ao dropdown normal mas permite selecionar **várias opções simultaneamente**. Cada item mostra `✓` quando ativo.
 
 ```lua
-Tab:AddColorPicker({
-    Name = "ESP Color",
-    Default = Color3.fromRGB(255, 0, 0),
-    Callback = function(color)
-        _G.ESPColor = color
-        print("Cor selecionada:", color)
+Tab:AddMultiDropdown({
+    Name        = "Gamemodes",
+    Options     = {"Sword", "Gun", "Knife", "Bomb"},
+    Default     = {"Sword", "Gun"},     -- pré-selecionados (opcional)
+    Placeholder = "Selecionar...",      -- texto quando nada selecionado (opcional)
+    Callback = function(selected)
+        -- selected = tabela com todos os itens ativos
+        print(table.concat(selected, ", "))
     end
 })
 ```
 
 **Parâmetros:**
 
-- `Name` (string) - Nome do color picker
-- `Default` (Color3) - Cor inicial
-- `Callback` (function) - Função executada ao mudar a cor
+| Parâmetro | Tipo | Descrição |
+|---|---|---|
+| `Name` | string | Nome do elemento |
+| `Options` | table | Lista de opções disponíveis |
+| `Default` | table | Opções pré-selecionadas |
+| `Placeholder` | string | Texto quando nenhum item está selecionado |
+| `Callback` | function | Chamada ao mudar seleção, recebe `selected` (table) |
 
 **Métodos:**
-
 ```lua
-local MyColorPicker = Tab:AddColorPicker({...})
-MyColorPicker:SetValue(Color3.fromRGB(0, 255, 0))
+local MyMulti = Tab:AddMultiDropdown({...})
+MyMulti:SetValues({"Gun", "Knife"}) -- substitui seleção atual
+MyMulti:GetValues()                 -- retorna tabela com selecionados
+MyMulti:AddOption("Grenade")        -- adiciona nova opção dinamicamente
 ```
 
 ---
+
+### 9️⃣ AddColorPicker (Seletor de Cor)
+
+```lua
+Tab:AddColorPicker({
+    Name    = "ESP Color",
+    Default = Color3.fromRGB(255, 0, 0),
+    Callback = function(color)
+        _G.ESPColor = color
+    end
+})
+```
+
+**Parâmetros:**
+- `Name` (string) — Nome do color picker
+- `Default` (Color3) — Cor inicial
+- `Callback` (function) — Chamada ao mudar cor, recebe `color` (Color3)
+
+**Métodos:**
+```lua
+local MyCP = Tab:AddColorPicker({...})
+MyCP:SetValue(Color3.fromRGB(0, 255, 0))
+```
+
+---
+
+### 🔟 AddKeybind (Tecla de Atalho)
+
+```lua
+Tab:AddKeybind({
+    Name    = "Ativar ESP",
+    Default = Enum.KeyCode.Z,
+    KeyChanged = function(newKey)    -- opcional
+        print("Tecla alterada para:", newKey.Name)
+    end,
+    Callback = function()
+        -- executado ao pressionar a tecla
+        print("ESP ativado!")
+    end
+})
+```
+
+**Parâmetros:**
+
+| Parâmetro | Tipo | Descrição |
+|---|---|---|
+| `Name` | string | Nome do keybind |
+| `Default` | Enum.KeyCode | Tecla padrão |
+| `Callback` | function | Chamada ao pressionar a tecla |
+| `KeyChanged` | function | Chamada quando o utilizador reatribui a tecla, recebe `newKey` |
+
+> Para um toggle com keybind integrado, usa `AddToggleKeybind` em vez deste.
 
 ---
 
@@ -222,48 +329,24 @@ MyColorPicker:SetValue(Color3.fromRGB(0, 255, 0))
 
 ```lua
 Window:Notify({
-    Title = "Título",
-    Message = "Mensagem aqui",
-    Type = "Success",
+    Title    = "Título",
+    Message  = "Mensagem aqui",
+    Type     = "Success",
     Duration = 5
 })
 ```
 
 **Parâmetros:**
-- `Title` (string) - Título da notificação
-- `Message` (string) - Mensagem
-- `Type` (string) - Tipo: "Success", "Error", "Warning", "Info"
-- `Duration` (number) - Duração em segundos (padrão: 5)
+- `Title` (string) — Título
+- `Message` (string) — Mensagem
+- `Type` (string) — `"Success"` | `"Error"` | `"Warning"` | `"Info"`
+- `Duration` (number) — Duração em segundos (padrão: 5)
 
-**Tipos de notificação:**
 ```lua
--- Sucesso (verde)
-Window:Notify({
-    Title = "Sucesso!",
-    Message = "Operação concluída",
-    Type = "Success"
-})
-
--- Erro (vermelho)
-Window:Notify({
-    Title = "Erro!",
-    Message = "Algo deu errado",
-    Type = "Error"
-})
-
--- Aviso (amarelo)
-Window:Notify({
-    Title = "Atenção!",
-    Message = "Cuidado com isso",
-    Type = "Warning"
-})
-
--- Informação (azul)
-Window:Notify({
-    Title = "Info",
-    Message = "Informação importante",
-    Type = "Info"
-})
+Window:Notify({Title = "Sucesso!",  Message = "Operação concluída",    Type = "Success"})
+Window:Notify({Title = "Erro!",     Message = "Algo deu errado",       Type = "Error"})
+Window:Notify({Title = "Atenção!",  Message = "Cuidado com isso",      Type = "Warning"})
+Window:Notify({Title = "Info",      Message = "Informação importante", Type = "Info"})
 ```
 
 ---
@@ -271,74 +354,57 @@ Window:Notify({
 ## 🎮 Controles da Janela
 
 ```lua
--- Mostrar UI
-Window:Show()
-
--- Esconder UI
-Window:Hide()
-
--- Alternar visibilidade
-Window:Toggle()
+Window:Show()    -- Mostrar UI
+Window:Hide()    -- Esconder UI
+Window:Toggle()  -- Alternar visibilidade
 ```
 
-**Atalho de teclado:** Pressione `RightShift` para abrir/fechar a UI
+**Atalho de teclado:** Configurável — padrão `RightShift`.  
+Pode ser alterado via parâmetro `MinimizeKey` na criação da janela **ou** em runtime pela tab **⚙ Config** que é gerada automaticamente no final da sidebar.
 
 ---
 
 ## 📱 Suporte Mobile
 
-A biblioteca detecta automaticamente dispositivos mobile e ajusta:
-- Tamanho dos elementos
-- Botão flutuante arrastável
-- Layout otimizado para toque
+A biblioteca deteta automaticamente dispositivos mobile e ajusta:
+- Tamanho de todos os elementos (touch-friendly)
+- Botão flutuante arrastável para abrir/fechar
+- Layout e fontes otimizados para ecrãs pequenos
 
 ---
 
 ## 💡 Exemplo Completo
 
 ```lua
-local QuantomLib = loadstring(game:HttpGet('SEU-LINK-RAW'))()
+local QuantomLib = loadstring(game:HttpGet('https://raw.githubusercontent.com/Dimess1/ui/refs/heads/main/library.lua'))()
 
 local Window = QuantomLib:CreateWindow({
-    Name = "BLOX FRUITS HUB",
-    Version = "v2.0.0"
+    Name        = "BLOX FRUITS HUB",
+    Version     = "v2.0.0",
+    MinimizeKey = Enum.KeyCode.RightShift
 })
 
-Window:Notify({
-    Title = "Bem-vindo!",
-    Message = "Hub carregado com sucesso",
-    Type = "Success",
-    Duration = 3
-})
+Window:Notify({Title = "Bem-vindo!", Message = "Hub carregado com sucesso", Type = "Success", Duration = 3})
 
-local MainTab = Window:CreateTab({
-    Name = "Principal",
-    Icon = "🏠"
-})
+local MainTab   = Window:CreateTab({Name = "Main",   Icon = "🏠"})
+local CombatTab = Window:CreateTab({Name = "Combat", Icon = "⚔️"})
 
-local CombatTab = Window:CreateTab({
-    Name = "Combate",
-    Icon = "⚔️"
-})
-
+-- ── MAIN ────────────────────────────────────────────
 MainTab:AddSection("AUTO FARM")
 
-MainTab:AddToggle({
-    Name = "Auto Farm Level",
+MainTab:AddToggleKeybind({
+    Name    = "Auto Farm",
     Default = false,
-    Callback = function(value)
-        _G.AutoFarm = value
-        while _G.AutoFarm do
-            wait(0.1)
-            -- Seu código de farm aqui
-        end
+    Key     = Enum.KeyCode.F,
+    Callback = function(state)
+        _G.AutoFarm = state
     end
 })
 
 MainTab:AddSlider({
-    Name = "Farm Speed",
-    Min = 1,
-    Max = 100,
+    Name    = "Farm Speed",
+    Min     = 1,
+    Max     = 100,
     Default = 50,
     Callback = function(value)
         _G.FarmSpeed = value
@@ -348,7 +414,7 @@ MainTab:AddSlider({
 MainTab:AddSection("TELEPORTS")
 
 MainTab:AddDropdown({
-    Name = "Teleport Location",
+    Name    = "Teleport Location",
     Options = {"Spawn", "Shop", "Boss", "Quest"},
     Default = "Spawn",
     Callback = function(value)
@@ -358,35 +424,49 @@ MainTab:AddDropdown({
     end
 })
 
-CombatTab:AddSection("COMBATE")
+MainTab:AddMultiDropdown({
+    Name    = "Farm Targets",
+    Options = {"Mobs", "Bosses", "Players", "Chests"},
+    Default = {"Mobs"},
+    Callback = function(selected)
+        _G.FarmTargets = selected
+    end
+})
 
-CombatTab:AddToggle({
-    Name = "Aimbot",
+-- ── COMBAT ──────────────────────────────────────────
+CombatTab:AddSection("AIMBOT")
+
+CombatTab:AddToggleKeybind({
+    Name    = "Aimbot",
     Default = false,
-    Callback = function(value)
-        _G.Aimbot = value
+    Key     = Enum.KeyCode.X,
+    Callback = function(state)
+        _G.Aimbot = state
     end
 })
 
 CombatTab:AddSlider({
-    Name = "FOV Size",
-    Min = 50,
-    Max = 500,
+    Name    = "FOV Size",
+    Min     = 50,
+    Max     = 500,
     Default = 150,
     Callback = function(value)
         _G.FOVSize = value
     end
 })
 
+CombatTab:AddColorPicker({
+    Name    = "FOV Color",
+    Default = Color3.fromRGB(255, 255, 255),
+    Callback = function(color)
+        _G.FOVColor = color
+    end
+})
+
 CombatTab:AddButton({
     Name = "Kill All",
     Callback = function()
-        Window:Notify({
-            Title = "Kill All",
-            Message = "Executando...",
-            Type = "Info"
-        })
-        -- Seu código aqui
+        Window:Notify({Title = "Kill All", Message = "Executando...", Type = "Info"})
     end
 })
 
@@ -397,16 +477,16 @@ Window:Show()
 
 ## 🎨 Personalização de Cores
 
-As cores são definidas no Theme (linha ~20 do código):
+As cores são definidas no `Theme` (linha ~20 do código):
 
 ```lua
 local Theme = {
-    Background = Color3.fromRGB(12, 12, 14),
-    Surface = Color3.fromRGB(18, 18, 22),
-    Primary = Color3.fromRGB(66, 135, 245),
-    Success = Color3.fromRGB(80, 200, 120),
-    Warning = Color3.fromRGB(255, 200, 80),
-    Error = Color3.fromRGB(255, 80, 80),
+    Background  = Color3.fromRGB(12, 12, 14),
+    Surface     = Color3.fromRGB(18, 18, 22),
+    Primary     = Color3.fromRGB(66, 135, 245),
+    Success     = Color3.fromRGB(80, 200, 120),
+    Warning     = Color3.fromRGB(255, 200, 80),
+    Error       = Color3.fromRGB(255, 80, 80),
     -- ... outras cores
 }
 ```
@@ -415,87 +495,63 @@ local Theme = {
 
 ## ⚙️ Recursos Avançados
 
-### Variáveis Globais
-Use `_G.NomeVariavel` para compartilhar valores entre scripts:
-
-```lua
-Tab:AddToggle({
-    Name = "ESP",
-    Default = false,
-    Callback = function(value)
-        _G.ESPEnabled = value
-    end
-})
-```
-
 ### Loops com Toggle
 ```lua
-local farmToggle = MainTab:AddToggle({
-    Name = "Auto Farm",
+local farmToggle = Tab:AddToggle({
+    Name    = "Auto Farm",
     Default = false,
-    Callback = function(value)
-        _G.AutoFarm = value
-    end
+    Callback = function(v) _G.AutoFarm = v end
 })
 
 task.spawn(function()
     while task.wait(0.5) do
         if _G.AutoFarm then
-            -- Código do farm
+            -- código do farm
         end
     end
 end)
 ```
 
-### Atualizar Valores Dinamicamente
+### Toggle com Keybind + Loop
+```lua
+Tab:AddToggleKeybind({
+    Name    = "Speed Hack",
+    Default = false,
+    Key     = Enum.KeyCode.G,
+    Callback = function(state)
+        _G.SpeedHack = state
+        game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = state and 100 or 16
+    end
+})
+```
+
+### Multi-seleção Dinâmica
+```lua
+local multiDrop = Tab:AddMultiDropdown({
+    Name    = "Layers",
+    Options = {"ESP", "Chams", "Tracers"},
+    Callback = function(selected)
+        for _, v in ipairs(selected) do print(v) end
+    end
+})
+
+-- Adicionar opção depois de criado
+multiDrop:AddOption("Names")
+
+-- Ler selecionados
+local current = multiDrop:GetValues()
+```
+
+### Atualizar Valores em Runtime
 ```lua
 local speedSlider = Tab:AddSlider({...})
+speedSlider:SetValue(200)
 
--- Depois, você pode atualizar:
-speedSlider:SetValue(100)
+local toggle = Tab:AddToggle({...})
+toggle:SetValue(true)
+
+local tk = Tab:AddToggleKeybind({...})
+tk:SetToggle(false)
+tk:SetKey(Enum.KeyCode.H)
 ```
 
----
-
-## 🛠️ Solução de Problemas
-
-### UI não aparece
-```lua
--- Certifique-se de chamar:
-Window:Show()
-```
-
-### Mobile: Botão não aparece
-O botão flutuante aparece automaticamente em dispositivos mobile. Se não aparecer, a UI está configurada para desktop.
-
-### Notificações não funcionam
-Certifique-se de que a janela foi criada antes de chamar `Window:Notify()`
-
----
-
-## 📝 Notas Importantes
-
-1. **Keybind padrão:** `RightShift` para abrir/fechar
-2. **Mobile:** Botão flutuante arrastável automático
-3. **Performance:** Use `task.spawn()` para loops pesados
-4. **Segurança:** Nunca compartilhe links raw com código malicioso
-
----
-
-## 🔗 Links Úteis
-
-- GitHub: Crie repositório público para hospedar
-- WeAreDevs: Para executores Roblox
-- V3rmillion: Comunidade de scripting
-
----
-
-## ✨ Créditos
-
-**Quantom UI Library v1.0**
-Desenvolvido com TweenService e modern design
-Suporte completo para PC e Mobile
-
----
-
-**Última atualização:** Fevereiro 2026
