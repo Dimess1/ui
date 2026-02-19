@@ -284,6 +284,7 @@ function QuantomLib:CreateWindow(config)
     Window.Name = config.Name or "QUANTOM.GG"
     Window.Version = config.Version or "v1.0.0"
     Window.Categories = {}
+    local minimizeKey = config.MinimizeKey or Enum.KeyCode.RightShift
 
     -- Remover UI antiga se existir
     for _, gui in ipairs(PlayerGui:GetChildren()) do
@@ -670,7 +671,7 @@ function QuantomLib:CreateWindow(config)
         CategoryButton.BorderSizePixel = 0
         CategoryButton.Text = ""
         CategoryButton.AutoButtonColor = false
-        CategoryButton.LayoutOrder = #Window.Categories + 1
+        CategoryButton.LayoutOrder = config._settingsTab and 9999 or (#Window.Categories + 1)
         CategoryButton.ZIndex = 3
         CategoryButton.Parent = Sidebar
 
@@ -1279,6 +1280,397 @@ function QuantomLib:CreateWindow(config)
             }
         end
 
+
+        function Tab:AddToggleKeybind(config)
+            local toggleState = config.Default or false
+            local currentKey = config.Key or Enum.KeyCode.E
+            local keybindChanging = false
+            local blacklistedKeys = {
+                Enum.KeyCode.W, Enum.KeyCode.A, Enum.KeyCode.S, Enum.KeyCode.D,
+                Enum.KeyCode.Space, Enum.KeyCode.LeftShift, Enum.KeyCode.LeftControl
+            }
+
+            local RowFrame = Instance.new("Frame")
+            RowFrame.Name = randomName(14)
+            RowFrame.Size = UDim2.new(1, 0, 0, isMobile and 36 or 32)
+            RowFrame.BackgroundColor3 = Theme.Surface
+            RowFrame.BorderSizePixel = 0
+            RowFrame.ZIndex = 3
+            RowFrame.Parent = ContentFrame
+
+            local RowCorner = Instance.new("UICorner")
+            RowCorner.CornerRadius = UDim.new(0, 4)
+            RowCorner.Parent = RowFrame
+
+            local RowLabel = Instance.new("TextLabel")
+            RowLabel.Name = randomName(12)
+            RowLabel.Size = UDim2.new(0.45, -12, 1, 0)
+            RowLabel.Position = UDim2.new(0, 12, 0, 0)
+            RowLabel.BackgroundTransparency = 1
+            RowLabel.Text = config.Name or "Toggle Keybind"
+            RowLabel.Font = Enum.Font.Gotham
+            RowLabel.TextSize = isMobile and 11 or 12
+            RowLabel.TextColor3 = Theme.Text
+            RowLabel.TextXAlignment = Enum.TextXAlignment.Left
+            RowLabel.TextTruncate = Enum.TextTruncate.AtEnd
+            RowLabel.ZIndex = 4
+            RowLabel.Parent = RowFrame
+
+            local ToggleBtn = Instance.new("TextButton")
+            ToggleBtn.Name = randomName(13)
+            ToggleBtn.Size = UDim2.new(0, isMobile and 42 or 38, 0, isMobile and 22 or 18)
+            ToggleBtn.Position = UDim2.new(0.5, isMobile and -21 or -19, 0.5, isMobile and -11 or -9)
+            ToggleBtn.BackgroundColor3 = toggleState and Theme.Toggle or Theme.Border
+            ToggleBtn.Text = ""
+            ToggleBtn.AutoButtonColor = false
+            ToggleBtn.ZIndex = 4
+            ToggleBtn.Parent = RowFrame
+
+            local ToggleBtnCorner = Instance.new("UICorner")
+            ToggleBtnCorner.CornerRadius = UDim.new(1, 0)
+            ToggleBtnCorner.Parent = ToggleBtn
+
+            local ToggleCircle = Instance.new("Frame")
+            ToggleCircle.Name = randomName(10)
+            ToggleCircle.Size = UDim2.new(0, isMobile and 18 or 14, 0, isMobile and 18 or 14)
+            ToggleCircle.Position = toggleState
+                and UDim2.new(1, isMobile and -20 or -16, 0.5, isMobile and -9 or -7)
+                or  UDim2.new(0, 2, 0.5, isMobile and -9 or -7)
+            ToggleCircle.BackgroundColor3 = Theme.Text
+            ToggleCircle.BorderSizePixel = 0
+            ToggleCircle.ZIndex = 5
+            ToggleCircle.Parent = ToggleBtn
+
+            local CircleCorner = Instance.new("UICorner")
+            CircleCorner.CornerRadius = UDim.new(1, 0)
+            CircleCorner.Parent = ToggleCircle
+
+            local KeyBtn = Instance.new("TextButton")
+            KeyBtn.Name = randomName(13)
+            KeyBtn.Size = UDim2.new(0, isMobile and 72 or 68, 0, isMobile and 26 or 22)
+            KeyBtn.Position = UDim2.new(1, isMobile and -82 or -78, 0.5, isMobile and -13 or -11)
+            KeyBtn.BackgroundColor3 = Theme.SurfaceLight
+            KeyBtn.Text = currentKey.Name
+            KeyBtn.Font = Enum.Font.GothamBold
+            KeyBtn.TextSize = isMobile and 10 or 11
+            KeyBtn.TextColor3 = Theme.Primary
+            KeyBtn.AutoButtonColor = false
+            KeyBtn.ZIndex = 4
+            KeyBtn.Parent = RowFrame
+
+            local KeyBtnCorner = Instance.new("UICorner")
+            KeyBtnCorner.CornerRadius = UDim.new(0, 6)
+            KeyBtnCorner.Parent = KeyBtn
+
+            local KeyStroke = Instance.new("UIStroke")
+            KeyStroke.Color = Theme.Primary
+            KeyStroke.Thickness = 0
+            KeyStroke.Transparency = 0.5
+            KeyStroke.Parent = KeyBtn
+
+            local function fireToggle(newState)
+                toggleState = newState
+                TweenService:Create(ToggleBtn, TweenInfo.new(0.2), {
+                    BackgroundColor3 = toggleState and Theme.Toggle or Theme.Border
+                }):Play()
+                local endPos = toggleState
+                    and UDim2.new(1, isMobile and -20 or -16, 0.5, isMobile and -9 or -7)
+                    or  UDim2.new(0, 2, 0.5, isMobile and -9 or -7)
+                TweenService:Create(ToggleCircle, TweenInfo.new(0.2, Enum.EasingStyle.Quad), {Position = endPos}):Play()
+                if config.Callback then config.Callback(toggleState) end
+            end
+
+            ToggleBtn.MouseButton1Click:Connect(function()
+                fireToggle(not toggleState)
+            end)
+
+            KeyBtn.MouseEnter:Connect(function()
+                if not keybindChanging then
+                    TweenService:Create(KeyBtn, TweenInfo.new(0.2), {BackgroundColor3 = Theme.SurfaceHover}):Play()
+                    TweenService:Create(KeyStroke, TweenInfo.new(0.2), {Thickness = 2}):Play()
+                end
+            end)
+
+            KeyBtn.MouseLeave:Connect(function()
+                if not keybindChanging then
+                    TweenService:Create(KeyBtn, TweenInfo.new(0.2), {BackgroundColor3 = Theme.SurfaceLight}):Play()
+                    TweenService:Create(KeyStroke, TweenInfo.new(0.2), {Thickness = 0}):Play()
+                end
+            end)
+
+            KeyBtn.MouseButton1Click:Connect(function()
+                if keybindChanging then return end
+                keybindChanging = true
+                KeyBtn.Text = "..."
+                KeyBtn.TextColor3 = Theme.Warning
+                TweenService:Create(KeyBtn, TweenInfo.new(0.2), {BackgroundColor3 = Theme.Primary}):Play()
+                TweenService:Create(KeyStroke, TweenInfo.new(0.2), {Thickness = 2, Color = Theme.Warning}):Play()
+
+                local conn
+                conn = UserInputService.InputBegan:Connect(function(input)
+                    if input.UserInputType ~= Enum.UserInputType.Keyboard then return end
+                    local key = input.KeyCode
+                    local isBlacklisted = false
+                    for _, bl in ipairs(blacklistedKeys) do
+                        if key == bl then isBlacklisted = true; break end
+                    end
+                    if isBlacklisted then
+                        CreateNotification({Title = "Keybind Inválido", Message = "Essa tecla não pode ser usada!", Type = "Error", Duration = 2})
+                        KeyBtn.Text = currentKey.Name
+                    else
+                        currentKey = key
+                        KeyBtn.Text = key.Name
+                        KeyBtn.TextColor3 = Theme.Success
+                        CreateNotification({Title = "Keybind Alterado", Message = "Nova tecla: " .. key.Name, Type = "Success", Duration = 2})
+                        if config.KeyChanged then config.KeyChanged(key) end
+                        task.wait(0.5)
+                    end
+                    KeyBtn.TextColor3 = Theme.Primary
+                    TweenService:Create(KeyBtn, TweenInfo.new(0.2), {BackgroundColor3 = Theme.SurfaceLight}):Play()
+                    TweenService:Create(KeyStroke, TweenInfo.new(0.2), {Thickness = 0, Color = Theme.Primary}):Play()
+                    keybindChanging = false
+                    conn:Disconnect()
+                end)
+            end)
+
+            UserInputService.InputBegan:Connect(function(input, gameProcessed)
+                if gameProcessed then return end
+                if input.UserInputType == Enum.UserInputType.Keyboard and input.KeyCode == currentKey then
+                    TweenService:Create(KeyBtn, TweenInfo.new(0.1), {
+                        Size = UDim2.new(0, (isMobile and 72 or 68) + 5, 0, (isMobile and 26 or 22) + 5)
+                    }):Play()
+                    task.wait(0.1)
+                    TweenService:Create(KeyBtn, TweenInfo.new(0.2, Enum.EasingStyle.Elastic), {
+                        Size = UDim2.new(0, isMobile and 72 or 68, 0, isMobile and 26 or 22)
+                    }):Play()
+                    fireToggle(not toggleState)
+                end
+            end)
+
+            return {
+                SetToggle = function(self, value)
+                    toggleState = value
+                    ToggleBtn.BackgroundColor3 = toggleState and Theme.Toggle or Theme.Border
+                    ToggleCircle.Position = toggleState
+                        and UDim2.new(1, isMobile and -20 or -16, 0.5, isMobile and -9 or -7)
+                        or  UDim2.new(0, 2, 0.5, isMobile and -9 or -7)
+                end,
+                SetKey = function(self, key)
+                    currentKey = key
+                    KeyBtn.Text = key.Name
+                end,
+                GetState = function(self) return toggleState end,
+                GetKey   = function(self) return currentKey end,
+            }
+        end
+
+
+        function Tab:AddMultiDropdown(config)
+            local selectedOptions = {}
+            local dropdownOpen = false
+
+            if config.Default then
+                for _, v in ipairs(config.Default) do
+                    selectedOptions[v] = true
+                end
+            end
+
+            local function getSelectedText()
+                local count, lastName = 0, ""
+                for k in pairs(selectedOptions) do count = count + 1; lastName = k end
+                if count == 0 then return config.Placeholder or "Selecionar..." end
+                if count == 1 then return lastName end
+                return count .. " selecionados"
+            end
+
+            local MultiFrame = Instance.new("Frame")
+            MultiFrame.Name = randomName(14)
+            MultiFrame.Size = UDim2.new(1, 0, 0, isMobile and 36 or 32)
+            MultiFrame.BackgroundColor3 = Theme.Surface
+            MultiFrame.BorderSizePixel = 0
+            MultiFrame.ZIndex = 3
+            MultiFrame.Parent = ContentFrame
+
+            local MultiCorner = Instance.new("UICorner")
+            MultiCorner.CornerRadius = UDim.new(0, 4)
+            MultiCorner.Parent = MultiFrame
+
+            local MultiLabel = Instance.new("TextLabel")
+            MultiLabel.Name = randomName(12)
+            MultiLabel.Size = UDim2.new(0, 100, 1, 0)
+            MultiLabel.Position = UDim2.new(0, 12, 0, 0)
+            MultiLabel.BackgroundTransparency = 1
+            MultiLabel.Text = config.Name or "Multi"
+            MultiLabel.Font = Enum.Font.Gotham
+            MultiLabel.TextSize = isMobile and 11 or 12
+            MultiLabel.TextColor3 = Theme.Text
+            MultiLabel.TextXAlignment = Enum.TextXAlignment.Left
+            MultiLabel.ZIndex = 4
+            MultiLabel.Parent = MultiFrame
+
+            local MultiBtn = Instance.new("TextButton")
+            MultiBtn.Name = randomName(13)
+            MultiBtn.Size = UDim2.new(1, -120, 0, isMobile and 26 or 22)
+            MultiBtn.Position = UDim2.new(0, 110, 0.5, isMobile and -13 or -11)
+            MultiBtn.BackgroundColor3 = Theme.SurfaceLight
+            MultiBtn.Text = getSelectedText()
+            MultiBtn.Font = Enum.Font.Gotham
+            MultiBtn.TextSize = isMobile and 10 or 11
+            MultiBtn.TextColor3 = Theme.Text
+            MultiBtn.TextXAlignment = Enum.TextXAlignment.Left
+            MultiBtn.AutoButtonColor = false
+            MultiBtn.ZIndex = 4
+            MultiBtn.Parent = MultiFrame
+
+            local MultiBtnCorner = Instance.new("UICorner")
+            MultiBtnCorner.CornerRadius = UDim.new(0, 4)
+            MultiBtnCorner.Parent = MultiBtn
+
+            local MultiBtnPadding = Instance.new("UIPadding")
+            MultiBtnPadding.PaddingLeft = UDim.new(0, 8)
+            MultiBtnPadding.Parent = MultiBtn
+
+            local Arrow = Instance.new("TextLabel")
+            Arrow.Name = randomName(8)
+            Arrow.Size = UDim2.new(0, 20, 1, 0)
+            Arrow.Position = UDim2.new(1, -24, 0, 0)
+            Arrow.BackgroundTransparency = 1
+            Arrow.Text = "▼"
+            Arrow.Font = Enum.Font.Gotham
+            Arrow.TextSize = isMobile and 8 or 9
+            Arrow.TextColor3 = Theme.TextMuted
+            Arrow.ZIndex = 5
+            Arrow.Parent = MultiBtn
+
+            local OptionsList = Instance.new("Frame")
+            OptionsList.Name = randomName(13)
+            OptionsList.Size = UDim2.new(1, -120, 0, 0)
+            OptionsList.Position = UDim2.new(0, 110, 1, 4)
+            OptionsList.BackgroundColor3 = Theme.SurfaceLight
+            OptionsList.BorderSizePixel = 0
+            OptionsList.Visible = false
+            OptionsList.ZIndex = 10
+            OptionsList.ClipsDescendants = true
+            OptionsList.Parent = MultiFrame
+
+            local OptionsCorner = Instance.new("UICorner")
+            OptionsCorner.CornerRadius = UDim.new(0, 4)
+            OptionsCorner.Parent = OptionsList
+
+            local OptionsLayout = Instance.new("UIListLayout")
+            OptionsLayout.SortOrder = Enum.SortOrder.LayoutOrder
+            OptionsLayout.Parent = OptionsList
+
+            local optionBtns = {}
+
+            local function updateOptionBtn(option, btn)
+                local sel = selectedOptions[option]
+                btn.Text = (sel and "✓  " or "    ") .. option
+                TweenService:Create(btn, TweenInfo.new(0.15), {
+                    TextColor3 = sel and Theme.Primary or Theme.Text,
+                    BackgroundColor3 = sel and Theme.SurfaceHover or Theme.SurfaceLight,
+                }):Play()
+            end
+
+            for _, option in ipairs(config.Options or {}) do
+                local OptionBtn = Instance.new("TextButton")
+                OptionBtn.Name = randomName(12)
+                OptionBtn.Size = UDim2.new(1, 0, 0, isMobile and 28 or 24)
+                OptionBtn.BackgroundColor3 = selectedOptions[option] and Theme.SurfaceHover or Theme.SurfaceLight
+                OptionBtn.Text = (selectedOptions[option] and "✓  " or "    ") .. option
+                OptionBtn.Font = Enum.Font.Gotham
+                OptionBtn.TextSize = isMobile and 10 or 11
+                OptionBtn.TextColor3 = selectedOptions[option] and Theme.Primary or Theme.Text
+                OptionBtn.TextXAlignment = Enum.TextXAlignment.Left
+                OptionBtn.AutoButtonColor = false
+                OptionBtn.ZIndex = 11
+                OptionBtn.Parent = OptionsList
+
+                local OptionPadding = Instance.new("UIPadding")
+                OptionPadding.PaddingLeft = UDim.new(0, 8)
+                OptionPadding.Parent = OptionBtn
+
+                optionBtns[option] = OptionBtn
+
+                OptionBtn.MouseButton1Click:Connect(function()
+                    if selectedOptions[option] then
+                        selectedOptions[option] = nil
+                    else
+                        selectedOptions[option] = true
+                    end
+                    updateOptionBtn(option, OptionBtn)
+                    MultiBtn.Text = getSelectedText()
+                    if config.Callback then
+                        local result = {}
+                        for k in pairs(selectedOptions) do table.insert(result, k) end
+                        config.Callback(result)
+                    end
+                end)
+            end
+
+            MultiBtn.MouseButton1Click:Connect(function()
+                dropdownOpen = not dropdownOpen
+                if dropdownOpen then
+                    OptionsList.Visible = true
+                    local optionCount = #(config.Options or {})
+                    local maxHeight = math.min(optionCount * (isMobile and 28 or 24), isMobile and 140 or 120)
+                    TweenService:Create(OptionsList, TweenInfo.new(0.2), {Size = UDim2.new(1, -120, 0, maxHeight)}):Play()
+                    TweenService:Create(Arrow, TweenInfo.new(0.2), {Rotation = 180}):Play()
+                else
+                    TweenService:Create(OptionsList, TweenInfo.new(0.2), {Size = UDim2.new(1, -120, 0, 0)}):Play()
+                    TweenService:Create(Arrow, TweenInfo.new(0.2), {Rotation = 0}):Play()
+                    task.wait(0.2)
+                    OptionsList.Visible = false
+                end
+            end)
+
+            return {
+                SetValues = function(self, values)
+                    selectedOptions = {}
+                    for _, v in ipairs(values) do selectedOptions[v] = true end
+                    MultiBtn.Text = getSelectedText()
+                    for opt, btn in pairs(optionBtns) do updateOptionBtn(opt, btn) end
+                end,
+                GetValues = function(self)
+                    local result = {}
+                    for k in pairs(selectedOptions) do table.insert(result, k) end
+                    return result
+                end,
+                AddOption = function(self, option)
+                    if not optionBtns[option] then
+                        table.insert(config.Options, option)
+                        local OptionBtn = Instance.new("TextButton")
+                        OptionBtn.Name = randomName(12)
+                        OptionBtn.Size = UDim2.new(1, 0, 0, isMobile and 28 or 24)
+                        OptionBtn.BackgroundColor3 = Theme.SurfaceLight
+                        OptionBtn.Text = "    " .. option
+                        OptionBtn.Font = Enum.Font.Gotham
+                        OptionBtn.TextSize = isMobile and 10 or 11
+                        OptionBtn.TextColor3 = Theme.Text
+                        OptionBtn.TextXAlignment = Enum.TextXAlignment.Left
+                        OptionBtn.AutoButtonColor = false
+                        OptionBtn.ZIndex = 11
+                        OptionBtn.Parent = OptionsList
+                        local OptionPadding = Instance.new("UIPadding")
+                        OptionPadding.PaddingLeft = UDim.new(0, 8)
+                        OptionPadding.Parent = OptionBtn
+                        optionBtns[option] = OptionBtn
+                        OptionBtn.MouseButton1Click:Connect(function()
+                            if selectedOptions[option] then selectedOptions[option] = nil
+                            else selectedOptions[option] = true end
+                            updateOptionBtn(option, OptionBtn)
+                            MultiBtn.Text = getSelectedText()
+                            if config.Callback then
+                                local result = {}
+                                for k in pairs(selectedOptions) do table.insert(result, k) end
+                                config.Callback(result)
+                            end
+                        end)
+                    end
+                end,
+            }
+        end
+
         function Tab:AddKeybind(config)
             local currentKey = config.Default or Enum.KeyCode.E
             local blacklistedKeys = {
@@ -1397,6 +1789,7 @@ function QuantomLib:CreateWindow(config)
                         else
                             currentKey = key
                             KeybindButton.Text = key.Name
+                            if config.KeyChanged then config.KeyChanged(key) end
                             KeybindButton.TextColor3 = Theme.Success
 
                             CreateNotification({
@@ -1477,12 +1870,29 @@ function QuantomLib:CreateWindow(config)
     end
 
     UserInputService.InputBegan:Connect(function(input, gameProcessed)
-        if not gameProcessed and input.KeyCode == Enum.KeyCode.RightShift then
+        if not gameProcessed and input.KeyCode == minimizeKey then
             Window:Toggle()
         end
     end)
 
-    return Window
+
+    -- ⚙ Settings Tab automático (sempre no final)
+    task.defer(function()
+        local SettingsTab = Window:CreateTab({Name = "Config", Icon = "⚙", _settingsTab = true})
+        SettingsTab:AddSection("Atalhos do Script")
+        SettingsTab:AddKeybind({
+            Name = "Minimizar / Abrir",
+            Default = minimizeKey,
+            KeyChanged = function(newKey)
+                minimizeKey = newKey
+            end,
+            Callback = function()
+                Window:Toggle()
+            end,
+        })
+    end)
+
+        return Window
 end
 
 return QuantomLib
