@@ -1,4 +1,3 @@
-
 local QuantomLib = {}
 
 local TweenService = game:GetService("TweenService")
@@ -69,10 +68,9 @@ local function CreateNotificationContainer()
     NotificationContainer.BackgroundTransparency = 1
     NotificationContainer.ZIndex = 9999
     
-    -- Procurar pela ScreenGui stealth
     local screenGui = PlayerGui:FindFirstChild(STEALTH_NAMES.ScreenGui)
     if not screenGui then
-        screenGui = PlayerGui:GetChildren()[#PlayerGui:GetChildren()] -- Pegar a última criada
+        screenGui = PlayerGui:GetChildren()[#PlayerGui:GetChildren()]
     end
     
     NotificationContainer.Parent = screenGui or PlayerGui
@@ -286,7 +284,6 @@ function QuantomLib:CreateWindow(config)
     Window.Categories = {}
     local minimizeKey = config.MinimizeKey or Enum.KeyCode.RightShift
 
-    -- Remover UI antiga se existir
     for _, gui in ipairs(PlayerGui:GetChildren()) do
         if gui:IsA("ScreenGui") and gui.Name == STEALTH_NAMES.ScreenGui then
             gui:Destroy()
@@ -362,10 +359,12 @@ function QuantomLib:CreateWindow(config)
     local floatDragging = false
     local floatDragStart
     local floatStartPos
+    local floatDragMoved = false
 
     FloatingButton.InputBegan:Connect(function(input)
         if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
             floatDragging = true
+            floatDragMoved = false
             floatDragStart = input.Position
             floatStartPos = FloatingButton.Position
         end
@@ -380,6 +379,9 @@ function QuantomLib:CreateWindow(config)
     UserInputService.InputChanged:Connect(function(input)
         if floatDragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
             local delta = input.Position - floatDragStart
+            if delta.Magnitude > 5 then
+                floatDragMoved = true
+            end
             FloatingButton.Position = UDim2.new(
                 floatStartPos.X.Scale,
                 floatStartPos.X.Offset + delta.X,
@@ -390,10 +392,9 @@ function QuantomLib:CreateWindow(config)
     end)
 
     FloatingButton.MouseButton1Click:Connect(function()
-        MainContainer.Visible = not MainContainer.Visible
-        if MainContainer.Visible then
-            FloatingButton.Visible = false
-        end
+        if floatDragMoved then return end
+        MainContainer.Visible = true
+        FloatingButton.Visible = false
     end)
 
     local BackgroundEffects = Instance.new("Frame")
@@ -761,18 +762,17 @@ function QuantomLib:CreateWindow(config)
         local function activateTab()
             for _, cat in pairs(Window.Categories) do
                 cat.ContentScroll.Visible = false
-                local btn = Sidebar:FindFirstChild(function(c) return c:IsA("TextButton") end, true)
-                for _, child in pairs(Sidebar:GetChildren()) do
-                    if child:IsA("TextButton") then
-                        TweenService:Create(child, TweenInfo.new(0.2), {BackgroundTransparency = 1}):Play()
-                        for _, subChild in pairs(child:GetChildren()) do
-                            if subChild:IsA("TextLabel") then
-                                TweenService:Create(subChild, TweenInfo.new(0.2), {
-                                    TextColor3 = subChild.Text:match("[A-Z]") and Theme.TextSecondary or Theme.TextMuted
-                                }):Play()
-                            elseif subChild:IsA("Frame") then
-                                TweenService:Create(subChild, TweenInfo.new(0.2), {Size = UDim2.new(0, 0, 0, catHeight)}):Play()
-                            end
+            end
+            for _, child in pairs(Sidebar:GetChildren()) do
+                if child:IsA("TextButton") then
+                    TweenService:Create(child, TweenInfo.new(0.2), {BackgroundTransparency = 1}):Play()
+                    for _, subChild in pairs(child:GetChildren()) do
+                        if subChild:IsA("TextLabel") then
+                            TweenService:Create(subChild, TweenInfo.new(0.2), {
+                                TextColor3 = subChild.Text:match("[A-Z]") and Theme.TextSecondary or Theme.TextMuted
+                            }):Play()
+                        elseif subChild:IsA("Frame") then
+                            TweenService:Create(subChild, TweenInfo.new(0.2), {Size = UDim2.new(0, 0, 0, catHeight)}):Play()
                         end
                     end
                 end
@@ -1853,6 +1853,9 @@ function QuantomLib:CreateWindow(config)
 
     function Window:Show()
         MainContainer.Visible = true
+        if isMobile then
+            FloatingButton.Visible = false
+        end
     end
 
     function Window:Hide()
@@ -1864,8 +1867,8 @@ function QuantomLib:CreateWindow(config)
 
     function Window:Toggle()
         MainContainer.Visible = not MainContainer.Visible
-        if isMobile and not MainContainer.Visible then
-            FloatingButton.Visible = true
+        if isMobile then
+            FloatingButton.Visible = not MainContainer.Visible
         end
     end
 
@@ -1876,7 +1879,7 @@ function QuantomLib:CreateWindow(config)
     end)
 
 
-    -- ⚙ Settings Tab automático (sempre no final)
+    -- Settings Tab (always at the end)
     task.defer(function()
         local SettingsTab = Window:CreateTab({Name = "Config", Icon = "⚙", _settingsTab = true})
         SettingsTab:AddSection("Atalhos do Script")
@@ -1886,13 +1889,14 @@ function QuantomLib:CreateWindow(config)
             KeyChanged = function(newKey)
                 minimizeKey = newKey
             end,
-            Callback = function()
-                Window:Toggle()
-            end,
+            -- FIX: Removed Callback here. The global InputBegan handler already
+            -- calls Window:Toggle() when minimizeKey is pressed. Having a Callback
+            -- that also calls Window:Toggle() caused a double-toggle (open+close
+            -- in the same frame), making the UI appear to flicker or not open.
         })
     end)
 
-        return Window
+    return Window
 end
 
 return QuantomLib
