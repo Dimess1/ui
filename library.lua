@@ -1671,6 +1671,358 @@ function QuantomLib:CreateWindow(config)
             }
         end
 
+        function Tab:AddColorPicker(config)
+            local currentColor = config.Default or Color3.fromRGB(255, 255, 255)
+
+            local CPFrame = Instance.new("Frame")
+            CPFrame.Name = randomName(14)
+            CPFrame.Size = UDim2.new(1, 0, 0, isMobile and 36 or 32)
+            CPFrame.BackgroundColor3 = Theme.Surface
+            CPFrame.BorderSizePixel = 0
+            CPFrame.ZIndex = 3
+            CPFrame.ClipsDescendants = false
+            CPFrame.Parent = ContentFrame
+
+            local CPCorner = Instance.new("UICorner")
+            CPCorner.CornerRadius = UDim.new(0, 4)
+            CPCorner.Parent = CPFrame
+
+            local CPLabel = Instance.new("TextLabel")
+            CPLabel.Name = randomName(12)
+            CPLabel.Size = UDim2.new(1, -80, 1, 0)
+            CPLabel.Position = UDim2.new(0, 12, 0, 0)
+            CPLabel.BackgroundTransparency = 1
+            CPLabel.Text = config.Name or "Color"
+            CPLabel.Font = Enum.Font.Gotham
+            CPLabel.TextSize = isMobile and 11 or 12
+            CPLabel.TextColor3 = Theme.Text
+            CPLabel.TextXAlignment = Enum.TextXAlignment.Left
+            CPLabel.ZIndex = 4
+            CPLabel.Parent = CPFrame
+
+            local PreviewBtn = Instance.new("TextButton")
+            PreviewBtn.Name = randomName(13)
+            PreviewBtn.Size = UDim2.new(0, isMobile and 42 or 38, 0, isMobile and 22 or 18)
+            PreviewBtn.Position = UDim2.new(1, isMobile and -52 or -48, 0.5, isMobile and -11 or -9)
+            PreviewBtn.BackgroundColor3 = currentColor
+            PreviewBtn.Text = ""
+            PreviewBtn.AutoButtonColor = false
+            PreviewBtn.ZIndex = 4
+            PreviewBtn.Parent = CPFrame
+
+            local PreviewCorner = Instance.new("UICorner")
+            PreviewCorner.CornerRadius = UDim.new(0, 4)
+            PreviewCorner.Parent = PreviewBtn
+
+            local PreviewStroke = Instance.new("UIStroke")
+            PreviewStroke.Color = Theme.Border
+            PreviewStroke.Thickness = 1
+            PreviewStroke.Parent = PreviewBtn
+
+            local pickerOpen = false
+            local pickerHeight = isMobile and 160 or 150
+
+            local PickerPanel = Instance.new("Frame")
+            PickerPanel.Name = randomName(14)
+            PickerPanel.Size = UDim2.new(1, 0, 0, 0)
+            PickerPanel.Position = UDim2.new(0, 0, 1, 4)
+            PickerPanel.BackgroundColor3 = Theme.SurfaceLight
+            PickerPanel.BorderSizePixel = 0
+            PickerPanel.Visible = false
+            PickerPanel.ZIndex = 10
+            PickerPanel.ClipsDescendants = true
+            PickerPanel.Parent = CPFrame
+
+            local PanelCorner = Instance.new("UICorner")
+            PanelCorner.CornerRadius = UDim.new(0, 6)
+            PanelCorner.Parent = PickerPanel
+
+            local PanelStroke = Instance.new("UIStroke")
+            PanelStroke.Color = Theme.Border
+            PanelStroke.Thickness = 1
+            PanelStroke.Transparency = 0.5
+            PanelStroke.Parent = PickerPanel
+
+            local h, s, v = Color3.toHSV(currentColor)
+
+            local svBoxSize = isMobile and 110 or 100
+            local SVBox = Instance.new("ImageLabel")
+            SVBox.Name = randomName(12)
+            SVBox.Size = UDim2.new(0, svBoxSize, 0, svBoxSize)
+            SVBox.Position = UDim2.new(0, 10, 0, 10)
+            SVBox.BackgroundColor3 = Color3.fromHSV(h, 1, 1)
+            SVBox.BorderSizePixel = 0
+            SVBox.ZIndex = 11
+            SVBox.Parent = PickerPanel
+
+            local SVCorner = Instance.new("UICorner")
+            SVCorner.CornerRadius = UDim.new(0, 4)
+            SVCorner.Parent = SVBox
+
+            local WhiteGradient = Instance.new("UIGradient")
+            WhiteGradient.Color = ColorSequence.new{
+                ColorSequenceKeypoint.new(0, Color3.new(1, 1, 1)),
+                ColorSequenceKeypoint.new(1, Color3.new(1, 1, 1))
+            }
+            WhiteGradient.Transparency = NumberSequence.new{
+                NumberSequenceKeypoint.new(0, 0),
+                NumberSequenceKeypoint.new(1, 1)
+            }
+            WhiteGradient.Parent = SVBox
+
+            local BlackOverlay = Instance.new("Frame")
+            BlackOverlay.Name = randomName(10)
+            BlackOverlay.Size = UDim2.new(1, 0, 1, 0)
+            BlackOverlay.BackgroundColor3 = Color3.new(0, 0, 0)
+            BlackOverlay.BorderSizePixel = 0
+            BlackOverlay.ZIndex = 12
+            BlackOverlay.Parent = SVBox
+
+            local BlackCorner = Instance.new("UICorner")
+            BlackCorner.CornerRadius = UDim.new(0, 4)
+            BlackCorner.Parent = BlackOverlay
+
+            local BlackGradient = Instance.new("UIGradient")
+            BlackGradient.Transparency = NumberSequence.new{
+                NumberSequenceKeypoint.new(0, 1),
+                NumberSequenceKeypoint.new(1, 0)
+            }
+            BlackGradient.Rotation = 90
+            BlackGradient.Parent = BlackOverlay
+
+            local SVCursor = Instance.new("Frame")
+            SVCursor.Name = randomName(10)
+            SVCursor.Size = UDim2.new(0, 10, 0, 10)
+            SVCursor.Position = UDim2.new(s, -5, 1 - v, -5)
+            SVCursor.BackgroundColor3 = Color3.new(1, 1, 1)
+            SVCursor.BorderSizePixel = 0
+            SVCursor.ZIndex = 14
+            SVCursor.Parent = SVBox
+
+            local SVCursorCorner = Instance.new("UICorner")
+            SVCursorCorner.CornerRadius = UDim.new(1, 0)
+            SVCursorCorner.Parent = SVCursor
+
+            local SVCursorStroke = Instance.new("UIStroke")
+            SVCursorStroke.Color = Color3.new(0, 0, 0)
+            SVCursorStroke.Thickness = 1
+            SVCursorStroke.Parent = SVCursor
+
+            local hueBarWidth = isMobile and 18 or 16
+            local HueBar = Instance.new("Frame")
+            HueBar.Name = randomName(12)
+            HueBar.Size = UDim2.new(0, hueBarWidth, 0, svBoxSize)
+            HueBar.Position = UDim2.new(0, svBoxSize + 18, 0, 10)
+            HueBar.BackgroundColor3 = Color3.new(1, 1, 1)
+            HueBar.BorderSizePixel = 0
+            HueBar.ZIndex = 11
+            HueBar.Parent = PickerPanel
+
+            local HueCorner = Instance.new("UICorner")
+            HueCorner.CornerRadius = UDim.new(0, 4)
+            HueCorner.Parent = HueBar
+
+            local HueGradient = Instance.new("UIGradient")
+            HueGradient.Color = ColorSequence.new{
+                ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 0, 0)),
+                ColorSequenceKeypoint.new(0.167, Color3.fromRGB(255, 255, 0)),
+                ColorSequenceKeypoint.new(0.333, Color3.fromRGB(0, 255, 0)),
+                ColorSequenceKeypoint.new(0.5, Color3.fromRGB(0, 255, 255)),
+                ColorSequenceKeypoint.new(0.667, Color3.fromRGB(0, 0, 255)),
+                ColorSequenceKeypoint.new(0.833, Color3.fromRGB(255, 0, 255)),
+                ColorSequenceKeypoint.new(1, Color3.fromRGB(255, 0, 0))
+            }
+            HueGradient.Rotation = 90
+            HueGradient.Parent = HueBar
+
+            local HueCursor = Instance.new("Frame")
+            HueCursor.Name = randomName(10)
+            HueCursor.Size = UDim2.new(1, 4, 0, 6)
+            HueCursor.Position = UDim2.new(0, -2, h, -3)
+            HueCursor.BackgroundColor3 = Color3.new(1, 1, 1)
+            HueCursor.BorderSizePixel = 0
+            HueCursor.ZIndex = 12
+            HueCursor.Parent = HueBar
+
+            local HueCursorCorner = Instance.new("UICorner")
+            HueCursorCorner.CornerRadius = UDim.new(0, 3)
+            HueCursorCorner.Parent = HueCursor
+
+            local HueCursorStroke = Instance.new("UIStroke")
+            HueCursorStroke.Color = Color3.new(0, 0, 0)
+            HueCursorStroke.Thickness = 1
+            HueCursorStroke.Parent = HueCursor
+
+            local infoX = svBoxSize + hueBarWidth + 28
+            local RLabel = Instance.new("TextLabel")
+            RLabel.Name = randomName(8)
+            RLabel.Size = UDim2.new(1, -infoX - 10, 0, 18)
+            RLabel.Position = UDim2.new(0, infoX, 0, 14)
+            RLabel.BackgroundTransparency = 1
+            RLabel.Text = "R: " .. math.floor(currentColor.R * 255)
+            RLabel.Font = Enum.Font.GothamBold
+            RLabel.TextSize = isMobile and 10 or 11
+            RLabel.TextColor3 = Color3.fromRGB(255, 100, 100)
+            RLabel.TextXAlignment = Enum.TextXAlignment.Left
+            RLabel.ZIndex = 11
+            RLabel.Parent = PickerPanel
+
+            local GLabel = Instance.new("TextLabel")
+            GLabel.Name = randomName(8)
+            GLabel.Size = UDim2.new(1, -infoX - 10, 0, 18)
+            GLabel.Position = UDim2.new(0, infoX, 0, 34)
+            GLabel.BackgroundTransparency = 1
+            GLabel.Text = "G: " .. math.floor(currentColor.G * 255)
+            GLabel.Font = Enum.Font.GothamBold
+            GLabel.TextSize = isMobile and 10 or 11
+            GLabel.TextColor3 = Color3.fromRGB(100, 255, 100)
+            GLabel.TextXAlignment = Enum.TextXAlignment.Left
+            GLabel.ZIndex = 11
+            GLabel.Parent = PickerPanel
+
+            local BLabel = Instance.new("TextLabel")
+            BLabel.Name = randomName(8)
+            BLabel.Size = UDim2.new(1, -infoX - 10, 0, 18)
+            BLabel.Position = UDim2.new(0, infoX, 0, 54)
+            BLabel.BackgroundTransparency = 1
+            BLabel.Text = "B: " .. math.floor(currentColor.B * 255)
+            BLabel.Font = Enum.Font.GothamBold
+            BLabel.TextSize = isMobile and 10 or 11
+            BLabel.TextColor3 = Color3.fromRGB(100, 100, 255)
+            BLabel.TextXAlignment = Enum.TextXAlignment.Left
+            BLabel.ZIndex = 11
+            BLabel.Parent = PickerPanel
+
+            local HexLabel = Instance.new("TextLabel")
+            HexLabel.Name = randomName(8)
+            HexLabel.Size = UDim2.new(1, -infoX - 10, 0, 18)
+            HexLabel.Position = UDim2.new(0, infoX, 0, 80)
+            HexLabel.BackgroundTransparency = 1
+            HexLabel.Text = string.format("#%02X%02X%02X", currentColor.R * 255, currentColor.G * 255, currentColor.B * 255)
+            HexLabel.Font = Enum.Font.GothamBold
+            HexLabel.TextSize = isMobile and 10 or 11
+            HexLabel.TextColor3 = Theme.TextSecondary
+            HexLabel.TextXAlignment = Enum.TextXAlignment.Left
+            HexLabel.ZIndex = 11
+            HexLabel.Parent = PickerPanel
+
+            local function updateColor()
+                currentColor = Color3.fromHSV(h, s, v)
+                PreviewBtn.BackgroundColor3 = currentColor
+                SVBox.BackgroundColor3 = Color3.fromHSV(h, 1, 1)
+                SVCursor.Position = UDim2.new(s, -5, 1 - v, -5)
+                HueCursor.Position = UDim2.new(0, -2, h, -3)
+                RLabel.Text = "R: " .. math.floor(currentColor.R * 255)
+                GLabel.Text = "G: " .. math.floor(currentColor.G * 255)
+                BLabel.Text = "B: " .. math.floor(currentColor.B * 255)
+                HexLabel.Text = string.format("#%02X%02X%02X", currentColor.R * 255, currentColor.G * 255, currentColor.B * 255)
+                if config.Callback then
+                    config.Callback(currentColor)
+                end
+            end
+
+            local draggingSV = false
+            local draggingHue = false
+
+            SVBox.InputBegan:Connect(function(input)
+                if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+                    draggingSV = true
+                    local relX = math.clamp((input.Position.X - SVBox.AbsolutePosition.X) / SVBox.AbsoluteSize.X, 0, 1)
+                    local relY = math.clamp((input.Position.Y - SVBox.AbsolutePosition.Y) / SVBox.AbsoluteSize.Y, 0, 1)
+                    s = relX
+                    v = 1 - relY
+                    updateColor()
+                end
+            end)
+
+            SVBox.InputEnded:Connect(function(input)
+                if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+                    draggingSV = false
+                end
+            end)
+
+            BlackOverlay.InputBegan:Connect(function(input)
+                if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+                    draggingSV = true
+                    local relX = math.clamp((input.Position.X - SVBox.AbsolutePosition.X) / SVBox.AbsoluteSize.X, 0, 1)
+                    local relY = math.clamp((input.Position.Y - SVBox.AbsolutePosition.Y) / SVBox.AbsoluteSize.Y, 0, 1)
+                    s = relX
+                    v = 1 - relY
+                    updateColor()
+                end
+            end)
+
+            BlackOverlay.InputEnded:Connect(function(input)
+                if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+                    draggingSV = false
+                end
+            end)
+
+            HueBar.InputBegan:Connect(function(input)
+                if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+                    draggingHue = true
+                    local relY = math.clamp((input.Position.Y - HueBar.AbsolutePosition.Y) / HueBar.AbsoluteSize.Y, 0, 1)
+                    h = relY
+                    updateColor()
+                end
+            end)
+
+            HueBar.InputEnded:Connect(function(input)
+                if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+                    draggingHue = false
+                end
+            end)
+
+            UserInputService.InputChanged:Connect(function(input)
+                if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+                    if draggingSV then
+                        local relX = math.clamp((input.Position.X - SVBox.AbsolutePosition.X) / SVBox.AbsoluteSize.X, 0, 1)
+                        local relY = math.clamp((input.Position.Y - SVBox.AbsolutePosition.Y) / SVBox.AbsoluteSize.Y, 0, 1)
+                        s = relX
+                        v = 1 - relY
+                        updateColor()
+                    elseif draggingHue then
+                        local relY = math.clamp((input.Position.Y - HueBar.AbsolutePosition.Y) / HueBar.AbsoluteSize.Y, 0, 1)
+                        h = relY
+                        updateColor()
+                    end
+                end
+            end)
+
+            PreviewBtn.MouseButton1Click:Connect(function()
+                pickerOpen = not pickerOpen
+                if pickerOpen then
+                    PickerPanel.Visible = true
+                    TweenService:Create(PickerPanel, TweenInfo.new(0.25, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
+                        Size = UDim2.new(1, 0, 0, pickerHeight)
+                    }):Play()
+                else
+                    TweenService:Create(PickerPanel, TweenInfo.new(0.2), {
+                        Size = UDim2.new(1, 0, 0, 0)
+                    }):Play()
+                    task.wait(0.2)
+                    PickerPanel.Visible = false
+                end
+            end)
+
+            return {
+                SetValue = function(self, color)
+                    currentColor = color
+                    h, s, v = Color3.toHSV(color)
+                    PreviewBtn.BackgroundColor3 = color
+                    if pickerOpen then
+                        SVBox.BackgroundColor3 = Color3.fromHSV(h, 1, 1)
+                        SVCursor.Position = UDim2.new(s, -5, 1 - v, -5)
+                        HueCursor.Position = UDim2.new(0, -2, h, -3)
+                        RLabel.Text = "R: " .. math.floor(color.R * 255)
+                        GLabel.Text = "G: " .. math.floor(color.G * 255)
+                        BLabel.Text = "B: " .. math.floor(color.B * 255)
+                        HexLabel.Text = string.format("#%02X%02X%02X", color.R * 255, color.G * 255, color.B * 255)
+                    end
+                end
+            }
+        end
+
         function Tab:AddKeybind(config)
             local currentKey = config.Default or Enum.KeyCode.E
             local blacklistedKeys = {
@@ -1879,20 +2231,127 @@ function QuantomLib:CreateWindow(config)
     end)
 
 
-    -- Settings Tab (always at the end)
+    -- ── Watermark ─────────────────────────────────────────
+    local watermarkEnabled = true
+
+    local WatermarkFrame = Instance.new("Frame")
+    WatermarkFrame.Name = randomName(14)
+    WatermarkFrame.Size = UDim2.new(0, isMobile and 260 or 320, 0, isMobile and 28 or 30)
+    WatermarkFrame.Position = UDim2.new(0, isMobile and 8 or 14, 0, isMobile and 6 or 10)
+    WatermarkFrame.BackgroundColor3 = Theme.Background
+    WatermarkFrame.BackgroundTransparency = 0.15
+    WatermarkFrame.BorderSizePixel = 0
+    WatermarkFrame.ZIndex = 9000
+    WatermarkFrame.Visible = watermarkEnabled
+    WatermarkFrame.Parent = ScreenGui
+
+    local WMCorner = Instance.new("UICorner")
+    WMCorner.CornerRadius = UDim.new(0, 6)
+    WMCorner.Parent = WatermarkFrame
+
+    local WMStroke = Instance.new("UIStroke")
+    WMStroke.Color = Theme.Primary
+    WMStroke.Thickness = 1
+    WMStroke.Transparency = 0.5
+    WMStroke.Parent = WatermarkFrame
+
+    local WMAccent = Instance.new("Frame")
+    WMAccent.Name = randomName(8)
+    WMAccent.Size = UDim2.new(1, 0, 0, 2)
+    WMAccent.Position = UDim2.new(0, 0, 0, 0)
+    WMAccent.BackgroundColor3 = Theme.Primary
+    WMAccent.BorderSizePixel = 0
+    WMAccent.ZIndex = 9001
+    WMAccent.Parent = WatermarkFrame
+
+    local WMAccentCorner = Instance.new("UICorner")
+    WMAccentCorner.CornerRadius = UDim.new(0, 6)
+    WMAccentCorner.Parent = WMAccent
+
+    local WMGradient = Instance.new("UIGradient")
+    WMGradient.Color = ColorSequence.new{
+        ColorSequenceKeypoint.new(0, Theme.Primary),
+        ColorSequenceKeypoint.new(0.5, Theme.Accent),
+        ColorSequenceKeypoint.new(1, Theme.Primary)
+    }
+    WMGradient.Parent = WMAccent
+
+    local WMText = Instance.new("TextLabel")
+    WMText.Name = randomName(12)
+    WMText.Size = UDim2.new(1, -16, 1, -2)
+    WMText.Position = UDim2.new(0, 8, 0, 2)
+    WMText.BackgroundTransparency = 1
+    WMText.Text = "Quantom.gg"
+    WMText.Font = Enum.Font.GothamBold
+    WMText.TextSize = isMobile and 11 or 12
+    WMText.TextColor3 = Theme.Text
+    WMText.TextXAlignment = Enum.TextXAlignment.Left
+    WMText.ZIndex = 9002
+    WMText.Parent = WatermarkFrame
+
+    local function getPlayerPing()
+        local success, ping = pcall(function()
+            return Player:GetNetworkPing() * 1000
+        end)
+        return success and math.floor(ping) or 0
+    end
+
+    local fpsCount = 0
+    local lastFpsTime = tick()
+    local currentFPS = 60
+
+    RunService.RenderStepped:Connect(function()
+        fpsCount = fpsCount + 1
+        local now = tick()
+        if now - lastFpsTime >= 1 then
+            currentFPS = math.floor(fpsCount / (now - lastFpsTime))
+            fpsCount = 0
+            lastFpsTime = now
+        end
+    end)
+
+    task.spawn(function()
+        while ScreenGui.Parent do
+            if watermarkEnabled then
+                local playerName = Player.DisplayName or Player.Name
+                local ping = getPlayerPing()
+                local sep = "  |  "
+
+                WMText.Text = "Quantom.gg" .. sep .. playerName .. sep .. currentFPS .. " FPS" .. sep .. ping .. " ms"
+
+                local textWidth = WMText.TextBounds.X + 24
+                local minWidth = isMobile and 200 or 240
+                TweenService:Create(WatermarkFrame, TweenInfo.new(0.3), {
+                    Size = UDim2.new(0, math.max(textWidth, minWidth), 0, isMobile and 28 or 30)
+                }):Play()
+            end
+            task.wait(0.5)
+        end
+    end)
+
+    -- ── Settings Tab (always at the end) ─────────────────
     task.defer(function()
         local SettingsTab = Window:CreateTab({Name = "Config", Icon = "⚙", _settingsTab = true})
+
+        SettingsTab:AddSection("WATERMARK")
+
+        SettingsTab:AddToggle({
+            Name = "Watermark",
+            Default = watermarkEnabled,
+            Callback = function(value)
+                watermarkEnabled = value
+                WatermarkFrame.Visible = value
+            end
+        })
+
         SettingsTab:AddSection("Atalhos do Script")
+
         SettingsTab:AddKeybind({
             Name = "Minimizar / Abrir",
             Default = minimizeKey,
             KeyChanged = function(newKey)
                 minimizeKey = newKey
             end,
-            -- FIX: Removed Callback here. The global InputBegan handler already
-            -- calls Window:Toggle() when minimizeKey is pressed. Having a Callback
-            -- that also calls Window:Toggle() caused a double-toggle (open+close
-            -- in the same frame), making the UI appear to flicker or not open.
         })
     end)
 

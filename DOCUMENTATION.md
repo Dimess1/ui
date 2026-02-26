@@ -325,6 +325,24 @@ Tab:AddKeybind({
 
 ---
 
+## 💧 Watermark (Marca d'água)
+
+A Watermark é exibida automaticamente no **canto superior esquerdo** da tela e mostra em tempo real:
+
+```
+Quantom.gg  |  NickName  |  60 FPS  |  32 ms
+```
+
+- **Ativada por padrão** ao carregar a library
+- Pode ser ativada/desativada na tab **⚙ Config → Watermark**
+- Atualiza FPS e Ping a cada 0.5 segundos
+- Adapta o tamanho automaticamente ao conteúdo
+- Design elegante com barra de gradiente no topo
+
+> Não é necessário configurar nada — a watermark funciona automaticamente.
+
+---
+
 ## 🔔 Sistema de Notificações
 
 ```lua
@@ -359,8 +377,14 @@ Window:Hide()    -- Esconder UI
 Window:Toggle()  -- Alternar visibilidade
 ```
 
-**Atalho de teclado:** Configurável — padrão `RightShift`.  
+**Atalho de teclado:** Configurável — padrão `RightShift`.
 Pode ser alterado via parâmetro `MinimizeKey` na criação da janela **ou** em runtime pela tab **⚙ Config** que é gerada automaticamente no final da sidebar.
+
+### Tab ⚙ Config (automática)
+
+A tab Config é criada automaticamente e inclui:
+- **Watermark** — Toggle para ativar/desativar a marca d'água (Quantom.gg | Nick | FPS | Ping)
+- **Minimizar / Abrir** — Keybind configurável para mostrar/esconder a UI
 
 ---
 
