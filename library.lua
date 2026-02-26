@@ -5,6 +5,7 @@ local UserInputService = game:GetService("UserInputService")
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local HttpService = game:GetService("HttpService")
+local Stats = game:GetService("Stats")
 
 local Player = Players.LocalPlayer
 local PlayerGui = Player:WaitForChild("PlayerGui")
@@ -31,7 +32,8 @@ local STEALTH_NAMES = {
     Header = randomName(10),
     Sidebar = randomName(11),
     ContentArea = randomName(13),
-    FloatingButton = randomName(15)
+    FloatingButton = randomName(15),
+    Watermark = randomName(13)
 }
 
 local Theme = {
@@ -276,6 +278,305 @@ local function CreateNotification(config)
         end
     end)
 end
+
+-- ══════════════════════════════════════════════════════════
+--  WATERMARK SYSTEM
+-- ══════════════════════════════════════════════════════════
+
+local WatermarkData = {
+    Frame = nil,
+    Connection = nil,
+    Visible = false,
+    FPS = 0,
+    Ping = 0,
+    FrameCount = 0,
+    LastFPSUpdate = 0,
+}
+
+local function CreateWatermark(screenGui)
+    if WatermarkData.Frame then return WatermarkData.Frame end
+
+    local wmHeight = isMobile and 28 or 26
+
+    -- Main watermark container
+    local WatermarkFrame = Instance.new("Frame")
+    WatermarkFrame.Name = STEALTH_NAMES.Watermark
+    WatermarkFrame.Size = UDim2.new(0, isMobile and 260 or 320, 0, wmHeight)
+    WatermarkFrame.Position = UDim2.new(0, isMobile and 8 or 12, 0, isMobile and 6 or 8)
+    WatermarkFrame.BackgroundColor3 = Color3.fromRGB(10, 10, 13)
+    WatermarkFrame.BackgroundTransparency = 0.15
+    WatermarkFrame.BorderSizePixel = 0
+    WatermarkFrame.Visible = false
+    WatermarkFrame.ZIndex = 9990
+    WatermarkFrame.Parent = screenGui
+
+    local WmCorner = Instance.new("UICorner")
+    WmCorner.CornerRadius = UDim.new(0, isMobile and 6 or 5)
+    WmCorner.Parent = WatermarkFrame
+
+    local WmStroke = Instance.new("UIStroke")
+    WmStroke.Color = Theme.Primary
+    WmStroke.Thickness = 1
+    WmStroke.Transparency = 0.6
+    WmStroke.Parent = WatermarkFrame
+
+    -- Top accent line (gradient glow)
+    local TopAccent = Instance.new("Frame")
+    TopAccent.Name = randomName(8)
+    TopAccent.Size = UDim2.new(1, 0, 0, 2)
+    TopAccent.Position = UDim2.new(0, 0, 0, 0)
+    TopAccent.BackgroundColor3 = Theme.Primary
+    TopAccent.BorderSizePixel = 0
+    TopAccent.ZIndex = 9992
+    TopAccent.Parent = WatermarkFrame
+
+    local TopAccentCorner = Instance.new("UICorner")
+    TopAccentCorner.CornerRadius = UDim.new(0, isMobile and 6 or 5)
+    TopAccentCorner.Parent = TopAccent
+
+    local AccentGradient = Instance.new("UIGradient")
+    AccentGradient.Color = ColorSequence.new{
+        ColorSequenceKeypoint.new(0, Theme.Primary),
+        ColorSequenceKeypoint.new(0.5, Theme.Accent),
+        ColorSequenceKeypoint.new(1, Theme.Primary)
+    }
+    AccentGradient.Parent = TopAccent
+
+    -- Subtle animated gradient on accent line
+    task.spawn(function()
+        while WatermarkFrame and WatermarkFrame.Parent do
+            TweenService:Create(AccentGradient, TweenInfo.new(3, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut), {
+                Offset = Vector2.new(1, 0)
+            }):Play()
+            task.wait(3)
+            TweenService:Create(AccentGradient, TweenInfo.new(3, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut), {
+                Offset = Vector2.new(-1, 0)
+            }):Play()
+            task.wait(3)
+        end
+    end)
+
+    -- Inner layout
+    local WmPadding = Instance.new("UIPadding")
+    WmPadding.PaddingLeft = UDim.new(0, isMobile and 8 or 10)
+    WmPadding.PaddingRight = UDim.new(0, isMobile and 8 or 10)
+    WmPadding.Parent = WatermarkFrame
+
+    -- Brand label: "Quantom.gg"
+    local BrandLabel = Instance.new("TextLabel")
+    BrandLabel.Name = randomName(10)
+    BrandLabel.Size = UDim2.new(0, isMobile and 62 or 72, 1, 0)
+    BrandLabel.Position = UDim2.new(0, 0, 0, 0)
+    BrandLabel.BackgroundTransparency = 1
+    BrandLabel.Text = "Quantom.gg"
+    BrandLabel.Font = Enum.Font.GothamBold
+    BrandLabel.TextSize = isMobile and 10 or 11
+    BrandLabel.TextColor3 = Theme.Primary
+    BrandLabel.TextXAlignment = Enum.TextXAlignment.Left
+    BrandLabel.ZIndex = 9993
+    BrandLabel.Parent = WatermarkFrame
+
+    -- Separator 1
+    local Sep1 = Instance.new("Frame")
+    Sep1.Name = randomName(6)
+    Sep1.Size = UDim2.new(0, 1, 0, isMobile and 12 or 14)
+    Sep1.Position = UDim2.new(0, isMobile and 66 or 78, 0.5, isMobile and -6 or -7)
+    Sep1.BackgroundColor3 = Theme.Border
+    Sep1.BorderSizePixel = 0
+    Sep1.ZIndex = 9993
+    Sep1.Parent = WatermarkFrame
+
+    -- Player name label
+    local NameLabel = Instance.new("TextLabel")
+    NameLabel.Name = randomName(11)
+    NameLabel.Size = UDim2.new(0, isMobile and 70 or 100, 1, 0)
+    NameLabel.Position = UDim2.new(0, isMobile and 72 or 86, 0, 0)
+    NameLabel.BackgroundTransparency = 1
+    NameLabel.Text = Player.DisplayName
+    NameLabel.Font = Enum.Font.GothamMedium
+    NameLabel.TextSize = isMobile and 9 or 10
+    NameLabel.TextColor3 = Theme.Text
+    NameLabel.TextXAlignment = Enum.TextXAlignment.Left
+    NameLabel.TextTruncate = Enum.TextTruncate.AtEnd
+    NameLabel.ZIndex = 9993
+    NameLabel.Parent = WatermarkFrame
+
+    -- Separator 2
+    local Sep2 = Instance.new("Frame")
+    Sep2.Name = randomName(6)
+    Sep2.Size = UDim2.new(0, 1, 0, isMobile and 12 or 14)
+    Sep2.Position = UDim2.new(0, isMobile and 146 or 192, 0.5, isMobile and -6 or -7)
+    Sep2.BackgroundColor3 = Theme.Border
+    Sep2.BorderSizePixel = 0
+    Sep2.ZIndex = 9993
+    Sep2.Parent = WatermarkFrame
+
+    -- FPS label
+    local FPSLabel = Instance.new("TextLabel")
+    FPSLabel.Name = randomName(10)
+    FPSLabel.Size = UDim2.new(0, isMobile and 42 or 48, 1, 0)
+    FPSLabel.Position = UDim2.new(0, isMobile and 152 or 200, 0, 0)
+    FPSLabel.BackgroundTransparency = 1
+    FPSLabel.Text = "0 FPS"
+    FPSLabel.Font = Enum.Font.GothamMedium
+    FPSLabel.TextSize = isMobile and 9 or 10
+    FPSLabel.TextColor3 = Theme.Success
+    FPSLabel.TextXAlignment = Enum.TextXAlignment.Left
+    FPSLabel.ZIndex = 9993
+    FPSLabel.Parent = WatermarkFrame
+
+    -- Separator 3
+    local Sep3 = Instance.new("Frame")
+    Sep3.Name = randomName(6)
+    Sep3.Size = UDim2.new(0, 1, 0, isMobile and 12 or 14)
+    Sep3.Position = UDim2.new(0, isMobile and 198 or 254, 0.5, isMobile and -6 or -7)
+    Sep3.BackgroundColor3 = Theme.Border
+    Sep3.BorderSizePixel = 0
+    Sep3.ZIndex = 9993
+    Sep3.Parent = WatermarkFrame
+
+    -- Ping label
+    local PingLabel = Instance.new("TextLabel")
+    PingLabel.Name = randomName(10)
+    PingLabel.Size = UDim2.new(0, isMobile and 50 or 52, 1, 0)
+    PingLabel.Position = UDim2.new(0, isMobile and 204 or 262, 0, 0)
+    PingLabel.BackgroundTransparency = 1
+    PingLabel.Text = "0ms"
+    PingLabel.Font = Enum.Font.GothamMedium
+    PingLabel.TextSize = isMobile and 9 or 10
+    PingLabel.TextColor3 = Theme.Info
+    PingLabel.TextXAlignment = Enum.TextXAlignment.Left
+    PingLabel.ZIndex = 9993
+    PingLabel.Parent = WatermarkFrame
+
+    -- Draggable watermark
+    local wmDragging = false
+    local wmDragStart, wmStartPos
+
+    WatermarkFrame.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            wmDragging = true
+            wmDragStart = input.Position
+            wmStartPos = WatermarkFrame.Position
+        end
+    end)
+
+    WatermarkFrame.InputEnded:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            wmDragging = false
+        end
+    end)
+
+    UserInputService.InputChanged:Connect(function(input)
+        if wmDragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+            local delta = input.Position - wmDragStart
+            WatermarkFrame.Position = UDim2.new(
+                wmStartPos.X.Scale,
+                wmStartPos.X.Offset + delta.X,
+                wmStartPos.Y.Scale,
+                wmStartPos.Y.Offset + delta.Y
+            )
+        end
+    end)
+
+    -- FPS + Ping update loop
+    WatermarkData.Connection = RunService.Heartbeat:Connect(function(dt)
+        if not WatermarkFrame or not WatermarkFrame.Parent then
+            if WatermarkData.Connection then
+                WatermarkData.Connection:Disconnect()
+            end
+            return
+        end
+
+        -- FPS calculation
+        WatermarkData.FrameCount = WatermarkData.FrameCount + 1
+        WatermarkData.LastFPSUpdate = WatermarkData.LastFPSUpdate + dt
+
+        if WatermarkData.LastFPSUpdate >= 0.5 then
+            WatermarkData.FPS = math.floor(WatermarkData.FrameCount / WatermarkData.LastFPSUpdate)
+            WatermarkData.FrameCount = 0
+            WatermarkData.LastFPSUpdate = 0
+
+            -- Ping
+            local ping = math.floor(Stats.Network.ServerStatsItem["Data Ping"]:GetValue())
+            WatermarkData.Ping = ping
+
+            -- Update FPS text + color
+            FPSLabel.Text = WatermarkData.FPS .. " FPS"
+            if WatermarkData.FPS >= 55 then
+                FPSLabel.TextColor3 = Theme.Success
+            elseif WatermarkData.FPS >= 30 then
+                FPSLabel.TextColor3 = Theme.Warning
+            else
+                FPSLabel.TextColor3 = Theme.Error
+            end
+
+            -- Update Ping text + color
+            PingLabel.Text = ping .. "ms"
+            if ping <= 80 then
+                PingLabel.TextColor3 = Theme.Success
+            elseif ping <= 150 then
+                PingLabel.TextColor3 = Theme.Warning
+            else
+                PingLabel.TextColor3 = Theme.Error
+            end
+        end
+    end)
+
+    WatermarkData.Frame = WatermarkFrame
+    return WatermarkFrame
+end
+
+local function ShowWatermark(screenGui)
+    if not WatermarkData.Frame then
+        CreateWatermark(screenGui)
+    end
+    WatermarkData.Frame.Visible = true
+    WatermarkData.Visible = true
+
+    -- Animate in
+    WatermarkData.Frame.BackgroundTransparency = 1
+    TweenService:Create(WatermarkData.Frame, TweenInfo.new(0.35, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {
+        BackgroundTransparency = 0.15
+    }):Play()
+
+    for _, child in ipairs(WatermarkData.Frame:GetDescendants()) do
+        if child:IsA("TextLabel") then
+            child.TextTransparency = 1
+            TweenService:Create(child, TweenInfo.new(0.35), {TextTransparency = 0}):Play()
+        elseif child:IsA("Frame") and child.BackgroundTransparency < 0.5 then
+            local target = child.BackgroundTransparency
+            child.BackgroundTransparency = 1
+            TweenService:Create(child, TweenInfo.new(0.35), {BackgroundTransparency = target}):Play()
+        end
+    end
+end
+
+local function HideWatermark()
+    if not WatermarkData.Frame then return end
+    WatermarkData.Visible = false
+
+    TweenService:Create(WatermarkData.Frame, TweenInfo.new(0.25, Enum.EasingStyle.Quint, Enum.EasingDirection.In), {
+        BackgroundTransparency = 1
+    }):Play()
+
+    for _, child in ipairs(WatermarkData.Frame:GetDescendants()) do
+        if child:IsA("TextLabel") then
+            TweenService:Create(child, TweenInfo.new(0.25), {TextTransparency = 1}):Play()
+        elseif child:IsA("Frame") and child.BackgroundTransparency < 0.5 then
+            TweenService:Create(child, TweenInfo.new(0.25), {BackgroundTransparency = 1}):Play()
+        end
+    end
+
+    task.delay(0.25, function()
+        if WatermarkData.Frame and not WatermarkData.Visible then
+            WatermarkData.Frame.Visible = false
+        end
+    end)
+end
+
+-- ══════════════════════════════════════════════════════════
+
 
 function QuantomLib:CreateWindow(config)
     local Window = {}
@@ -1882,6 +2183,21 @@ function QuantomLib:CreateWindow(config)
     -- Settings Tab (always at the end)
     task.defer(function()
         local SettingsTab = Window:CreateTab({Name = "Config", Icon = "⚙", _settingsTab = true})
+
+        -- Watermark section
+        SettingsTab:AddSection("Watermark")
+        SettingsTab:AddToggle({
+            Name = "Mostrar Watermark",
+            Default = false,
+            Callback = function(state)
+                if state then
+                    ShowWatermark(ScreenGui)
+                else
+                    HideWatermark()
+                end
+            end
+        })
+
         SettingsTab:AddSection("Atalhos do Script")
         SettingsTab:AddKeybind({
             Name = "Minimizar / Abrir",
