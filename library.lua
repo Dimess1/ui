@@ -40,7 +40,8 @@ local STEALTH_NAMES = {
     TooltipFrame = randomName(11),
     ConsoleFrame = randomName(12),
     ColorPicker = randomName(13),
-    ProfileManager = randomName(14)
+    ProfileManager = randomName(14),
+    KeybindList = randomName(13)
 }
 
 local DefaultThemes = {
@@ -564,6 +565,231 @@ local function HideWatermark()
     task.delay(0.25, function()
         if WatermarkData.Frame and not WatermarkData.Visible then
             WatermarkData.Frame.Visible = false
+        end
+    end)
+end
+
+local KeybindListData = {
+    Frame = nil,
+    Visible = false,
+    Entries = {},
+    Labels = {},
+}
+
+local function CreateKeybindList(screenGui)
+    if KeybindListData.Frame then return KeybindListData.Frame end
+
+    local listWidth = isMobile and 180 or 220
+    local KBListFrame = Instance.new("Frame")
+    KBListFrame.Name = STEALTH_NAMES.KeybindList
+    KBListFrame.Size = UDim2.new(0, listWidth, 0, 30)
+    KBListFrame.Position = UDim2.new(0, isMobile and 8 or 12, 1, -(isMobile and 50 or 60))
+    KBListFrame.AnchorPoint = Vector2.new(0, 1)
+    KBListFrame.BackgroundColor3 = Color3.fromRGB(10, 10, 13)
+    KBListFrame.BackgroundTransparency = 0.15
+    KBListFrame.BorderSizePixel = 0
+    KBListFrame.Visible = false
+    KBListFrame.ZIndex = 9980
+    KBListFrame.AutomaticSize = Enum.AutomaticSize.Y
+    KBListFrame.Parent = screenGui
+
+    local KBCorner = Instance.new("UICorner")
+    KBCorner.CornerRadius = UDim.new(0, isMobile and 6 or 5)
+    KBCorner.Parent = KBListFrame
+
+    local KBStroke = Instance.new("UIStroke")
+    KBStroke.Color = Theme.Primary
+    KBStroke.Thickness = 1
+    KBStroke.Transparency = 0.6
+    KBStroke.Parent = KBListFrame
+
+    local TopAccent = Instance.new("Frame")
+    TopAccent.Name = randomName(8)
+    TopAccent.Size = UDim2.new(1, 0, 0, 2)
+    TopAccent.Position = UDim2.new(0, 0, 0, 0)
+    TopAccent.BackgroundColor3 = Theme.Primary
+    TopAccent.BorderSizePixel = 0
+    TopAccent.ZIndex = 9982
+    TopAccent.Parent = KBListFrame
+
+    local TopAccentCorner = Instance.new("UICorner")
+    TopAccentCorner.CornerRadius = UDim.new(0, isMobile and 6 or 5)
+    TopAccentCorner.Parent = TopAccent
+
+    local KBPadding = Instance.new("UIPadding")
+    KBPadding.PaddingTop = UDim.new(0, 6)
+    KBPadding.PaddingBottom = UDim.new(0, 6)
+    KBPadding.PaddingLeft = UDim.new(0, isMobile and 8 or 10)
+    KBPadding.PaddingRight = UDim.new(0, isMobile and 8 or 10)
+    KBPadding.Parent = KBListFrame
+
+    local KBLayout = Instance.new("UIListLayout")
+    KBLayout.Padding = UDim.new(0, 2)
+    KBLayout.SortOrder = Enum.SortOrder.LayoutOrder
+    KBLayout.Parent = KBListFrame
+
+    local TitleRow = Instance.new("TextLabel")
+    TitleRow.Name = randomName(10)
+    TitleRow.Size = UDim2.new(1, 0, 0, isMobile and 16 or 14)
+    TitleRow.BackgroundTransparency = 1
+    TitleRow.Text = "Keybinds Ativos"
+    TitleRow.Font = Enum.Font.GothamBold
+    TitleRow.TextSize = isMobile and 10 or 9
+    TitleRow.TextColor3 = Theme.Primary
+    TitleRow.TextXAlignment = Enum.TextXAlignment.Left
+    TitleRow.ZIndex = 9983
+    TitleRow.LayoutOrder = 0
+    TitleRow.Parent = KBListFrame
+
+    local kbDragging = false
+    local kbDragStart, kbStartPos
+
+    KBListFrame.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            kbDragging = true
+            kbDragStart = input.Position
+            kbStartPos = KBListFrame.Position
+        end
+    end)
+
+    KBListFrame.InputEnded:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            kbDragging = false
+        end
+    end)
+
+    UserInputService.InputChanged:Connect(function(input)
+        if kbDragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+            local delta = input.Position - kbDragStart
+            KBListFrame.Position = UDim2.new(kbStartPos.X.Scale, kbStartPos.X.Offset + delta.X, kbStartPos.Y.Scale, kbStartPos.Y.Offset + delta.Y)
+        end
+    end)
+
+    KeybindListData.Frame = KBListFrame
+    return KBListFrame
+end
+
+local function UpdateKeybindList()
+    if not KeybindListData.Frame then return end
+
+    for _, label in pairs(KeybindListData.Labels) do
+        label:Destroy()
+    end
+    KeybindListData.Labels = {}
+
+    local hasActive = false
+    local order = 1
+
+    for _, entry in ipairs(KeybindListData.Entries) do
+        if entry.GetState() then
+            hasActive = true
+            order = order + 1
+
+            local Row = Instance.new("Frame")
+            Row.Name = randomName(8)
+            Row.Size = UDim2.new(1, 0, 0, isMobile and 18 or 16)
+            Row.BackgroundTransparency = 1
+            Row.ZIndex = 9983
+            Row.LayoutOrder = order
+            Row.Parent = KeybindListData.Frame
+
+            local NameLabel = Instance.new("TextLabel")
+            NameLabel.Name = randomName(7)
+            NameLabel.Size = UDim2.new(1, -(isMobile and 40 or 45), 1, 0)
+            NameLabel.Position = UDim2.new(0, 0, 0, 0)
+            NameLabel.BackgroundTransparency = 1
+            NameLabel.Text = entry.Name
+            NameLabel.Font = Enum.Font.GothamMedium
+            NameLabel.TextSize = isMobile and 9 or 10
+            NameLabel.TextColor3 = Theme.Text
+            NameLabel.TextXAlignment = Enum.TextXAlignment.Left
+            NameLabel.TextTruncate = Enum.TextTruncate.AtEnd
+            NameLabel.ZIndex = 9984
+            NameLabel.Parent = Row
+
+            local KeyLabel = Instance.new("TextLabel")
+            KeyLabel.Name = randomName(7)
+            KeyLabel.Size = UDim2.new(0, isMobile and 36 or 40, 0, isMobile and 14 or 13)
+            KeyLabel.Position = UDim2.new(1, -(isMobile and 36 or 40), 0.5, -(isMobile and 7 or 6.5))
+            KeyLabel.BackgroundColor3 = Theme.Primary
+            KeyLabel.BackgroundTransparency = 0.8
+            KeyLabel.Text = entry.GetKey().Name
+            KeyLabel.Font = Enum.Font.GothamBold
+            KeyLabel.TextSize = isMobile and 8 or 9
+            KeyLabel.TextColor3 = Theme.Primary
+            KeyLabel.ZIndex = 9984
+            KeyLabel.Parent = Row
+
+            local KeyCorner = Instance.new("UICorner")
+            KeyCorner.CornerRadius = UDim.new(0, 3)
+            KeyCorner.Parent = KeyLabel
+
+            table.insert(KeybindListData.Labels, Row)
+        end
+    end
+
+    if not hasActive then
+        local EmptyLabel = Instance.new("TextLabel")
+        EmptyLabel.Name = randomName(8)
+        EmptyLabel.Size = UDim2.new(1, 0, 0, isMobile and 14 or 12)
+        EmptyLabel.BackgroundTransparency = 1
+        EmptyLabel.Text = "Nenhum ativo"
+        EmptyLabel.Font = Enum.Font.Gotham
+        EmptyLabel.TextSize = isMobile and 8 or 9
+        EmptyLabel.TextColor3 = Theme.TextMuted
+        EmptyLabel.TextXAlignment = Enum.TextXAlignment.Left
+        EmptyLabel.ZIndex = 9983
+        EmptyLabel.LayoutOrder = 1
+        EmptyLabel.Parent = KeybindListData.Frame
+        table.insert(KeybindListData.Labels, EmptyLabel)
+    end
+end
+
+local function RegisterKeybindEntry(name, getState, getKey)
+    table.insert(KeybindListData.Entries, {
+        Name = name,
+        GetState = getState,
+        GetKey = getKey,
+    })
+    UpdateKeybindList()
+end
+
+local function ShowKeybindList(screenGui)
+    if not KeybindListData.Frame then
+        CreateKeybindList(screenGui)
+    end
+    KeybindListData.Frame.Visible = true
+    KeybindListData.Visible = true
+    UpdateKeybindList()
+
+    KeybindListData.Frame.BackgroundTransparency = 1
+    TweenService:Create(KeybindListData.Frame, TweenInfo.new(0.35, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {BackgroundTransparency = 0.15}):Play()
+    for _, child in ipairs(KeybindListData.Frame:GetDescendants()) do
+        if child:IsA("TextLabel") then
+            child.TextTransparency = 1
+            TweenService:Create(child, TweenInfo.new(0.35), {TextTransparency = 0}):Play()
+        elseif child:IsA("Frame") and child.BackgroundTransparency < 0.5 then
+            local target = child.BackgroundTransparency
+            child.BackgroundTransparency = 1
+            TweenService:Create(child, TweenInfo.new(0.35), {BackgroundTransparency = target}):Play()
+        end
+    end
+end
+
+local function HideKeybindList()
+    if not KeybindListData.Frame then return end
+    KeybindListData.Visible = false
+    TweenService:Create(KeybindListData.Frame, TweenInfo.new(0.25, Enum.EasingStyle.Quint, Enum.EasingDirection.In), {BackgroundTransparency = 1}):Play()
+    for _, child in ipairs(KeybindListData.Frame:GetDescendants()) do
+        if child:IsA("TextLabel") then
+            TweenService:Create(child, TweenInfo.new(0.25), {TextTransparency = 1}):Play()
+        elseif child:IsA("Frame") and child.BackgroundTransparency < 0.5 then
+            TweenService:Create(child, TweenInfo.new(0.25), {BackgroundTransparency = 1}):Play()
+        end
+    end
+    task.delay(0.25, function()
+        if KeybindListData.Frame and not KeybindListData.Visible then
+            KeybindListData.Frame.Visible = false
         end
     end)
 end
@@ -2481,6 +2707,7 @@ function QuantomLib:CreateWindow(config)
                 local endPos = toggleState and UDim2.new(1, isMobile and -20 or -16, 0.5, isMobile and -9 or -7) or UDim2.new(0, 2, 0.5, isMobile and -9 or -7)
                 TweenService:Create(ToggleCircle, TweenInfo.new(0.2, Enum.EasingStyle.Quad), {Position = endPos}):Play()
                 if config.Callback then config.Callback(toggleState) end
+                UpdateKeybindList()
             end
 
             ToggleBtn.MouseButton1Click:Connect(function()
@@ -2554,12 +2781,18 @@ function QuantomLib:CreateWindow(config)
                 SetKey = function(self, key)
                     currentKey = key
                     KeyBtn.Text = key.Name
+                    UpdateKeybindList()
                 end,
                 GetValue = function(self) return toggleState end,
                 GetState = function(self) return toggleState end,
                 GetKey = function(self) return currentKey end,
             }
             if flag then Window._elements[flag] = element end
+            RegisterKeybindEntry(
+                config.Name or "Toggle Keybind",
+                function() return toggleState end,
+                function() return currentKey end
+            )
             return element
         end
 
@@ -2957,6 +3190,12 @@ function QuantomLib:CreateWindow(config)
             NotificationContainer = nil
         end
         NotificationQueue = {}
+        if KeybindListData.Frame then
+            KeybindListData.Frame:Destroy()
+            KeybindListData.Frame = nil
+        end
+        KeybindListData.Entries = {}
+        KeybindListData.Labels = {}
         ScreenGui:Destroy()
     end
 
@@ -2980,6 +3219,21 @@ function QuantomLib:CreateWindow(config)
                     ShowWatermark(ScreenGui)
                 else
                     HideWatermark()
+                end
+            end
+        })
+
+        SettingsTab:AddSection("Keybind List")
+        SettingsTab:AddToggle({
+            Name = "Mostrar Keybinds Ativos",
+            Default = false,
+            Flag = "keybindlist_visible",
+            Tooltip = "Mostra um painel com todos os toggles ativos e suas teclas",
+            Callback = function(state)
+                if state then
+                    ShowKeybindList(ScreenGui)
+                else
+                    HideKeybindList()
                 end
             end
         })
