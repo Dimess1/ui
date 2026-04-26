@@ -893,7 +893,7 @@ function QuantomLib:CreateWindow(config)
         HUDTitle.Size = UDim2.new(1, -50, 1, 0)
         HUDTitle.Position = UDim2.new(0, 22, 0, 0)
         HUDTitle.BackgroundTransparency = 1
-        HUDTitle.Text = "CHEATS HUD"
+        HUDTitle.Text = "KEYBIND LIST"
         HUDTitle.Font = Enum.Font.GothamBold
         HUDTitle.TextSize = isMobile and 9 or 10
         HUDTitle.TextColor3 = Theme.TextMuted
@@ -964,145 +964,137 @@ function QuantomLib:CreateWindow(config)
         HUDPad.PaddingRight = UDim.new(0, 8)
         HUDPad.Parent = HUDContent
         local rowRefs = {}
-        if count == 0 then
-            local EmptyLabel = Instance.new("TextLabel")
-            EmptyLabel.Size = UDim2.new(1, 0, 0, rowH)
-            EmptyLabel.BackgroundTransparency = 1
-            EmptyLabel.Text = "Nenhuma feature registrada"
-            EmptyLabel.Font = Enum.Font.Gotham
-            EmptyLabel.TextSize = isMobile and 9 or 10
-            EmptyLabel.TextColor3 = Theme.TextMuted
-            EmptyLabel.ZIndex = 8002
-            EmptyLabel.Parent = HUDContent
-        else
-            for i, entry in ipairs(HUDRegistry) do
-                local Row = Instance.new("Frame")
-                Row.Name = randomName(8)
-                Row.Size = UDim2.new(1, 0, 0, rowH)
-                Row.BackgroundTransparency = 1
-                Row.LayoutOrder = i
-                Row.ZIndex = 8002
-                Row.Parent = HUDContent
-                local Dot = Instance.new("Frame")
-                Dot.Size = UDim2.new(0, isMobile and 7 or 6, 0, isMobile and 7 or 6)
-                Dot.Position = UDim2.new(0, 0, 0.5, isMobile and -3.5 or -3)
-                Dot.BackgroundColor3 = Theme.Error
-                Dot.BorderSizePixel = 0
-                Dot.ZIndex = 8003
-                Dot.Parent = Row
-                Instance.new("UICorner", Dot).CornerRadius = UDim.new(1, 0)
-                local NameLabel = Instance.new("TextLabel")
-                NameLabel.Size = UDim2.new(1, -(isMobile and 70 or 80), 1, 0)
-                NameLabel.Position = UDim2.new(0, isMobile and 13 or 12, 0, 0)
-                NameLabel.BackgroundTransparency = 1
-                NameLabel.Text = entry.Name
-                NameLabel.Font = Enum.Font.GothamMedium
-                NameLabel.TextSize = isMobile and 10 or 10
-                NameLabel.TextColor3 = Theme.TextSecondary
-                NameLabel.TextXAlignment = Enum.TextXAlignment.Left
-                NameLabel.TextTruncate = Enum.TextTruncate.AtEnd
-                NameLabel.ZIndex = 8003
-                NameLabel.Parent = Row
-                local RightFrame = Instance.new("Frame")
-                RightFrame.Size = UDim2.new(0, isMobile and 62 or 72, 1, 0)
-                RightFrame.Position = UDim2.new(1, -(isMobile and 62 or 72), 0, 0)
-                RightFrame.BackgroundTransparency = 1
-                RightFrame.ZIndex = 8003
-                RightFrame.Parent = Row
-                local KeyTag = Instance.new("Frame")
-                KeyTag.Size = UDim2.new(0, isMobile and 28 or 32, 0, isMobile and 16 or 14)
-                KeyTag.Position = UDim2.new(0, 0, 0.5, isMobile and -8 or -7)
-                KeyTag.BackgroundColor3 = Theme.SurfaceLight
-                KeyTag.BorderSizePixel = 0
-                KeyTag.ZIndex = 8004
-                KeyTag.Parent = RightFrame
-                Instance.new("UICorner", KeyTag).CornerRadius = UDim.new(0, 3)
-                local KeyTagStroke = Instance.new("UIStroke")
-                KeyTagStroke.Color = Theme.Border
-                KeyTagStroke.Thickness = 1
-                KeyTagStroke.Parent = KeyTag
-                local KeyTagText = Instance.new("TextLabel")
-                KeyTagText.Size = UDim2.new(1, 0, 1, 0)
-                KeyTagText.BackgroundTransparency = 1
-                KeyTagText.Font = Enum.Font.GothamBold
-                KeyTagText.TextSize = isMobile and 7 or 8
-                KeyTagText.TextColor3 = Theme.TextSecondary
-                KeyTagText.ZIndex = 8005
-                KeyTagText.Parent = KeyTag
-                local StateTag = Instance.new("Frame")
-                StateTag.Size = UDim2.new(0, isMobile and 28 or 34, 0, isMobile and 16 or 14)
-                StateTag.Position = UDim2.new(1, -(isMobile and 28 or 34), 0.5, isMobile and -8 or -7)
-                StateTag.BackgroundColor3 = Theme.Error
-                StateTag.BackgroundTransparency = 0.5
-                StateTag.BorderSizePixel = 0
-                StateTag.ZIndex = 8004
-                StateTag.Parent = RightFrame
-                Instance.new("UICorner", StateTag).CornerRadius = UDim.new(0, 3)
-                local StateText = Instance.new("TextLabel")
-                StateText.Size = UDim2.new(1, 0, 1, 0)
-                StateText.BackgroundTransparency = 1
-                StateText.Font = Enum.Font.GothamBold
-                StateText.TextSize = isMobile and 7 or 8
-                StateText.ZIndex = 8005
-                StateText.Parent = StateTag
-                rowRefs[i] = {
-                    Dot = Dot,
-                    KeyTagText = KeyTagText,
-                    KeyTagStroke = KeyTagStroke,
-                    StateTag = StateTag,
-                    StateText = StateText,
-                    NameLabel = NameLabel,
-                    Entry = entry
-                }
-                if i < count then
-                    local Div = Instance.new("Frame")
-                    Div.Size = UDim2.new(1, 4, 0, 1)
-                    Div.Position = UDim2.new(0, -4, 1, 0)
-                    Div.BackgroundColor3 = Theme.Divider
-                    Div.BackgroundTransparency = 0.6
-                    Div.BorderSizePixel = 0
-                    Div.ZIndex = 8002
-                    Div.Parent = Row
-                end
-            end
+        for i, entry in ipairs(HUDRegistry) do
+            local Row = Instance.new("Frame")
+            Row.Name = randomName(8)
+            Row.Size = UDim2.new(1, 0, 0, 0)
+            Row.BackgroundTransparency = 1
+            Row.ClipsDescendants = true
+            Row.LayoutOrder = i
+            Row.ZIndex = 8002
+            Row.Parent = HUDContent
+            local Dot = Instance.new("Frame")
+            Dot.Size = UDim2.new(0, isMobile and 7 or 6, 0, isMobile and 7 or 6)
+            Dot.Position = UDim2.new(0, 0, 0.5, isMobile and -3.5 or -3)
+            Dot.BackgroundColor3 = Theme.Success
+            Dot.BorderSizePixel = 0
+            Dot.ZIndex = 8003
+            Dot.Parent = Row
+            Instance.new("UICorner", Dot).CornerRadius = UDim.new(1, 0)
+            local NameLabel = Instance.new("TextLabel")
+            NameLabel.Size = UDim2.new(1, -(isMobile and 70 or 80), 1, 0)
+            NameLabel.Position = UDim2.new(0, isMobile and 13 or 12, 0, 0)
+            NameLabel.BackgroundTransparency = 1
+            NameLabel.Text = entry.Name
+            NameLabel.Font = Enum.Font.GothamMedium
+            NameLabel.TextSize = isMobile and 10 or 10
+            NameLabel.TextColor3 = Theme.Text
+            NameLabel.TextXAlignment = Enum.TextXAlignment.Left
+            NameLabel.TextTruncate = Enum.TextTruncate.AtEnd
+            NameLabel.ZIndex = 8003
+            NameLabel.Parent = Row
+            local RightFrame = Instance.new("Frame")
+            RightFrame.Size = UDim2.new(0, isMobile and 62 or 72, 1, 0)
+            RightFrame.Position = UDim2.new(1, -(isMobile and 62 or 72), 0, 0)
+            RightFrame.BackgroundTransparency = 1
+            RightFrame.ZIndex = 8003
+            RightFrame.Parent = Row
+            local KeyTag = Instance.new("Frame")
+            KeyTag.Size = UDim2.new(0, isMobile and 28 or 32, 0, isMobile and 16 or 14)
+            KeyTag.Position = UDim2.new(0, 0, 0.5, isMobile and -8 or -7)
+            KeyTag.BackgroundColor3 = Theme.SurfaceLight
+            KeyTag.BorderSizePixel = 0
+            KeyTag.ZIndex = 8004
+            KeyTag.Parent = RightFrame
+            Instance.new("UICorner", KeyTag).CornerRadius = UDim.new(0, 3)
+            local KeyTagStroke = Instance.new("UIStroke")
+            KeyTagStroke.Color = Theme.Border
+            KeyTagStroke.Thickness = 1
+            KeyTagStroke.Parent = KeyTag
+            local KeyTagText = Instance.new("TextLabel")
+            KeyTagText.Size = UDim2.new(1, 0, 1, 0)
+            KeyTagText.BackgroundTransparency = 1
+            KeyTagText.Font = Enum.Font.GothamBold
+            KeyTagText.TextSize = isMobile and 7 or 8
+            KeyTagText.TextColor3 = Theme.TextSecondary
+            KeyTagText.ZIndex = 8005
+            KeyTagText.Parent = KeyTag
+            local StateTag = Instance.new("Frame")
+            StateTag.Size = UDim2.new(0, isMobile and 28 or 34, 0, isMobile and 16 or 14)
+            StateTag.Position = UDim2.new(1, -(isMobile and 28 or 34), 0.5, isMobile and -8 or -7)
+            StateTag.BackgroundColor3 = Theme.Success
+            StateTag.BackgroundTransparency = 0.5
+            StateTag.BorderSizePixel = 0
+            StateTag.ZIndex = 8004
+            StateTag.Parent = RightFrame
+            Instance.new("UICorner", StateTag).CornerRadius = UDim.new(0, 3)
+            local StateText = Instance.new("TextLabel")
+            StateText.Size = UDim2.new(1, 0, 1, 0)
+            StateText.BackgroundTransparency = 1
+            StateText.Font = Enum.Font.GothamBold
+            StateText.TextSize = isMobile and 7 or 8
+            StateText.ZIndex = 8005
+            StateText.Parent = StateTag
+            rowRefs[i] = {
+                Row = Row,
+                Dot = Dot,
+                KeyTagText = KeyTagText,
+                StateTag = StateTag,
+                StateText = StateText,
+                NameLabel = NameLabel,
+                Entry = entry,
+                visible = false
+            }
         end
+        local lastVisibleCount = -1
         HUDConnection = RunService.Heartbeat:Connect(function()
             if not HUD or not HUD.Parent then
                 if HUDConnection then HUDConnection:Disconnect() end
                 return
             end
+            local visibleCount = 0
             for _, ref in ipairs(rowRefs) do
                 local entry = ref.Entry
                 local state = entry.GetState and entry.GetState()
-                local key = entry.GetKey and entry.GetKey() or "?"
                 local eType = entry.Type or "Toggle"
-                local displayKey = key
-                if #displayKey > 4 then displayKey = displayKey:sub(1,4) end
-                ref.KeyTagText.Text = displayKey
-                if eType == "Hold" then
-                    ref.StateTag.BackgroundColor3 = Theme.Warning
-                    ref.StateText.Text = "HOLD"
-                    ref.StateText.TextColor3 = Theme.Warning
-                    ref.Dot.BackgroundColor3 = Theme.Warning
-                elseif eType == "Action" then
-                    ref.StateTag.BackgroundColor3 = Theme.Info
-                    ref.StateText.Text = "ACT"
-                    ref.StateText.TextColor3 = Theme.Info
-                    ref.Dot.BackgroundColor3 = Theme.Info
-                elseif state == true then
-                    ref.StateTag.BackgroundColor3 = Theme.Success
-                    ref.StateText.Text = "ON"
-                    ref.StateText.TextColor3 = Theme.Success
-                    ref.Dot.BackgroundColor3 = Theme.Success
-                    ref.NameLabel.TextColor3 = Theme.Text
+                local shouldShow = (eType == "Hold") or (eType == "Action") or (state == true)
+                if shouldShow then
+                    visibleCount = visibleCount + 1
+                    if not ref.visible then
+                        ref.visible = true
+                        TweenService:Create(ref.Row, TweenInfo.new(0.15), {Size = UDim2.new(1, 0, 0, rowH)}):Play()
+                    end
+                    local key = entry.GetKey and entry.GetKey() or "?"
+                    ref.KeyTagText.Text = #key > 4 and key:sub(1,4) or key
+                    if eType == "Hold" then
+                        ref.StateTag.BackgroundColor3 = Theme.Warning
+                        ref.StateText.Text = "HOLD"
+                        ref.StateText.TextColor3 = Theme.Warning
+                        ref.Dot.BackgroundColor3 = Theme.Warning
+                    elseif eType == "Action" then
+                        ref.StateTag.BackgroundColor3 = Theme.Info
+                        ref.StateText.Text = "ACT"
+                        ref.StateText.TextColor3 = Theme.Info
+                        ref.Dot.BackgroundColor3 = Theme.Info
+                    else
+                        ref.StateTag.BackgroundColor3 = Theme.Success
+                        ref.StateText.Text = "ON"
+                        ref.StateText.TextColor3 = Theme.Success
+                        ref.Dot.BackgroundColor3 = Theme.Success
+                        ref.NameLabel.TextColor3 = Theme.Text
+                    end
+                    ref.StateTag.BackgroundTransparency = 0.5
                 else
-                    ref.StateTag.BackgroundColor3 = Theme.Error
-                    ref.StateText.Text = "OFF"
-                    ref.StateText.TextColor3 = Theme.Error
-                    ref.Dot.BackgroundColor3 = Theme.TextMuted
-                    ref.NameLabel.TextColor3 = Theme.TextMuted
+                    if ref.visible then
+                        ref.visible = false
+                        TweenService:Create(ref.Row, TweenInfo.new(0.12), {Size = UDim2.new(1, 0, 0, 0)}):Play()
+                    end
                 end
-                ref.StateTag.BackgroundTransparency = 0.6
+            end
+            if visibleCount ~= lastVisibleCount then
+                lastVisibleCount = visibleCount
+                local newH = headerH + math.max(visibleCount, 0) * rowH + (visibleCount > 0 and 8 or 4)
+                TweenService:Create(HUD, TweenInfo.new(0.2), {Size = UDim2.new(0, hudW, 0, newH)}):Play()
             end
         end)
         HUD.BackgroundTransparency = 1
