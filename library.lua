@@ -1064,7 +1064,7 @@ function QuantomLib:CreateWindow(config)
                         ref.visible = true
                         TweenService:Create(ref.Row, TweenInfo.new(0.15), {Size = UDim2.new(1, 0, 0, rowH)}):Play()
                     end
-                    local key = entry.GetKey and entry.GetKey() or "?"
+                    local key = entry.GetKey and entry.GetKey() or "—"
                     ref.KeyTagText.Text = #key > 4 and key:sub(1,4) or key
                     if eType == "Hold" then
                         ref.StateTag.BackgroundColor3 = Theme.Warning
@@ -1140,7 +1140,6 @@ function QuantomLib:CreateWindow(config)
             if HUDFrame and HUDFrame.Parent then HUDFrame.Visible = false end
         end)
     end
-    local function BuildKeybindListUI() end
     function Window:Notify(config)
         CreateNotification(config)
     end
@@ -1334,14 +1333,13 @@ function QuantomLib:CreateWindow(config)
                     config.Callback(toggleState)
                 end
             end)
-            if config.ShowInHUD then
+            if not config.HideFromHUD then
                 table.insert(HUDRegistry, {
                     Name = config.Name or "Toggle",
                     Type = "Toggle",
                     GetState = function() return toggleState end,
                     GetKey = function()
-                        if config.HUDKey then return config.HUDKey end
-                        return "—"
+                        return config.HUDKey or "—"
                     end
                 })
             end
@@ -1930,15 +1928,14 @@ function QuantomLib:CreateWindow(config)
                     end
                 end
             end)
-            if not config._internal then
+            if not config._internal and not config.HideFromHUD then
                 table.insert(HUDRegistry, {
                     Name = config.Name or "Keybind",
                     Type = config.HUDType or "Action",
                     GetState = config.GetState or nil,
                     GetKey = function()
                         return currentKey.Name
-                    end,
-                    _skipHUD = not config.ShowInHUD
+                    end
                 })
             end
             return {
@@ -2307,6 +2304,7 @@ function QuantomLib:CreateWindow(config)
         SettingsTab:AddToggle({
             Name = "Mostrar Watermark",
             Default = false,
+            HideFromHUD = true,
             Callback = function(state)
                 if state then
                     ShowWatermark(ScreenGui)
@@ -2326,8 +2324,9 @@ function QuantomLib:CreateWindow(config)
         })
         SettingsTab:AddSection("Lista de Keybinds")
         SettingsTab:AddToggle({
-            Name = "Cheats HUD",
+            Name = "KeyBind List",
             Default = false,
+            HideFromHUD = true,
             Callback = function(state)
                 if state then
                     if HUDFrame and HUDFrame.Parent then HUDFrame:Destroy() HUDFrame = nil end
