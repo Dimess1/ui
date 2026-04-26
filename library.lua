@@ -13,7 +13,6 @@ local PlayerGui = Player:WaitForChild("PlayerGui")
 local isMobile = UserInputService.TouchEnabled and not UserInputService.KeyboardEnabled
 local viewportSize = workspace.CurrentCamera.ViewportSize
 
-
 local function randomName(length)
     length = length or 16
     local chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
@@ -24,7 +23,6 @@ local function randomName(length)
     end
     return result
 end
-
 
 local STEALTH_NAMES = {
     ScreenGui = randomName(12),
@@ -69,12 +67,12 @@ local function CreateNotificationContainer()
     NotificationContainer.Position = UDim2.new(1, -(isMobile and 290 or 330), 0, 10)
     NotificationContainer.BackgroundTransparency = 1
     NotificationContainer.ZIndex = 9999
-    
+
     local screenGui = PlayerGui:FindFirstChild(STEALTH_NAMES.ScreenGui)
     if not screenGui then
         screenGui = PlayerGui:GetChildren()[#PlayerGui:GetChildren()]
     end
-    
+
     NotificationContainer.Parent = screenGui or PlayerGui
 
     local NotificationList = Instance.new("UIListLayout")
@@ -553,13 +551,17 @@ local function HideWatermark()
     end)
 end
 
-
 function QuantomLib:CreateWindow(config)
     local Window = {}
     Window.Name = config.Name or "QUANTOM.GG"
     Window.Version = config.Version or "v1.0.0"
     Window.Categories = {}
     local minimizeKey = config.MinimizeKey or Enum.KeyCode.RightShift
+
+    local RegisteredKeybinds = {}
+    local KeybindListVisible = false
+    local KeybindListFrame = nil
+    local KeybindListRowContainer = nil
 
     for _, gui in ipairs(PlayerGui:GetChildren()) do
         if gui:IsA("ScreenGui") and gui.Name == STEALTH_NAMES.ScreenGui then
@@ -588,19 +590,32 @@ function QuantomLib:CreateWindow(config)
     MainContainer.Position = UDim2.new(0.5, -uiWidth/2, 0.5, -uiHeight/2)
     MainContainer.BackgroundColor3 = Theme.Background
     MainContainer.BorderSizePixel = 0
-    MainContainer.ClipsDescendants = true
+    MainContainer.ClipsDescendants = false
     MainContainer.Visible = false
     MainContainer.Parent = ScreenGui
 
+    local ClipFrame = Instance.new("Frame")
+    ClipFrame.Name = randomName(10)
+    ClipFrame.Size = UDim2.new(1, 0, 1, 0)
+    ClipFrame.BackgroundColor3 = Theme.Background
+    ClipFrame.BorderSizePixel = 0
+    ClipFrame.ClipsDescendants = true
+    ClipFrame.ZIndex = 1
+    ClipFrame.Parent = MainContainer
+
     local MainCorner = Instance.new("UICorner")
     MainCorner.CornerRadius = UDim.new(0, isMobile and 8 or 6)
-    MainCorner.Parent = MainContainer
+    MainCorner.Parent = ClipFrame
 
     local MainStroke = Instance.new("UIStroke")
     MainStroke.Color = Theme.Border
     MainStroke.Thickness = 1
     MainStroke.Transparency = 0.3
     MainStroke.Parent = MainContainer
+
+    local MainOuterCorner = Instance.new("UICorner")
+    MainOuterCorner.CornerRadius = UDim.new(0, isMobile and 8 or 6)
+    MainOuterCorner.Parent = MainContainer
 
     local FloatingButton = Instance.new("ImageButton")
     FloatingButton.Name = STEALTH_NAMES.FloatingButton
@@ -680,7 +695,7 @@ function QuantomLib:CreateWindow(config)
     BackgroundEffects.BackgroundTransparency = 1
     BackgroundEffects.ClipsDescendants = true
     BackgroundEffects.ZIndex = 0
-    BackgroundEffects.Parent = MainContainer
+    BackgroundEffects.Parent = ClipFrame
 
     for i = 1, isMobile and 8 or 15 do
         local particle = Instance.new("Frame")
@@ -740,7 +755,7 @@ function QuantomLib:CreateWindow(config)
     Header.BackgroundColor3 = Theme.Sidebar
     Header.BorderSizePixel = 0
     Header.ZIndex = 2
-    Header.Parent = MainContainer
+    Header.Parent = ClipFrame
 
     local HeaderCorner = Instance.new("UICorner")
     HeaderCorner.CornerRadius = UDim.new(0, isMobile and 8 or 6)
@@ -906,7 +921,7 @@ function QuantomLib:CreateWindow(config)
     Sidebar.BackgroundColor3 = Theme.Sidebar
     Sidebar.BorderSizePixel = 0
     Sidebar.ZIndex = 2
-    Sidebar.Parent = MainContainer
+    Sidebar.Parent = ClipFrame
 
     local SidebarList = Instance.new("UIListLayout")
     SidebarList.Padding = UDim.new(0, 2)
@@ -926,9 +941,394 @@ function QuantomLib:CreateWindow(config)
     ContentArea.BackgroundTransparency = 1
     ContentArea.BorderSizePixel = 0
     ContentArea.ZIndex = 2
-    ContentArea.Parent = MainContainer
+    ContentArea.Parent = ClipFrame
+
+    local DropdownOverlay = Instance.new("Frame")
+    DropdownOverlay.Name = randomName(12)
+    DropdownOverlay.Size = UDim2.new(1, 0, 1, 0)
+    DropdownOverlay.BackgroundTransparency = 1
+    DropdownOverlay.BorderSizePixel = 0
+    DropdownOverlay.ZIndex = 50
+    DropdownOverlay.Parent = MainContainer
+
+    local currentOpenDropdown = nil
 
     local currentTab = nil
+
+    local function BuildKeybindListUI()
+        if KeybindListFrame then
+            KeybindListFrame:Destroy()
+            KeybindListFrame = nil
+        end
+
+        local kw = isMobile and math.min(uiWidth - 20, 340) or 420
+        local kh = isMobile and 320 or 380
+
+        local Overlay = Instance.new("Frame")
+        Overlay.Name = randomName(12)
+        Overlay.Size = UDim2.new(1, 0, 1, 0)
+        Overlay.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+        Overlay.BackgroundTransparency = 0.5
+        Overlay.BorderSizePixel = 0
+        Overlay.ZIndex = 200
+        Overlay.Parent = MainContainer
+
+        local KBFrame = Instance.new("Frame")
+        KBFrame.Name = randomName(14)
+        KBFrame.Size = UDim2.new(0, kw, 0, kh)
+        KBFrame.Position = UDim2.new(0.5, -kw/2, 0.5, -kh/2)
+        KBFrame.BackgroundColor3 = Theme.Surface
+        KBFrame.BorderSizePixel = 0
+        KBFrame.ZIndex = 201
+        KBFrame.Parent = MainContainer
+
+        local KBCorner = Instance.new("UICorner")
+        KBCorner.CornerRadius = UDim.new(0, 8)
+        KBCorner.Parent = KBFrame
+
+        local KBStroke = Instance.new("UIStroke")
+        KBStroke.Color = Theme.Primary
+        KBStroke.Thickness = 1
+        KBStroke.Transparency = 0.4
+        KBStroke.Parent = KBFrame
+
+        local KBAccent = Instance.new("Frame")
+        KBAccent.Size = UDim2.new(1, 0, 0, 2)
+        KBAccent.BackgroundColor3 = Theme.Primary
+        KBAccent.BorderSizePixel = 0
+        KBAccent.ZIndex = 202
+        KBAccent.Parent = KBFrame
+        local KBAccentCorner = Instance.new("UICorner")
+        KBAccentCorner.CornerRadius = UDim.new(0, 8)
+        KBAccentCorner.Parent = KBAccent
+
+        local KBHeader = Instance.new("Frame")
+        KBHeader.Name = randomName(10)
+        KBHeader.Size = UDim2.new(1, 0, 0, isMobile and 44 or 42)
+        KBHeader.BackgroundColor3 = Theme.Sidebar
+        KBHeader.BorderSizePixel = 0
+        KBHeader.ZIndex = 202
+        KBHeader.Parent = KBFrame
+
+        local KBHeaderCorner = Instance.new("UICorner")
+        KBHeaderCorner.CornerRadius = UDim.new(0, 8)
+        KBHeaderCorner.Parent = KBHeader
+
+        local KBHeaderFix = Instance.new("Frame")
+        KBHeaderFix.Size = UDim2.new(1, 0, 0, 8)
+        KBHeaderFix.Position = UDim2.new(0, 0, 1, -8)
+        KBHeaderFix.BackgroundColor3 = Theme.Sidebar
+        KBHeaderFix.BorderSizePixel = 0
+        KBHeaderFix.ZIndex = 202
+        KBHeaderFix.Parent = KBHeader
+
+        local KBIconBadge = Instance.new("Frame")
+        KBIconBadge.Size = UDim2.new(0, 26, 0, 26)
+        KBIconBadge.Position = UDim2.new(0, 14, 0.5, -13)
+        KBIconBadge.BackgroundColor3 = Theme.Primary
+        KBIconBadge.BackgroundTransparency = 0.7
+        KBIconBadge.BorderSizePixel = 0
+        KBIconBadge.ZIndex = 203
+        KBIconBadge.Parent = KBHeader
+        local KBIconBadgeCorner = Instance.new("UICorner")
+        KBIconBadgeCorner.CornerRadius = UDim.new(0, 5)
+        KBIconBadgeCorner.Parent = KBIconBadge
+        local KBIconLabel = Instance.new("TextLabel")
+        KBIconLabel.Size = UDim2.new(1, 0, 1, 0)
+        KBIconLabel.BackgroundTransparency = 1
+        KBIconLabel.Text = "⌨"
+        KBIconLabel.Font = Enum.Font.GothamBold
+        KBIconLabel.TextSize = isMobile and 13 or 14
+        KBIconLabel.TextColor3 = Theme.Primary
+        KBIconLabel.ZIndex = 204
+        KBIconLabel.Parent = KBIconBadge
+
+        local KBTitle = Instance.new("TextLabel")
+        KBTitle.Size = UDim2.new(1, -100, 1, 0)
+        KBTitle.Position = UDim2.new(0, 48, 0, 0)
+        KBTitle.BackgroundTransparency = 1
+        KBTitle.Text = "KEYBIND LIST"
+        KBTitle.Font = Enum.Font.GothamBold
+        KBTitle.TextSize = isMobile and 12 or 13
+        KBTitle.TextColor3 = Theme.Text
+        KBTitle.TextXAlignment = Enum.TextXAlignment.Left
+        KBTitle.ZIndex = 203
+        KBTitle.Parent = KBHeader
+
+        local KBCount = Instance.new("TextLabel")
+        KBCount.Size = UDim2.new(0, 60, 0, 20)
+        KBCount.Position = UDim2.new(0, 48, 0.5, -10)
+        KBCount.BackgroundTransparency = 1
+        KBCount.Text = #RegisteredKeybinds .. " atalhos"
+        KBCount.Font = Enum.Font.Gotham
+        KBCount.TextSize = isMobile and 9 or 10
+        KBCount.TextColor3 = Theme.TextMuted
+        KBCount.TextXAlignment = Enum.TextXAlignment.Left
+        KBCount.ZIndex = 203
+        KBCount.Parent = KBHeader
+
+        KBTitle.Size = UDim2.new(1, -100, 0, 18)
+        KBTitle.Position = UDim2.new(0, 48, 0, 8)
+        KBCount.Position = UDim2.new(0, 48, 0, 26)
+
+        local KBClose = Instance.new("TextButton")
+        KBClose.Size = UDim2.new(0, 28, 0, 28)
+        KBClose.Position = UDim2.new(1, -38, 0.5, -14)
+        KBClose.BackgroundColor3 = Theme.Surface
+        KBClose.Text = "×"
+        KBClose.Font = Enum.Font.GothamBold
+        KBClose.TextSize = isMobile and 18 or 16
+        KBClose.TextColor3 = Theme.TextMuted
+        KBClose.AutoButtonColor = false
+        KBClose.ZIndex = 203
+        KBClose.Parent = KBHeader
+
+        local KBCloseCorner = Instance.new("UICorner")
+        KBCloseCorner.CornerRadius = UDim.new(0, 4)
+        KBCloseCorner.Parent = KBClose
+
+        KBClose.MouseEnter:Connect(function()
+            TweenService:Create(KBClose, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(200,50,50), TextColor3 = Theme.Text}):Play()
+        end)
+        KBClose.MouseLeave:Connect(function()
+            TweenService:Create(KBClose, TweenInfo.new(0.2), {BackgroundColor3 = Theme.Surface, TextColor3 = Theme.TextMuted}):Play()
+        end)
+
+        local ColHeader = Instance.new("Frame")
+        ColHeader.Name = randomName(10)
+        ColHeader.Size = UDim2.new(1, 0, 0, isMobile and 26 or 24)
+        ColHeader.Position = UDim2.new(0, 0, 0, isMobile and 44 or 42)
+        ColHeader.BackgroundColor3 = Theme.Background
+        ColHeader.BackgroundTransparency = 0.3
+        ColHeader.BorderSizePixel = 0
+        ColHeader.ZIndex = 202
+        ColHeader.Parent = KBFrame
+
+        local ColPad = Instance.new("UIPadding")
+        ColPad.PaddingLeft = UDim.new(0, 16)
+        ColPad.PaddingRight = UDim.new(0, 16)
+        ColPad.Parent = ColHeader
+
+        local ColFunction = Instance.new("TextLabel")
+        ColFunction.Size = UDim2.new(0.6, 0, 1, 0)
+        ColFunction.BackgroundTransparency = 1
+        ColFunction.Text = "FUNÇÃO"
+        ColFunction.Font = Enum.Font.GothamBold
+        ColFunction.TextSize = isMobile and 9 or 10
+        ColFunction.TextColor3 = Theme.TextMuted
+        ColFunction.TextXAlignment = Enum.TextXAlignment.Left
+        ColFunction.ZIndex = 203
+        ColFunction.Parent = ColHeader
+
+        local ColKey = Instance.new("TextLabel")
+        ColKey.Size = UDim2.new(0.4, 0, 1, 0)
+        ColKey.Position = UDim2.new(0.6, 0, 0, 0)
+        ColKey.BackgroundTransparency = 1
+        ColKey.Text = "TECLA"
+        ColKey.Font = Enum.Font.GothamBold
+        ColKey.TextSize = isMobile and 9 or 10
+        ColKey.TextColor3 = Theme.TextMuted
+        ColKey.TextXAlignment = Enum.TextXAlignment.Right
+        ColKey.ZIndex = 203
+        ColKey.Parent = ColHeader
+
+        local ColDiv = Instance.new("Frame")
+        ColDiv.Size = UDim2.new(1, -32, 0, 1)
+        ColDiv.Position = UDim2.new(0, 16, 1, 0)
+        ColDiv.BackgroundColor3 = Theme.Divider
+        ColDiv.BorderSizePixel = 0
+        ColDiv.ZIndex = 202
+        ColDiv.Parent = ColHeader
+
+        local topOffset = (isMobile and 44 or 42) + (isMobile and 26 or 24) + 1
+        local KBScroll = Instance.new("ScrollingFrame")
+        KBScroll.Name = randomName(13)
+        KBScroll.Size = UDim2.new(1, 0, 1, -topOffset - (isMobile and 44 or 42))
+        KBScroll.Position = UDim2.new(0, 0, 0, topOffset)
+        KBScroll.BackgroundTransparency = 1
+        KBScroll.BorderSizePixel = 0
+        KBScroll.ScrollBarThickness = isMobile and 4 or 3
+        KBScroll.ScrollBarImageColor3 = Theme.Primary
+        KBScroll.ScrollBarImageTransparency = 0.4
+        KBScroll.CanvasSize = UDim2.new(0, 0, 0, 0)
+        KBScroll.ZIndex = 202
+        KBScroll.Parent = KBFrame
+
+        local KBList = Instance.new("UIListLayout")
+        KBList.SortOrder = Enum.SortOrder.LayoutOrder
+        KBList.Parent = KBScroll
+
+        KBList:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+            KBScroll.CanvasSize = UDim2.new(0, 0, 0, KBList.AbsoluteContentSize.Y)
+        end)
+
+        KeybindListRowContainer = KBScroll
+
+        for i, kb in ipairs(RegisteredKeybinds) do
+            local rowH = isMobile and 38 or 34
+            local Row = Instance.new("Frame")
+            Row.Name = randomName(10)
+            Row.Size = UDim2.new(1, 0, 0, rowH)
+            Row.BackgroundColor3 = i % 2 == 0 and Theme.Surface or Theme.Background
+            Row.BackgroundTransparency = i % 2 == 0 and 0 or 0.5
+            Row.BorderSizePixel = 0
+            Row.LayoutOrder = i
+            Row.ZIndex = 203
+            Row.Parent = KBScroll
+
+            local RowPad = Instance.new("UIPadding")
+            RowPad.PaddingLeft = UDim.new(0, 16)
+            RowPad.PaddingRight = UDim.new(0, 16)
+            RowPad.Parent = Row
+
+            local RowName = Instance.new("TextLabel")
+            RowName.Size = UDim2.new(0.55, 0, 1, 0)
+            RowName.BackgroundTransparency = 1
+            RowName.Text = kb.Name
+            RowName.Font = Enum.Font.Gotham
+            RowName.TextSize = isMobile and 10 or 11
+            RowName.TextColor3 = Theme.TextSecondary
+            RowName.TextXAlignment = Enum.TextXAlignment.Left
+            RowName.TextTruncate = Enum.TextTruncate.AtEnd
+            RowName.ZIndex = 204
+            RowName.Parent = Row
+
+            local KeyBadge = Instance.new("Frame")
+            KeyBadge.Name = randomName(8)
+            KeyBadge.Size = UDim2.new(0, isMobile and 70 or 80, 0, isMobile and 22 or 20)
+            KeyBadge.Position = UDim2.new(1, -(isMobile and 70 or 80), 0.5, isMobile and -11 or -10)
+            KeyBadge.BackgroundColor3 = Theme.SurfaceLight
+            KeyBadge.BorderSizePixel = 0
+            KeyBadge.ZIndex = 204
+            KeyBadge.Parent = Row
+
+            local KeyBadgeCorner = Instance.new("UICorner")
+            KeyBadgeCorner.CornerRadius = UDim.new(0, 4)
+            KeyBadgeCorner.Parent = KeyBadge
+
+            local KeyBadgeStroke = Instance.new("UIStroke")
+            KeyBadgeStroke.Color = Theme.Border
+            KeyBadgeStroke.Thickness = 1
+            KeyBadgeStroke.Parent = KeyBadge
+
+            local KeyText = Instance.new("TextLabel")
+            KeyText.Name = randomName(9)
+            KeyText.Size = UDim2.new(1, 0, 1, 0)
+            KeyText.BackgroundTransparency = 1
+            KeyText.Font = Enum.Font.GothamBold
+            KeyText.TextSize = isMobile and 9 or 10
+            KeyText.TextColor3 = Theme.Primary
+            KeyText.ZIndex = 205
+            KeyText.Parent = KeyBadge
+
+            local function refreshKey()
+                local keyName = kb.GetKey and kb.GetKey() or "?"
+                KeyText.Text = keyName
+                if keyName:find("Shift") or keyName:find("Alt") or keyName:find("Control") then
+                    KeyText.TextColor3 = Theme.Warning
+                elseif keyName:find("Mouse") then
+                    KeyText.TextColor3 = Theme.Info
+                else
+                    KeyText.TextColor3 = Theme.Primary
+                end
+            end
+            refreshKey()
+            task.spawn(function()
+                while KeyBadge and KeyBadge.Parent do
+                    refreshKey()
+                    task.wait(0.5)
+                end
+            end)
+
+            if i < #RegisteredKeybinds then
+                local RowDiv = Instance.new("Frame")
+                RowDiv.Size = UDim2.new(1, -32, 0, 1)
+                RowDiv.Position = UDim2.new(0, 16, 1, -1)
+                RowDiv.BackgroundColor3 = Theme.Divider
+                RowDiv.BackgroundTransparency = 0.5
+                RowDiv.BorderSizePixel = 0
+                RowDiv.ZIndex = 204
+                RowDiv.Parent = Row
+            end
+        end
+
+        if #RegisteredKeybinds == 0 then
+            local EmptyLabel = Instance.new("TextLabel")
+            EmptyLabel.Size = UDim2.new(1, 0, 0, 60)
+            EmptyLabel.Position = UDim2.new(0, 0, 0, 10)
+            EmptyLabel.BackgroundTransparency = 1
+            EmptyLabel.Text = "Nenhum keybind registrado"
+            EmptyLabel.Font = Enum.Font.Gotham
+            EmptyLabel.TextSize = isMobile and 10 or 11
+            EmptyLabel.TextColor3 = Theme.TextMuted
+            EmptyLabel.ZIndex = 203
+            EmptyLabel.Parent = KBScroll
+        end
+
+        local KBFooter = Instance.new("Frame")
+        KBFooter.Name = randomName(10)
+        KBFooter.Size = UDim2.new(1, 0, 0, isMobile and 38 or 36)
+        KBFooter.Position = UDim2.new(0, 0, 1, -(isMobile and 38 or 36))
+        KBFooter.BackgroundColor3 = Theme.Sidebar
+        KBFooter.BorderSizePixel = 0
+        KBFooter.ZIndex = 202
+        KBFooter.Parent = KBFrame
+
+        local KBFooterCorner = Instance.new("UICorner")
+        KBFooterCorner.CornerRadius = UDim.new(0, 8)
+        KBFooterCorner.Parent = KBFooter
+
+        local KBFooterFix = Instance.new("Frame")
+        KBFooterFix.Size = UDim2.new(1, 0, 0, 8)
+        KBFooterFix.BackgroundColor3 = Theme.Sidebar
+        KBFooterFix.BorderSizePixel = 0
+        KBFooterFix.ZIndex = 202
+        KBFooterFix.Parent = KBFooter
+
+        local KBTip = Instance.new("TextLabel")
+        KBTip.Size = UDim2.new(1, -20, 1, 0)
+        KBTip.Position = UDim2.new(0, 10, 0, 0)
+        KBTip.BackgroundTransparency = 1
+        KBTip.Text = "💡 Clique em um keybind no Config para alterar a tecla"
+        KBTip.Font = Enum.Font.Gotham
+        KBTip.TextSize = isMobile and 9 or 10
+        KBTip.TextColor3 = Theme.TextMuted
+        KBTip.TextXAlignment = Enum.TextXAlignment.Left
+        KBTip.ZIndex = 203
+        KBTip.Parent = KBFooter
+
+        KBFrame.BackgroundTransparency = 1
+        KBFrame.Position = UDim2.new(0.5, -kw/2, 0.5, -kh/2 + 20)
+        Overlay.BackgroundTransparency = 1
+        TweenService:Create(Overlay, TweenInfo.new(0.2), {BackgroundTransparency = 0.5}):Play()
+        TweenService:Create(KBFrame, TweenInfo.new(0.3, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
+            BackgroundTransparency = 0,
+            Position = UDim2.new(0.5, -kw/2, 0.5, -kh/2)
+        }):Play()
+
+        local function closeKeybindList()
+            KeybindListVisible = false
+            TweenService:Create(Overlay, TweenInfo.new(0.2), {BackgroundTransparency = 1}):Play()
+            TweenService:Create(KBFrame, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {
+                BackgroundTransparency = 1,
+                Position = UDim2.new(0.5, -kw/2, 0.5, -kh/2 + 15)
+            }):Play()
+            task.delay(0.2, function()
+                Overlay:Destroy()
+                KBFrame:Destroy()
+                KeybindListFrame = nil
+            end)
+        end
+
+        KBClose.MouseButton1Click:Connect(closeKeybindList)
+        Overlay.InputBegan:Connect(function(input)
+            if input.UserInputType == Enum.UserInputType.MouseButton1 then
+                closeKeybindList()
+            end
+        end)
+
+        KeybindListFrame = KBFrame
+    end
 
     function Window:Notify(config)
         CreateNotification(config)
@@ -1037,6 +1437,11 @@ function QuantomLib:CreateWindow(config)
         end)
 
         local function activateTab()
+            if currentOpenDropdown then
+                currentOpenDropdown()
+                currentOpenDropdown = nil
+            end
+
             for _, cat in pairs(Window.Categories) do
                 cat.ContentScroll.Visible = false
             end
@@ -1414,6 +1819,7 @@ function QuantomLib:CreateWindow(config)
         function Tab:AddDropdown(config)
             local selectedOption = config.Default or (config.Options and config.Options[1]) or ""
             local dropdownOpen = false
+            local optionsListFrame = nil
 
             local DropdownFrame = Instance.new("Frame")
             DropdownFrame.Name = randomName(14)
@@ -1474,78 +1880,210 @@ function QuantomLib:CreateWindow(config)
             Arrow.ZIndex = 5
             Arrow.Parent = DropdownButton
 
-            local OptionsList = Instance.new("Frame")
-            OptionsList.Name = randomName(13)
-            OptionsList.Size = UDim2.new(1, -120, 0, 0)
-            OptionsList.Position = UDim2.new(0, 110, 1, 4)
-            OptionsList.BackgroundColor3 = Theme.SurfaceLight
-            OptionsList.BorderSizePixel = 0
-            OptionsList.Visible = false
-            OptionsList.ZIndex = 10
-            OptionsList.ClipsDescendants = true
-            OptionsList.Parent = DropdownFrame
+            DropdownButton.MouseEnter:Connect(function()
+                TweenService:Create(DropdownButton, TweenInfo.new(0.15), {BackgroundColor3 = Theme.SurfaceHover}):Play()
+            end)
+            DropdownButton.MouseLeave:Connect(function()
+                if not dropdownOpen then
+                    TweenService:Create(DropdownButton, TweenInfo.new(0.15), {BackgroundColor3 = Theme.SurfaceLight}):Play()
+                end
+            end)
 
-            local OptionsCorner = Instance.new("UICorner")
-            OptionsCorner.CornerRadius = UDim.new(0, 4)
-            OptionsCorner.Parent = OptionsList
-
-            local OptionsLayout = Instance.new("UIListLayout")
-            OptionsLayout.SortOrder = Enum.SortOrder.LayoutOrder
-            OptionsLayout.Parent = OptionsList
-
-            for _, option in ipairs(config.Options or {}) do
-                local OptionButton = Instance.new("TextButton")
-                OptionButton.Name = randomName(12)
-                OptionButton.Size = UDim2.new(1, 0, 0, isMobile and 28 or 24)
-                OptionButton.BackgroundColor3 = Theme.SurfaceLight
-                OptionButton.Text = option
-                OptionButton.Font = Enum.Font.Gotham
-                OptionButton.TextSize = isMobile and 10 or 11
-                OptionButton.TextColor3 = Theme.Text
-                OptionButton.TextXAlignment = Enum.TextXAlignment.Left
-                OptionButton.AutoButtonColor = false
-                OptionButton.ZIndex = 11
-                OptionButton.Parent = OptionsList
-
-                local OptionPadding = Instance.new("UIPadding")
-                OptionPadding.PaddingLeft = UDim.new(0, 8)
-                OptionPadding.Parent = OptionButton
-
-                OptionButton.MouseEnter:Connect(function()
-                    TweenService:Create(OptionButton, TweenInfo.new(0.1), {BackgroundColor3 = Theme.Surface}):Play()
-                end)
-
-                OptionButton.MouseLeave:Connect(function()
-                    TweenService:Create(OptionButton, TweenInfo.new(0.1), {BackgroundColor3 = Theme.SurfaceLight}):Play()
-                end)
-
-                OptionButton.MouseButton1Click:Connect(function()
-                    selectedOption = option
-                    DropdownButton.Text = option
-
-                    dropdownOpen = false
-                    TweenService:Create(OptionsList, TweenInfo.new(0.2), {Size = UDim2.new(1, -120, 0, 0)}):Play()
-                    task.wait(0.2)
-                    OptionsList.Visible = false
-
-                    if config.Callback then
-                        config.Callback(option)
+            local function closeDropdown()
+                if not dropdownOpen then return end
+                dropdownOpen = false
+                TweenService:Create(Arrow, TweenInfo.new(0.2), {TextColor3 = Theme.TextMuted}):Play()
+                TweenService:Create(DropdownButton, TweenInfo.new(0.15), {BackgroundColor3 = Theme.SurfaceLight}):Play()
+                if optionsListFrame then
+                    TweenService:Create(optionsListFrame, TweenInfo.new(0.15, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {
+                        BackgroundTransparency = 1
+                    }):Play()
+                    for _, c in ipairs(optionsListFrame:GetDescendants()) do
+                        if c:IsA("TextLabel") or c:IsA("TextButton") then
+                            TweenService:Create(c, TweenInfo.new(0.1), {TextTransparency = 1}):Play()
+                        end
                     end
-                end)
+                    task.delay(0.15, function()
+                        if optionsListFrame then
+                            optionsListFrame:Destroy()
+                            optionsListFrame = nil
+                        end
+                    end)
+                end
+                if currentOpenDropdown == closeDropdown then
+                    currentOpenDropdown = nil
+                end
+            end
+
+            local function openDropdown()
+                if currentOpenDropdown and currentOpenDropdown ~= closeDropdown then
+                    currentOpenDropdown()
+                end
+
+                dropdownOpen = true
+                currentOpenDropdown = closeDropdown
+
+                TweenService:Create(Arrow, TweenInfo.new(0.2), {TextColor3 = Theme.Primary}):Play()
+                TweenService:Create(DropdownButton, TweenInfo.new(0.15), {BackgroundColor3 = Theme.SurfaceHover}):Play()
+
+                local optionCount = #(config.Options or {})
+                local optionH = isMobile and 28 or 26
+                local maxVisible = isMobile and 4 or 5
+                local listH = math.min(optionCount, maxVisible) * optionH + 2
+
+                local abs = DropdownButton.AbsolutePosition
+                local mainAbs = MainContainer.AbsolutePosition
+                local relX = abs.X - mainAbs.X
+                local relY = abs.Y - mainAbs.Y + (isMobile and 26 or 22) + 4
+                local listW = DropdownButton.AbsoluteSize.X
+
+                local spaceBelow = uiHeight - (relY)
+                if spaceBelow < listH + 10 then
+                    relY = (abs.Y - mainAbs.Y) - listH - 4
+                end
+
+                optionsListFrame = Instance.new("Frame")
+                optionsListFrame.Name = randomName(13)
+                optionsListFrame.Size = UDim2.new(0, listW, 0, listH)
+                optionsListFrame.Position = UDim2.new(0, relX, 0, relY)
+                optionsListFrame.BackgroundColor3 = Theme.SurfaceLight
+                optionsListFrame.BorderSizePixel = 0
+                optionsListFrame.BackgroundTransparency = 1
+                optionsListFrame.ZIndex = 51
+                optionsListFrame.ClipsDescendants = true
+                optionsListFrame.Parent = DropdownOverlay
+
+                local OptionsCorner = Instance.new("UICorner")
+                OptionsCorner.CornerRadius = UDim.new(0, 5)
+                OptionsCorner.Parent = optionsListFrame
+
+                local OptionsStroke = Instance.new("UIStroke")
+                OptionsStroke.Color = Theme.Border
+                OptionsStroke.Thickness = 1
+                OptionsStroke.Transparency = 0.3
+                OptionsStroke.Parent = optionsListFrame
+
+                local OptionsScroll = Instance.new("ScrollingFrame")
+                OptionsScroll.Size = UDim2.new(1, 0, 1, 0)
+                OptionsScroll.BackgroundTransparency = 1
+                OptionsScroll.BorderSizePixel = 0
+                OptionsScroll.ScrollBarThickness = optionCount > maxVisible and (isMobile and 4 or 3) or 0
+                OptionsScroll.ScrollBarImageColor3 = Theme.Primary
+                OptionsScroll.CanvasSize = UDim2.new(0, 0, 0, optionCount * optionH)
+                OptionsScroll.ZIndex = 52
+                OptionsScroll.Parent = optionsListFrame
+
+                local OptionsLayout = Instance.new("UIListLayout")
+                OptionsLayout.SortOrder = Enum.SortOrder.LayoutOrder
+                OptionsLayout.Parent = OptionsScroll
+
+                for idx, option in ipairs(config.Options or {}) do
+                    local isSelected = option == selectedOption
+
+                    local OptionButton = Instance.new("TextButton")
+                    OptionButton.Name = randomName(12)
+                    OptionButton.Size = UDim2.new(1, 0, 0, optionH)
+                    OptionButton.BackgroundColor3 = isSelected and Theme.Primary or Theme.SurfaceLight
+                    OptionButton.BackgroundTransparency = isSelected and 0.7 or 0
+                    OptionButton.Text = ""
+                    OptionButton.AutoButtonColor = false
+                    OptionButton.LayoutOrder = idx
+                    OptionButton.ZIndex = 53
+                    OptionButton.Parent = OptionsScroll
+
+                    local OptionPadding = Instance.new("UIPadding")
+                    OptionPadding.PaddingLeft = UDim.new(0, 10)
+                    OptionPadding.PaddingRight = UDim.new(0, 8)
+                    OptionPadding.Parent = OptionButton
+
+                    local OptionText = Instance.new("TextLabel")
+                    OptionText.Size = UDim2.new(1, isSelected and -20 or 0, 1, 0)
+                    OptionText.BackgroundTransparency = 1
+                    OptionText.Text = option
+                    OptionText.Font = isSelected and Enum.Font.GothamBold or Enum.Font.Gotham
+                    OptionText.TextSize = isMobile and 10 or 11
+                    OptionText.TextColor3 = isSelected and Theme.Primary or Theme.Text
+                    OptionText.TextXAlignment = Enum.TextXAlignment.Left
+                    OptionText.TextTransparency = 1
+                    OptionText.ZIndex = 54
+                    OptionText.Parent = OptionButton
+
+                    if isSelected then
+                        local CheckMark = Instance.new("TextLabel")
+                        CheckMark.Size = UDim2.new(0, 16, 1, 0)
+                        CheckMark.Position = UDim2.new(1, -20, 0, 0)
+                        CheckMark.BackgroundTransparency = 1
+                        CheckMark.Text = "✓"
+                        CheckMark.Font = Enum.Font.GothamBold
+                        CheckMark.TextSize = isMobile and 10 or 11
+                        CheckMark.TextColor3 = Theme.Primary
+                        CheckMark.TextTransparency = 1
+                        CheckMark.ZIndex = 54
+                        CheckMark.Parent = OptionButton
+                        TweenService:Create(CheckMark, TweenInfo.new(0.2), {TextTransparency = 0}):Play()
+                    end
+
+                    if idx < optionCount then
+                        local Divider = Instance.new("Frame")
+                        Divider.Size = UDim2.new(1, -16, 0, 1)
+                        Divider.Position = UDim2.new(0, 8, 1, -1)
+                        Divider.BackgroundColor3 = Theme.Border
+                        Divider.BackgroundTransparency = 0.5
+                        Divider.BorderSizePixel = 0
+                        Divider.ZIndex = 53
+                        Divider.Parent = OptionButton
+                    end
+
+                    TweenService:Create(OptionText, TweenInfo.new(0.15, Enum.EasingStyle.Quad), {TextTransparency = 0}):Play()
+
+                    OptionButton.MouseEnter:Connect(function()
+                        if option ~= selectedOption then
+                            TweenService:Create(OptionButton, TweenInfo.new(0.1), {BackgroundColor3 = Theme.SurfaceHover, BackgroundTransparency = 0}):Play()
+                        end
+                    end)
+                    OptionButton.MouseLeave:Connect(function()
+                        if option ~= selectedOption then
+                            TweenService:Create(OptionButton, TweenInfo.new(0.1), {BackgroundColor3 = Theme.SurfaceLight, BackgroundTransparency = 0}):Play()
+                        end
+                    end)
+
+                    OptionButton.MouseButton1Click:Connect(function()
+                        selectedOption = option
+                        DropdownButton.Text = option
+                        closeDropdown()
+                        if config.Callback then
+                            config.Callback(option)
+                        end
+                    end)
+                end
+
+                TweenService:Create(optionsListFrame, TweenInfo.new(0.2, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {
+                    BackgroundTransparency = 0
+                }):Play()
             end
 
             DropdownButton.MouseButton1Click:Connect(function()
-                dropdownOpen = not dropdownOpen
-
                 if dropdownOpen then
-                    OptionsList.Visible = true
-                    local optionCount = #(config.Options or {})
-                    local maxHeight = math.min(optionCount * (isMobile and 28 or 24), isMobile and 140 or 120)
-                    TweenService:Create(OptionsList, TweenInfo.new(0.2), {Size = UDim2.new(1, -120, 0, maxHeight)}):Play()
+                    closeDropdown()
                 else
-                    TweenService:Create(OptionsList, TweenInfo.new(0.2), {Size = UDim2.new(1, -120, 0, 0)}):Play()
-                    task.wait(0.2)
-                    OptionsList.Visible = false
+                    openDropdown()
+                end
+            end)
+
+            UserInputService.InputBegan:Connect(function(input)
+                if input.UserInputType == Enum.UserInputType.MouseButton1 and dropdownOpen then
+                    task.wait()
+                    if optionsListFrame and not optionsListFrame:IsAncestorOf(UserInputService:GetFocusedTextBox() or Instance.new("Part")) then
+                        local mousePos = UserInputService:GetMouseLocation()
+                        if optionsListFrame then
+                            local abs = optionsListFrame.AbsolutePosition
+                            local sz  = optionsListFrame.AbsoluteSize
+                            if mousePos.X < abs.X or mousePos.X > abs.X + sz.X or
+                               mousePos.Y < abs.Y or mousePos.Y > abs.Y + sz.Y then
+                                closeDropdown()
+                            end
+                        end
+                    end
                 end
             end)
 
@@ -1553,6 +2091,9 @@ function QuantomLib:CreateWindow(config)
                 SetValue = function(self, value)
                     selectedOption = value
                     DropdownButton.Text = value
+                end,
+                GetValue = function(self)
+                    return selectedOption
                 end
             }
         end
@@ -1681,10 +2222,22 @@ function QuantomLib:CreateWindow(config)
                 end
             end)
 
+            if not config._internal then
+                table.insert(RegisteredKeybinds, {
+                    Name = config.Name or "Keybind",
+                    GetKey = function()
+                        return currentKey.Name
+                    end
+                })
+            end
+
             return {
                 SetKey = function(self, key)
                     currentKey = key
                     KeybindButton.Text = key.Name
+                end,
+                GetKey = function(self)
+                    return currentKey
                 end
             }
         end
@@ -2114,9 +2667,20 @@ function QuantomLib:CreateWindow(config)
         SettingsTab:AddKeybind({
             Name = "Minimizar / Abrir",
             Default = minimizeKey,
+            _internal = true,
             KeyChanged = function(newKey)
                 minimizeKey = newKey
             end,
+        })
+
+        SettingsTab:AddSection("Lista de Keybinds")
+        SettingsTab:AddButton({
+            Name = "Ver Keybind List",
+            Callback = function()
+                if KeybindListVisible then return end
+                KeybindListVisible = true
+                BuildKeybindListUI()
+            end
         })
     end)
 
