@@ -49,7 +49,6 @@ local Theme = {
 	Info = Color3.fromRGB(80, 150, 255),
 	Toggle = Color3.fromRGB(70, 140, 230)
 }
-
 local Sounds = {
 	ToggleOn  = "6026984224",
 	ToggleOff = "6020793244",
@@ -58,7 +57,6 @@ local Sounds = {
 	Keybind   = "3716451793",
 	Hover     = "6026984224",
 }
-
 local function PlaySound(id, vol, pitch)
 	local s = Instance.new("Sound")
 	s.SoundId = "rbxassetid://" .. id
@@ -69,7 +67,6 @@ local function PlaySound(id, vol, pitch)
 	s:Play()
 	game:GetService("Debris"):AddItem(s, 4)
 end
-
 local NotificationQueue = {}
 local NotificationContainer = nil
 local function CreateNotificationContainer()
@@ -500,11 +497,86 @@ function QuantomLib:CreateWindow(config)
 	Window.Name = config.Name or "QUANTOM.GG"
 	Window.Version = config.Version or "v1.0.0"
 	Window.Categories = {}
+	Window.Flags = {}
 	local minimizeKey = config.MinimizeKey or Enum.KeyCode.RightShift
 	local HUDRegistry = {}
 	local HUDFrame = nil
 	local HUDVisible = false
 	local HUDConnection = nil
+
+	local configDir = "QuantomLib"
+	local configSubDir = configDir .. "/" .. Window.Name:gsub("[^%w]", "_")
+
+	local function ensureConfigDir()
+		pcall(function()
+			if not isfolder(configDir) then makefolder(configDir) end
+			if not isfolder(configSubDir) then makefolder(configSubDir) end
+		end)
+	end
+
+	function Window:SaveConfig(name)
+		if not name or name == "" then return false end
+		ensureConfigDir()
+		local data = {}
+		for flag, info in pairs(Window.Flags) do
+			local entry = {Flag = flag, Type = info.Type}
+			if info.Type == "ColorPicker" then
+				local vals = info.GetValue()
+				local col, alp = vals[1], vals[2]
+				entry.Value = {R = col.R, G = col.G, B = col.B, A = alp}
+			elseif info.Type == "Keybind" then
+				local val = info.GetValue()
+				entry.Value = typeof(val) == "EnumItem" and val.Name or tostring(val)
+			else
+				entry.Value = info.GetValue()
+			end
+			table.insert(data, entry)
+		end
+		local ok = pcall(function()
+			writefile(configSubDir .. "/" .. name .. ".json", HttpService:JSONEncode(data))
+		end)
+		return ok
+	end
+
+	function Window:LoadConfig(name)
+		local path = configSubDir .. "/" .. name .. ".json"
+		local ok, content = pcall(readfile, path)
+		if not ok or not content then return false end
+		local ok2, data = pcall(function() return HttpService:JSONDecode(content) end)
+		if not ok2 or not data then return false end
+		for _, entry in ipairs(data) do
+			local info = Window.Flags[entry.Flag]
+			if info and entry.Value ~= nil then
+				if entry.Type == "ColorPicker" then
+					local v = entry.Value
+					info.SetValue(Color3.new(v.R, v.G, v.B), v.A)
+				elseif entry.Type == "Keybind" then
+					local key = Enum.KeyCode[entry.Value]
+					if key then info.SetValue(key) end
+				else
+					info.SetValue(entry.Value)
+				end
+			end
+		end
+		return true
+	end
+
+	function Window:GetConfigList()
+		local list = {}
+		pcall(function()
+			ensureConfigDir()
+			for _, path in ipairs(listfiles(configSubDir)) do
+				local name = path:match("([^/\\]+)%.json$")
+				if name then table.insert(list, name) end
+			end
+		end)
+		return list
+	end
+
+	function Window:DeleteConfig(name)
+		pcall(delfile, configSubDir .. "/" .. name .. ".json")
+	end
+
 	for _, gui in ipairs(PlayerGui:GetChildren()) do
 		if gui:IsA("ScreenGui") and gui.Name == STEALTH_NAMES.ScreenGui then
 			gui:Destroy()
@@ -828,7 +900,6 @@ function QuantomLib:CreateWindow(config)
 	SidebarPadding.PaddingTop = UDim.new(0, 8)
 	SidebarPadding.PaddingBottom = UDim.new(0, playerCardHeight + 4)
 	SidebarPadding.Parent = Sidebar
-
 	local PlayerCardDivider = Instance.new("Frame")
 	PlayerCardDivider.Name = randomName(10)
 	PlayerCardDivider.Size = UDim2.new(0, sidebarWidth, 0, 1)
@@ -837,7 +908,6 @@ function QuantomLib:CreateWindow(config)
 	PlayerCardDivider.BorderSizePixel = 0
 	PlayerCardDivider.ZIndex = 3
 	PlayerCardDivider.Parent = ClipFrame
-
 	local PlayerCard = Instance.new("Frame")
 	PlayerCard.Name = randomName(14)
 	PlayerCard.Size = UDim2.new(0, sidebarWidth, 0, playerCardHeight)
@@ -846,7 +916,6 @@ function QuantomLib:CreateWindow(config)
 	PlayerCard.BorderSizePixel = 0
 	PlayerCard.ZIndex = 3
 	PlayerCard.Parent = ClipFrame
-
 	local AvatarSize = isMobile and 38 or 36
 	local AvatarBorder = Instance.new("Frame")
 	AvatarBorder.Name = randomName(10)
@@ -860,7 +929,6 @@ function QuantomLib:CreateWindow(config)
 	local AvatarBorderCorner = Instance.new("UICorner")
 	AvatarBorderCorner.CornerRadius = UDim.new(1, 0)
 	AvatarBorderCorner.Parent = AvatarBorder
-
 	local AvatarFrame = Instance.new("Frame")
 	AvatarFrame.Name = randomName(12)
 	AvatarFrame.Size = UDim2.new(0, AvatarSize, 0, AvatarSize)
@@ -873,7 +941,6 @@ function QuantomLib:CreateWindow(config)
 	local AvatarFrameCorner = Instance.new("UICorner")
 	AvatarFrameCorner.CornerRadius = UDim.new(1, 0)
 	AvatarFrameCorner.Parent = AvatarFrame
-
 	local AvatarImage = Instance.new("ImageLabel")
 	AvatarImage.Name = randomName(11)
 	AvatarImage.Size = UDim2.new(1, 0, 1, 0)
@@ -882,7 +949,6 @@ function QuantomLib:CreateWindow(config)
 	AvatarImage.ScaleType = Enum.ScaleType.Crop
 	AvatarImage.ZIndex = 6
 	AvatarImage.Parent = AvatarFrame
-
 	task.spawn(function()
 		local ok, imgId = pcall(function()
 			return Players:GetUserThumbnailAsync(Player.UserId, Enum.ThumbnailType.HeadShot, Enum.ThumbnailSize.Size100x100)
@@ -891,7 +957,6 @@ function QuantomLib:CreateWindow(config)
 			AvatarImage.Image = imgId
 		end
 	end)
-
 	local OnlineDot = Instance.new("Frame")
 	OnlineDot.Name = randomName(8)
 	OnlineDot.Size = UDim2.new(0, isMobile and 10 or 9, 0, isMobile and 10 or 9)
@@ -907,7 +972,6 @@ function QuantomLib:CreateWindow(config)
 	OnlineDotStroke.Color = Color3.fromRGB(11, 11, 14)
 	OnlineDotStroke.Thickness = 2
 	OnlineDotStroke.Parent = OnlineDot
-
 	local textOffsetX = isMobile and (AvatarSize + 20) or (AvatarSize + 24)
 	local PlayerDisplayName = Instance.new("TextLabel")
 	PlayerDisplayName.Name = randomName(13)
@@ -922,7 +986,6 @@ function QuantomLib:CreateWindow(config)
 	PlayerDisplayName.TextTruncate = Enum.TextTruncate.AtEnd
 	PlayerDisplayName.ZIndex = 4
 	PlayerDisplayName.Parent = PlayerCard
-
 	local PlayerUserName = Instance.new("TextLabel")
 	PlayerUserName.Name = randomName(13)
 	PlayerUserName.Size = UDim2.new(1, -(textOffsetX + 6), 0, isMobile and 12 or 11)
@@ -936,7 +999,6 @@ function QuantomLib:CreateWindow(config)
 	PlayerUserName.TextTruncate = Enum.TextTruncate.AtEnd
 	PlayerUserName.ZIndex = 4
 	PlayerUserName.Parent = PlayerCard
-
 	task.spawn(function()
 		while PlayerCard and PlayerCard.Parent do
 			TweenService:Create(AvatarBorder, TweenInfo.new(2.5, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut, -1, true), {
@@ -949,7 +1011,6 @@ function QuantomLib:CreateWindow(config)
 			task.wait(2.5)
 		end
 	end)
-
 	local ContentArea = Instance.new("Frame")
 	ContentArea.Name = STEALTH_NAMES.ContentArea
 	ContentArea.Size = UDim2.new(1, -sidebarWidth, 1, -headerHeight)
@@ -1441,7 +1502,7 @@ function QuantomLib:CreateWindow(config)
 		CategoryButton.BorderSizePixel = 0
 		CategoryButton.Text = ""
 		CategoryButton.AutoButtonColor = false
-		CategoryButton.LayoutOrder = config._settingsTab and 9999 or (#Window.Categories + 1)
+		CategoryButton.LayoutOrder = config._order or (config._settingsTab and 9999 or (#Window.Categories + 1))
 		CategoryButton.ZIndex = 3
 		CategoryButton.Parent = Sidebar
 		local iconSize = isMobile and 14 or 18
@@ -1546,6 +1607,7 @@ function QuantomLib:CreateWindow(config)
 			TweenService:Create(Label, TweenInfo.new(0.2), {TextColor3 = Theme.Text}):Play()
 			TweenService:Create(Icon, TweenInfo.new(0.2), {TextColor3 = Theme.Primary}):Play()
 			TweenService:Create(Indicator, TweenInfo.new(0.2), {Size = UDim2.new(0, 3, 0, catHeight)}):Play()
+			if Tab._onActivate then Tab._onActivate() end
 		end
 		CategoryButton.MouseButton1Click:Connect(activateTab)
 		function Tab:AddSection(title)
@@ -1608,13 +1670,16 @@ function QuantomLib:CreateWindow(config)
 			local CircleCorner = Instance.new("UICorner")
 			CircleCorner.CornerRadius = UDim.new(1, 0)
 			CircleCorner.Parent = ToggleCircle
+			local function applyToggleVisual(state)
+				TweenService:Create(ToggleButton, TweenInfo.new(0.2), {
+					BackgroundColor3 = state and Theme.Toggle or Theme.Border
+				}):Play()
+				local endPos = state and UDim2.new(1, isMobile and -20 or -16, 0.5, isMobile and -9 or -7) or UDim2.new(0, 2, 0.5, isMobile and -9 or -7)
+				TweenService:Create(ToggleCircle, TweenInfo.new(0.2, Enum.EasingStyle.Quad), {Position = endPos}):Play()
+			end
 			ToggleButton.MouseButton1Click:Connect(function()
 				toggleState = not toggleState
-				TweenService:Create(ToggleButton, TweenInfo.new(0.2), {
-					BackgroundColor3 = toggleState and Theme.Toggle or Theme.Border
-				}):Play()
-				local endPos = toggleState and UDim2.new(1, isMobile and -20 or -16, 0.5, isMobile and -9 or -7) or UDim2.new(0, 2, 0.5, isMobile and -9 or -7)
-				TweenService:Create(ToggleCircle, TweenInfo.new(0.2, Enum.EasingStyle.Quad), {Position = endPos}):Play()
+				applyToggleVisual(toggleState)
 				if config.Callback then
 					config.Callback(toggleState)
 				end
@@ -1629,11 +1694,22 @@ function QuantomLib:CreateWindow(config)
 					end
 				})
 			end
+			if config.Flag then
+				Window.Flags[config.Flag] = {
+					Type = "Toggle",
+					GetValue = function() return toggleState end,
+					SetValue = function(v)
+						toggleState = v
+						applyToggleVisual(toggleState)
+						if config.Callback then config.Callback(toggleState) end
+					end
+				}
+			end
 			return {
 				SetValue = function(self, value)
 					toggleState = value
-					ToggleButton.BackgroundColor3 = toggleState and Theme.Toggle or Theme.Border
-					ToggleCircle.Position = toggleState and UDim2.new(1, isMobile and -20 or -16, 0.5, isMobile and -9 or -7) or UDim2.new(0, 2, 0.5, isMobile and -9 or -7)
+					applyToggleVisual(toggleState)
+					if config.Callback then config.Callback(toggleState) end
 				end
 			}
 		end
@@ -1798,6 +1874,19 @@ function QuantomLib:CreateWindow(config)
 					updateSlider(input)
 				end
 			end)
+			if config.Flag then
+				Window.Flags[config.Flag] = {
+					Type = "Slider",
+					GetValue = function() return sliderValue end,
+					SetValue = function(v)
+						sliderValue = math.clamp(v, config.Min, config.Max)
+						ValueLabel.Text = tostring(sliderValue)
+						local pct = (sliderValue - config.Min) / (config.Max - config.Min)
+						SliderFill.Size = UDim2.new(pct, 0, 1, 0)
+						if config.Callback then config.Callback(sliderValue) end
+					end
+				}
+			end
 			return {
 				SetValue = function(self, value)
 					sliderValue = math.clamp(value, config.Min, config.Max)
@@ -1856,9 +1945,22 @@ function QuantomLib:CreateWindow(config)
 					config.Callback(TextboxInput.Text)
 				end
 			end)
+			if config.Flag then
+				Window.Flags[config.Flag] = {
+					Type = "Textbox",
+					GetValue = function() return TextboxInput.Text end,
+					SetValue = function(v)
+						TextboxInput.Text = tostring(v)
+						if config.Callback then config.Callback(TextboxInput.Text) end
+					end
+				}
+			end
 			return {
 				SetValue = function(self, value)
 					TextboxInput.Text = value
+				end,
+				GetValue = function(self)
+					return TextboxInput.Text
 				end
 			}
 		end
@@ -2114,6 +2216,17 @@ function QuantomLib:CreateWindow(config)
 					end
 				end
 			end)
+			if config.Flag then
+				Window.Flags[config.Flag] = {
+					Type = "Dropdown",
+					GetValue = function() return selectedOption end,
+					SetValue = function(v)
+						selectedOption = v
+						DropdownButton.Text = v
+						if config.Callback then config.Callback(v) end
+					end
+				}
+			end
 			return {
 				SetValue = function(self, value)
 					selectedOption = value
@@ -2246,6 +2359,16 @@ function QuantomLib:CreateWindow(config)
 						return currentKey.Name
 					end
 				})
+			end
+			if config.Flag then
+				Window.Flags[config.Flag] = {
+					Type = "Keybind",
+					GetValue = function() return currentKey end,
+					SetValue = function(key)
+						currentKey = key
+						KeybindButton.Text = key.Name
+					end
+				}
 			end
 			return {
 				SetKey = function(self, key)
@@ -2567,6 +2690,17 @@ function QuantomLib:CreateWindow(config)
 					PickerPopup.Visible = false
 				end
 			end)
+			if config.Flag then
+				Window.Flags[config.Flag] = {
+					Type = "ColorPicker",
+					GetValue = function() return {getColor(), a} end,
+					SetValue = function(color, alpha)
+						if color then h, s, v = color:ToHSV() end
+						if alpha ~= nil then a = alpha end
+						updateAll()
+					end
+				}
+			end
 			return {
 				SetValue = function(self, color, alpha)
 					if color then h, s, v = color:ToHSV() end
@@ -2609,7 +2743,185 @@ function QuantomLib:CreateWindow(config)
 		end
 	end)
 	task.defer(function()
-		local SettingsTab = Window:CreateTab({Name = "Settings", Icon = "⚙", _settingsTab = true})
+		local ConfigsTab = Window:CreateTab({Name = "Configs", Icon = "📁", _order = 9998})
+		local configListContainer = nil
+		local configListLayout = nil
+		local configNameInput = nil
+
+		local function buildConfigRow(name, parentFrame)
+			local rowH = isMobile and 36 or 32
+			local Row = Instance.new("Frame")
+			Row.Name = randomName(12)
+			Row.Size = UDim2.new(1, 0, 0, rowH)
+			Row.BackgroundColor3 = Theme.Surface
+			Row.BorderSizePixel = 0
+			Row.ZIndex = 4
+			Row.Parent = parentFrame
+			local RowCorner = Instance.new("UICorner")
+			RowCorner.CornerRadius = UDim.new(0, 4)
+			RowCorner.Parent = Row
+			local RowStroke = Instance.new("UIStroke")
+			RowStroke.Color = Theme.Border
+			RowStroke.Thickness = 1
+			RowStroke.Transparency = 0.5
+			RowStroke.Parent = Row
+			local LeftAccent = Instance.new("Frame")
+			LeftAccent.Size = UDim2.new(0, 3, 1, 0)
+			LeftAccent.BackgroundColor3 = Theme.Primary
+			LeftAccent.BorderSizePixel = 0
+			LeftAccent.ZIndex = 5
+			LeftAccent.Parent = Row
+			local LeftAccentCorner = Instance.new("UICorner")
+			LeftAccentCorner.CornerRadius = UDim.new(0, 4)
+			LeftAccentCorner.Parent = LeftAccent
+			local NameLabel = Instance.new("TextLabel")
+			NameLabel.Size = UDim2.new(1, -130, 1, 0)
+			NameLabel.Position = UDim2.new(0, 12, 0, 0)
+			NameLabel.BackgroundTransparency = 1
+			NameLabel.Text = name
+			NameLabel.Font = Enum.Font.GothamMedium
+			NameLabel.TextSize = isMobile and 10 or 11
+			NameLabel.TextColor3 = Theme.Text
+			NameLabel.TextXAlignment = Enum.TextXAlignment.Left
+			NameLabel.TextTruncate = Enum.TextTruncate.AtEnd
+			NameLabel.ZIndex = 5
+			NameLabel.Parent = Row
+			local btnW = isMobile and 44 or 48
+			local btnH = isMobile and 22 or 20
+			local LoadBtn = Instance.new("TextButton")
+			LoadBtn.Size = UDim2.new(0, btnW, 0, btnH)
+			LoadBtn.Position = UDim2.new(1, -(btnW * 2 + 14), 0.5, -btnH / 2)
+			LoadBtn.BackgroundColor3 = Theme.Primary
+			LoadBtn.BackgroundTransparency = 0.2
+			LoadBtn.Text = "Carregar"
+			LoadBtn.Font = Enum.Font.GothamBold
+			LoadBtn.TextSize = isMobile and 8 or 9
+			LoadBtn.TextColor3 = Theme.Text
+			LoadBtn.AutoButtonColor = false
+			LoadBtn.ZIndex = 5
+			LoadBtn.Parent = Row
+			local LoadCorner = Instance.new("UICorner")
+			LoadCorner.CornerRadius = UDim.new(0, 4)
+			LoadCorner.Parent = LoadBtn
+			local DelBtn = Instance.new("TextButton")
+			DelBtn.Size = UDim2.new(0, btnW, 0, btnH)
+			DelBtn.Position = UDim2.new(1, -(btnW + 6), 0.5, -btnH / 2)
+			DelBtn.BackgroundColor3 = Theme.Error
+			DelBtn.BackgroundTransparency = 0.3
+			DelBtn.Text = "Deletar"
+			DelBtn.Font = Enum.Font.GothamBold
+			DelBtn.TextSize = isMobile and 8 or 9
+			DelBtn.TextColor3 = Theme.Text
+			DelBtn.AutoButtonColor = false
+			DelBtn.ZIndex = 5
+			DelBtn.Parent = Row
+			local DelCorner = Instance.new("UICorner")
+			DelCorner.CornerRadius = UDim.new(0, 4)
+			DelCorner.Parent = DelBtn
+			LoadBtn.MouseEnter:Connect(function()
+				TweenService:Create(LoadBtn, TweenInfo.new(0.15), {BackgroundTransparency = 0}):Play()
+			end)
+			LoadBtn.MouseLeave:Connect(function()
+				TweenService:Create(LoadBtn, TweenInfo.new(0.15), {BackgroundTransparency = 0.2}):Play()
+			end)
+			DelBtn.MouseEnter:Connect(function()
+				TweenService:Create(DelBtn, TweenInfo.new(0.15), {BackgroundTransparency = 0}):Play()
+			end)
+			DelBtn.MouseLeave:Connect(function()
+				TweenService:Create(DelBtn, TweenInfo.new(0.15), {BackgroundTransparency = 0.3}):Play()
+			end)
+			return Row, LoadBtn, DelBtn
+		end
+
+		local function refreshConfigList()
+			if not configListContainer then return end
+			for _, child in ipairs(configListContainer:GetChildren()) do
+				if child:IsA("Frame") then
+					child:Destroy()
+				end
+			end
+			local configs = Window:GetConfigList()
+			if #configs == 0 then
+				local EmptyLabel = Instance.new("TextLabel")
+				EmptyLabel.Size = UDim2.new(1, 0, 0, isMobile and 32 or 28)
+				EmptyLabel.BackgroundTransparency = 1
+				EmptyLabel.Text = "Nenhum config salvo."
+				EmptyLabel.Font = Enum.Font.Gotham
+				EmptyLabel.TextSize = isMobile and 10 or 11
+				EmptyLabel.TextColor3 = Theme.TextMuted
+				EmptyLabel.ZIndex = 4
+				EmptyLabel.Parent = configListContainer
+			else
+				for _, cfgName in ipairs(configs) do
+					local Row, LoadBtn, DelBtn = buildConfigRow(cfgName, configListContainer)
+					LoadBtn.MouseButton1Click:Connect(function()
+						PlaySound(Sounds.ToggleOn, 0.3, 1)
+						local ok = Window:LoadConfig(cfgName)
+						if ok then
+							CreateNotification({Title = "Configs", Message = "Config \"" .. cfgName .. "\" carregado!", Type = "Success", Duration = 3})
+						else
+							CreateNotification({Title = "Configs", Message = "Falha ao carregar \"" .. cfgName .. "\".", Type = "Error", Duration = 3})
+						end
+					end)
+					DelBtn.MouseButton1Click:Connect(function()
+						PlaySound(Sounds.ToggleOff, 0.3, 0.9)
+						Window:DeleteConfig(cfgName)
+						CreateNotification({Title = "Configs", Message = "Config \"" .. cfgName .. "\" deletado.", Type = "Warning", Duration = 3})
+						refreshConfigList()
+					end)
+				end
+			end
+		end
+
+		ConfigsTab._onActivate = refreshConfigList
+
+		ConfigsTab:AddSection("Salvar Config")
+
+		configNameInput = ConfigsTab:AddTextbox({
+			Name = "Nome",
+			Placeholder = "Nome do config...",
+			Default = ""
+		})
+
+		ConfigsTab:AddButton({
+			Name = "💾  Salvar Config",
+			Callback = function()
+				local name = configNameInput:GetValue()
+				if not name or name == "" then
+					CreateNotification({Title = "Configs", Message = "Digite um nome para o config.", Type = "Warning", Duration = 3})
+					return
+				end
+				local ok = Window:SaveConfig(name)
+				if ok then
+					CreateNotification({Title = "Configs", Message = "Config \"" .. name .. "\" salvo!", Type = "Success", Duration = 3})
+					refreshConfigList()
+				else
+					CreateNotification({Title = "Configs", Message = "Falha ao salvar config.", Type = "Error", Duration = 3})
+				end
+			end
+		})
+
+		ConfigsTab:AddSection("Configs Salvos")
+
+		configListContainer = Instance.new("Frame")
+		configListContainer.Name = randomName(14)
+		configListContainer.Size = UDim2.new(1, 0, 0, 0)
+		configListContainer.BackgroundTransparency = 1
+		configListContainer.ZIndex = 3
+		configListContainer.Parent = ConfigsTab.ContentFrame
+
+		configListLayout = Instance.new("UIListLayout")
+		configListLayout.Padding = UDim.new(0, isMobile and 6 or 8)
+		configListLayout.SortOrder = Enum.SortOrder.LayoutOrder
+		configListLayout.Parent = configListContainer
+
+		configListLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+			configListContainer.Size = UDim2.new(1, 0, 0, configListLayout.AbsoluteContentSize.Y)
+		end)
+
+		refreshConfigList()
+
+		local SettingsTab = Window:CreateTab({Name = "Settings", Icon = "⚙", _order = 9999})
 		SettingsTab:AddSection("Watermark")
 		SettingsTab:AddToggle({
 			Name = "Mostrar Watermark",
