@@ -949,17 +949,17 @@ function QuantomLib:CreateWindow(config)
 			BackgroundTransparency = 1
 		}):Play()
 		for _, child in ipairs(LoadingFrame:GetDescendants()) do
-			if child:IsA("TextLabel") or child:IsA("ImageLabel") then
-				TweenService:Create(child, TweenInfo.new(0.3), {
-					TextTransparency = 1,
-					ImageTransparency = 1
-				}):Play()
+			if child:IsA("TextLabel") then
+				TweenService:Create(child, TweenInfo.new(0.3), {TextTransparency = 1}):Play()
+			elseif child:IsA("ImageLabel") then
+				TweenService:Create(child, TweenInfo.new(0.3), {ImageTransparency = 1}):Play()
 			elseif child:IsA("Frame") then
 				TweenService:Create(child, TweenInfo.new(0.3), {BackgroundTransparency = 1}):Play()
 			end
 		end
 		task.wait(0.45)
 		LoadingFrame.Visible = false
+		LoadingFrame:Destroy()
 	end
 	local function CreateHUD()
 		if HUDFrame then HUDFrame:Destroy() HUDFrame = nil end
