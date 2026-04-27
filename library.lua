@@ -5,6 +5,7 @@ local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local HttpService = game:GetService("HttpService")
 local Stats = game:GetService("Stats")
+local SoundService = game:GetService("SoundService")
 local Player = Players.LocalPlayer
 local PlayerGui = Player:WaitForChild("PlayerGui")
 local isMobile = UserInputService.TouchEnabled and not UserInputService.KeyboardEnabled
@@ -48,6 +49,27 @@ local Theme = {
 	Info = Color3.fromRGB(80, 150, 255),
 	Toggle = Color3.fromRGB(70, 140, 230)
 }
+
+local Sounds = {
+	ToggleOn  = "6026984224",
+	ToggleOff = "6020793244",
+	Click     = "4177953",
+	Notify    = "5997023029",
+	Keybind   = "3716451793",
+	Hover     = "6026984224",
+}
+
+local function PlaySound(id, vol, pitch)
+	local s = Instance.new("Sound")
+	s.SoundId = "rbxassetid://" .. id
+	s.Volume = vol or 0.35
+	s.PlaybackSpeed = pitch or 1
+	s.RollOffMaxDistance = 0
+	s.Parent = SoundService
+	s:Play()
+	game:GetService("Debris"):AddItem(s, 4)
+end
+
 local NotificationQueue = {}
 local NotificationContainer = nil
 local function CreateNotificationContainer()
@@ -74,6 +96,7 @@ local function CreateNotificationContainer()
 end
 local function CreateNotification(config)
 	CreateNotificationContainer()
+	PlaySound(Sounds.Notify, 0.4, 1)
 	local notifType = config.Type or "Info"
 	local notifColor = Theme.Info
 	local notifIcon = "ℹ"
@@ -788,6 +811,7 @@ function QuantomLib:CreateWindow(config)
 		end
 	end)
 	local sidebarWidth = isMobile and 100 or 160
+	local playerCardHeight = isMobile and 68 or 62
 	local Sidebar = Instance.new("Frame")
 	Sidebar.Name = STEALTH_NAMES.Sidebar
 	Sidebar.Size = UDim2.new(0, sidebarWidth, 1, -headerHeight)
@@ -802,8 +826,130 @@ function QuantomLib:CreateWindow(config)
 	SidebarList.Parent = Sidebar
 	local SidebarPadding = Instance.new("UIPadding")
 	SidebarPadding.PaddingTop = UDim.new(0, 8)
-	SidebarPadding.PaddingBottom = UDim.new(0, 8)
+	SidebarPadding.PaddingBottom = UDim.new(0, playerCardHeight + 4)
 	SidebarPadding.Parent = Sidebar
+
+	local PlayerCardDivider = Instance.new("Frame")
+	PlayerCardDivider.Name = randomName(10)
+	PlayerCardDivider.Size = UDim2.new(0, sidebarWidth, 0, 1)
+	PlayerCardDivider.Position = UDim2.new(0, 0, 1, -(playerCardHeight + 1))
+	PlayerCardDivider.BackgroundColor3 = Theme.Divider
+	PlayerCardDivider.BorderSizePixel = 0
+	PlayerCardDivider.ZIndex = 3
+	PlayerCardDivider.Parent = ClipFrame
+
+	local PlayerCard = Instance.new("Frame")
+	PlayerCard.Name = randomName(14)
+	PlayerCard.Size = UDim2.new(0, sidebarWidth, 0, playerCardHeight)
+	PlayerCard.Position = UDim2.new(0, 0, 1, -playerCardHeight)
+	PlayerCard.BackgroundColor3 = Color3.fromRGB(11, 11, 14)
+	PlayerCard.BorderSizePixel = 0
+	PlayerCard.ZIndex = 3
+	PlayerCard.Parent = ClipFrame
+
+	local AvatarSize = isMobile and 38 or 36
+	local AvatarBorder = Instance.new("Frame")
+	AvatarBorder.Name = randomName(10)
+	AvatarBorder.Size = UDim2.new(0, AvatarSize + 4, 0, AvatarSize + 4)
+	AvatarBorder.Position = UDim2.new(0, isMobile and 8 or 10, 0.5, -(AvatarSize/2 + 2))
+	AvatarBorder.BackgroundColor3 = Theme.Primary
+	AvatarBorder.BackgroundTransparency = 0.4
+	AvatarBorder.BorderSizePixel = 0
+	AvatarBorder.ZIndex = 4
+	AvatarBorder.Parent = PlayerCard
+	local AvatarBorderCorner = Instance.new("UICorner")
+	AvatarBorderCorner.CornerRadius = UDim.new(1, 0)
+	AvatarBorderCorner.Parent = AvatarBorder
+
+	local AvatarFrame = Instance.new("Frame")
+	AvatarFrame.Name = randomName(12)
+	AvatarFrame.Size = UDim2.new(0, AvatarSize, 0, AvatarSize)
+	AvatarFrame.Position = UDim2.new(0.5, -AvatarSize/2, 0.5, -AvatarSize/2)
+	AvatarFrame.BackgroundColor3 = Theme.Surface
+	AvatarFrame.BorderSizePixel = 0
+	AvatarFrame.ZIndex = 5
+	AvatarFrame.ClipsDescendants = true
+	AvatarFrame.Parent = AvatarBorder
+	local AvatarFrameCorner = Instance.new("UICorner")
+	AvatarFrameCorner.CornerRadius = UDim.new(1, 0)
+	AvatarFrameCorner.Parent = AvatarFrame
+
+	local AvatarImage = Instance.new("ImageLabel")
+	AvatarImage.Name = randomName(11)
+	AvatarImage.Size = UDim2.new(1, 0, 1, 0)
+	AvatarImage.BackgroundTransparency = 1
+	AvatarImage.Image = "rbxassetid://7546875799"
+	AvatarImage.ScaleType = Enum.ScaleType.Crop
+	AvatarImage.ZIndex = 6
+	AvatarImage.Parent = AvatarFrame
+
+	task.spawn(function()
+		local ok, imgId = pcall(function()
+			return Players:GetUserThumbnailAsync(Player.UserId, Enum.ThumbnailType.HeadShot, Enum.ThumbnailSize.Size100x100)
+		end)
+		if ok and imgId then
+			AvatarImage.Image = imgId
+		end
+	end)
+
+	local OnlineDot = Instance.new("Frame")
+	OnlineDot.Name = randomName(8)
+	OnlineDot.Size = UDim2.new(0, isMobile and 10 or 9, 0, isMobile and 10 or 9)
+	OnlineDot.Position = UDim2.new(1, -(isMobile and 10 or 9), 1, -(isMobile and 10 or 9))
+	OnlineDot.BackgroundColor3 = Theme.Success
+	OnlineDot.BorderSizePixel = 0
+	OnlineDot.ZIndex = 7
+	OnlineDot.Parent = AvatarBorder
+	local OnlineDotCorner = Instance.new("UICorner")
+	OnlineDotCorner.CornerRadius = UDim.new(1, 0)
+	OnlineDotCorner.Parent = OnlineDot
+	local OnlineDotStroke = Instance.new("UIStroke")
+	OnlineDotStroke.Color = Color3.fromRGB(11, 11, 14)
+	OnlineDotStroke.Thickness = 2
+	OnlineDotStroke.Parent = OnlineDot
+
+	local textOffsetX = isMobile and (AvatarSize + 20) or (AvatarSize + 24)
+	local PlayerDisplayName = Instance.new("TextLabel")
+	PlayerDisplayName.Name = randomName(13)
+	PlayerDisplayName.Size = UDim2.new(1, -(textOffsetX + 6), 0, isMobile and 14 or 13)
+	PlayerDisplayName.Position = UDim2.new(0, textOffsetX, 0, isMobile and 14 or 13)
+	PlayerDisplayName.BackgroundTransparency = 1
+	PlayerDisplayName.Text = Player.DisplayName
+	PlayerDisplayName.Font = Enum.Font.GothamBold
+	PlayerDisplayName.TextSize = isMobile and 10 or 11
+	PlayerDisplayName.TextColor3 = Theme.Text
+	PlayerDisplayName.TextXAlignment = Enum.TextXAlignment.Left
+	PlayerDisplayName.TextTruncate = Enum.TextTruncate.AtEnd
+	PlayerDisplayName.ZIndex = 4
+	PlayerDisplayName.Parent = PlayerCard
+
+	local PlayerUserName = Instance.new("TextLabel")
+	PlayerUserName.Name = randomName(13)
+	PlayerUserName.Size = UDim2.new(1, -(textOffsetX + 6), 0, isMobile and 12 or 11)
+	PlayerUserName.Position = UDim2.new(0, textOffsetX, 0, isMobile and 30 or 28)
+	PlayerUserName.BackgroundTransparency = 1
+	PlayerUserName.Text = "@" .. Player.Name
+	PlayerUserName.Font = Enum.Font.Gotham
+	PlayerUserName.TextSize = isMobile and 9 or 10
+	PlayerUserName.TextColor3 = Theme.TextMuted
+	PlayerUserName.TextXAlignment = Enum.TextXAlignment.Left
+	PlayerUserName.TextTruncate = Enum.TextTruncate.AtEnd
+	PlayerUserName.ZIndex = 4
+	PlayerUserName.Parent = PlayerCard
+
+	task.spawn(function()
+		while PlayerCard and PlayerCard.Parent do
+			TweenService:Create(AvatarBorder, TweenInfo.new(2.5, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut, -1, true), {
+				BackgroundTransparency = 0.7
+			}):Play()
+			task.wait(2.5)
+			TweenService:Create(AvatarBorder, TweenInfo.new(2.5, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut, -1, true), {
+				BackgroundTransparency = 0.2
+			}):Play()
+			task.wait(2.5)
+		end
+	end)
+
 	local ContentArea = Instance.new("Frame")
 	ContentArea.Name = STEALTH_NAMES.ContentArea
 	ContentArea.Size = UDim2.new(1, -sidebarWidth, 1, -headerHeight)
@@ -1376,6 +1522,7 @@ function QuantomLib:CreateWindow(config)
 				currentOpenDropdown()
 				currentOpenDropdown = nil
 			end
+			PlaySound(Sounds.Click, 0.25, 1.1)
 			for _, cat in pairs(Window.Categories) do
 				cat.ContentScroll.Visible = false
 			end
@@ -1463,6 +1610,11 @@ function QuantomLib:CreateWindow(config)
 			CircleCorner.Parent = ToggleCircle
 			ToggleButton.MouseButton1Click:Connect(function()
 				toggleState = not toggleState
+				if toggleState then
+					PlaySound(Sounds.ToggleOn, 0.35, 1)
+				else
+					PlaySound(Sounds.ToggleOff, 0.3, 0.9)
+				end
 				TweenService:Create(ToggleButton, TweenInfo.new(0.2), {
 					BackgroundColor3 = toggleState and Theme.Toggle or Theme.Border
 				}):Play()
@@ -1546,6 +1698,7 @@ function QuantomLib:CreateWindow(config)
 			end)
 			ButtonClickable.MouseButton1Down:Connect(function()
 				isPressed = true
+				PlaySound(Sounds.Click, 0.3, 1.2)
 				TweenService:Create(ButtonFrame, TweenInfo.new(0.08), {BackgroundColor3 = Theme.Primary}):Play()
 				TweenService:Create(ButtonLabel, TweenInfo.new(0.08), {TextColor3 = Color3.fromRGB(255, 255, 255)}):Play()
 				TweenService:Create(ButtonIcon, TweenInfo.new(0.08), {TextColor3 = Color3.fromRGB(255, 255, 255)}):Play()
@@ -1636,6 +1789,7 @@ function QuantomLib:CreateWindow(config)
 			SliderTrack.InputBegan:Connect(function(input)
 				if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
 					dragging = true
+					PlaySound(Sounds.Click, 0.2, 1.3)
 					updateSlider(input)
 				end
 			end)
@@ -1698,8 +1852,12 @@ function QuantomLib:CreateWindow(config)
 			local InputCorner = Instance.new("UICorner")
 			InputCorner.CornerRadius = UDim.new(0, 4)
 			InputCorner.Parent = TextboxInput
+			TextboxInput.Focused:Connect(function()
+				PlaySound(Sounds.Click, 0.2, 1.1)
+			end)
 			TextboxInput.FocusLost:Connect(function(enterPressed)
 				if enterPressed and config.Callback then
+					PlaySound(Sounds.ToggleOn, 0.25, 1.2)
 					config.Callback(TextboxInput.Text)
 				end
 			end)
@@ -1811,6 +1969,7 @@ function QuantomLib:CreateWindow(config)
 				if currentOpenDropdown and currentOpenDropdown ~= closeDropdown then
 					currentOpenDropdown()
 				end
+				PlaySound(Sounds.Click, 0.25, 0.95)
 				dropdownOpen = true
 				currentOpenDropdown = closeDropdown
 				TweenService:Create(Arrow, TweenInfo.new(0.2), {TextColor3 = Theme.Primary}):Play()
@@ -1922,6 +2081,7 @@ function QuantomLib:CreateWindow(config)
 					OptionButton.MouseButton1Click:Connect(function()
 						selectedOption = option
 						DropdownButton.Text = option
+						PlaySound(Sounds.Click, 0.28, 1.15)
 						closeDropdown()
 						if config.Callback then
 							config.Callback(option)
@@ -2033,6 +2193,7 @@ function QuantomLib:CreateWindow(config)
 			KeybindButton.MouseButton1Click:Connect(function()
 				if keybindChanging then return end
 				keybindChanging = true
+				PlaySound(Sounds.Click, 0.3, 0.9)
 				KeybindButton.Text = "..."
 				KeybindButton.TextColor3 = Theme.Warning
 				TweenService:Create(KeybindButton, TweenInfo.new(0.2), {BackgroundColor3 = Theme.Primary}):Play()
@@ -2046,6 +2207,7 @@ function QuantomLib:CreateWindow(config)
 							if key == blacklisted then isBlacklisted = true; break end
 						end
 						if isBlacklisted then
+							PlaySound(Sounds.ToggleOff, 0.4, 0.8)
 							CreateNotification({Title = "Keybind Inválido", Message = "Essa tecla não pode ser usada!", Type = "Error", Duration = 2})
 							KeybindButton.Text = currentKey.Name
 							KeybindButton.TextColor3 = Theme.Primary
@@ -2053,6 +2215,7 @@ function QuantomLib:CreateWindow(config)
 							currentKey = key
 							KeybindButton.Text = key.Name
 							if config.KeyChanged then config.KeyChanged(key) end
+							PlaySound(Sounds.Keybind, 0.4, 1)
 							KeybindButton.TextColor3 = Theme.Success
 							CreateNotification({Title = "Keybind Alterado", Message = "Nova tecla: " .. key.Name, Type = "Success", Duration = 2})
 							task.wait(0.5)
@@ -2394,6 +2557,7 @@ function QuantomLib:CreateWindow(config)
 			end)
 			ColorBtn.MouseButton1Click:Connect(function()
 				pickerOpen = not pickerOpen
+				PlaySound(Sounds.Click, 0.25, 1.05)
 				if pickerOpen then
 					local abs = ColorBtn.AbsolutePosition
 					local scrollAbs = ContentScroll.AbsolutePosition
@@ -2488,8 +2652,6 @@ function QuantomLib:CreateWindow(config)
 				end
 			end
 		})
-
-
 		if not loadingFinished then
 			local fakeSteps = {
 				{ progress = 12,  status = "Iniciando módulos...",        delay = 0.40 },
@@ -2506,7 +2668,6 @@ function QuantomLib:CreateWindow(config)
 			end
 			Window:FinishLoading()
 		end
-
 		MainContainer.Visible = true
 		if isMobile then
 			FloatingButton.Visible = false
