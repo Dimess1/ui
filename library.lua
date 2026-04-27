@@ -1610,11 +1610,6 @@ function QuantomLib:CreateWindow(config)
 			CircleCorner.Parent = ToggleCircle
 			ToggleButton.MouseButton1Click:Connect(function()
 				toggleState = not toggleState
-				if toggleState then
-					PlaySound(Sounds.ToggleOn, 0.35, 1)
-				else
-					PlaySound(Sounds.ToggleOff, 0.3, 0.9)
-				end
 				TweenService:Create(ToggleButton, TweenInfo.new(0.2), {
 					BackgroundColor3 = toggleState and Theme.Toggle or Theme.Border
 				}):Play()
@@ -2614,7 +2609,7 @@ function QuantomLib:CreateWindow(config)
 		end
 	end)
 	task.defer(function()
-		local SettingsTab = Window:CreateTab({Name = "Config", Icon = "⚙", _settingsTab = true})
+		local SettingsTab = Window:CreateTab({Name = "Settings", Icon = "⚙", _settingsTab = true})
 		SettingsTab:AddSection("Watermark")
 		SettingsTab:AddToggle({
 			Name = "Mostrar Watermark",
