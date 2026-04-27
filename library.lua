@@ -2489,9 +2489,21 @@ function QuantomLib:CreateWindow(config)
 			end
 		})
 
+
 		if not loadingFinished then
-			Window:SetLoadingProgress(100, "Concluído!")
-			task.wait(0.2)
+			local fakeSteps = {
+				{ progress = 12,  status = "Iniciando módulos...",        delay = 0.40 },
+				{ progress = 28,  status = "Carregando recursos...",       delay = 0.50 },
+				{ progress = 45,  status = "Conectando ao servidor...",    delay = 0.55 },
+				{ progress = 60,  status = "Verificando autenticação...",  delay = 0.50 },
+				{ progress = 74,  status = "Aplicando configurações...",   delay = 0.45 },
+				{ progress = 88,  status = "Quase lá...",                  delay = 0.40 },
+				{ progress = 96,  status = "Finalizando...",               delay = 0.35 },
+			}
+			for _, step in ipairs(fakeSteps) do
+				Window:SetLoadingProgress(step.progress, step.status)
+				task.wait(step.delay)
+			end
 			Window:FinishLoading()
 		end
 
