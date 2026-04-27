@@ -822,7 +822,6 @@ function QuantomLib:CreateWindow(config)
 	DropdownOverlay.Parent = MainContainer
 	local currentOpenDropdown = nil
 	local currentTab = nil
-
 	local LoadingFrame = Instance.new("Frame")
 	LoadingFrame.Name = randomName(14)
 	LoadingFrame.Size = UDim2.new(1, 0, 1, 0)
@@ -830,11 +829,9 @@ function QuantomLib:CreateWindow(config)
 	LoadingFrame.BorderSizePixel = 0
 	LoadingFrame.ZIndex = 300
 	LoadingFrame.Parent = ClipFrame
-
 	local LoadingCorner = Instance.new("UICorner")
 	LoadingCorner.CornerRadius = UDim.new(0, isMobile and 8 or 6)
 	LoadingCorner.Parent = LoadingFrame
-
 	local LoadingGlow = Instance.new("Frame")
 	LoadingGlow.Name = randomName(10)
 	LoadingGlow.Size = UDim2.new(1, 0, 1, 0)
@@ -843,7 +840,6 @@ function QuantomLib:CreateWindow(config)
 	LoadingGlow.BorderSizePixel = 0
 	LoadingGlow.ZIndex = 301
 	LoadingGlow.Parent = LoadingFrame
-
 	local LoadingGlowGrad = Instance.new("UIGradient")
 	LoadingGlowGrad.Color = ColorSequence.new{
 		ColorSequenceKeypoint.new(0, Theme.Primary),
@@ -852,7 +848,6 @@ function QuantomLib:CreateWindow(config)
 	}
 	LoadingGlowGrad.Rotation = 45
 	LoadingGlowGrad.Parent = LoadingGlow
-
 	local LoadingImage = Instance.new("ImageLabel")
 	LoadingImage.Name = randomName(12)
 	LoadingImage.Size = UDim2.new(0, isMobile and 120 or 160, 0, isMobile and 120 or 160)
@@ -863,7 +858,6 @@ function QuantomLib:CreateWindow(config)
 	LoadingImage.ScaleType = Enum.ScaleType.Fit
 	LoadingImage.ZIndex = 302
 	LoadingImage.Parent = LoadingFrame
-
 	local LoadingTitle = Instance.new("TextLabel")
 	LoadingTitle.Name = randomName(11)
 	LoadingTitle.Size = UDim2.new(1, 0, 0, 22)
@@ -876,7 +870,6 @@ function QuantomLib:CreateWindow(config)
 	LoadingTitle.TextColor3 = Theme.Text
 	LoadingTitle.ZIndex = 302
 	LoadingTitle.Parent = LoadingFrame
-
 	local LoadingBarBG = Instance.new("Frame")
 	LoadingBarBG.Name = randomName(10)
 	LoadingBarBG.Size = UDim2.new(0, isMobile and 200 or 280, 0, isMobile and 5 or 4)
@@ -886,11 +879,9 @@ function QuantomLib:CreateWindow(config)
 	LoadingBarBG.BorderSizePixel = 0
 	LoadingBarBG.ZIndex = 302
 	LoadingBarBG.Parent = LoadingFrame
-
 	local LoadingBarBGCorner = Instance.new("UICorner")
 	LoadingBarBGCorner.CornerRadius = UDim.new(1, 0)
 	LoadingBarBGCorner.Parent = LoadingBarBG
-
 	local LoadingBarFill = Instance.new("Frame")
 	LoadingBarFill.Name = randomName(10)
 	LoadingBarFill.Size = UDim2.new(0, 0, 1, 0)
@@ -898,18 +889,15 @@ function QuantomLib:CreateWindow(config)
 	LoadingBarFill.BorderSizePixel = 0
 	LoadingBarFill.ZIndex = 303
 	LoadingBarFill.Parent = LoadingBarBG
-
 	local LoadingBarFillCorner = Instance.new("UICorner")
 	LoadingBarFillCorner.CornerRadius = UDim.new(1, 0)
 	LoadingBarFillCorner.Parent = LoadingBarFill
-
 	local LoadingBarFillGrad = Instance.new("UIGradient")
 	LoadingBarFillGrad.Color = ColorSequence.new{
 		ColorSequenceKeypoint.new(0, Theme.Primary),
 		ColorSequenceKeypoint.new(1, Theme.Accent)
 	}
 	LoadingBarFillGrad.Parent = LoadingBarFill
-
 	local LoadingPercent = Instance.new("TextLabel")
 	LoadingPercent.Name = randomName(11)
 	LoadingPercent.Size = UDim2.new(1, 0, 0, 18)
@@ -922,7 +910,6 @@ function QuantomLib:CreateWindow(config)
 	LoadingPercent.TextColor3 = Theme.Primary
 	LoadingPercent.ZIndex = 302
 	LoadingPercent.Parent = LoadingFrame
-
 	local LoadingStatus = Instance.new("TextLabel")
 	LoadingStatus.Name = randomName(11)
 	LoadingStatus.Size = UDim2.new(1, 0, 0, 16)
@@ -935,10 +922,8 @@ function QuantomLib:CreateWindow(config)
 	LoadingStatus.TextColor3 = Theme.TextMuted
 	LoadingStatus.ZIndex = 302
 	LoadingStatus.Parent = LoadingFrame
-
 	local loadingProgress = 0
 	local loadingFinished = false
-
 	function Window:SetLoadingProgress(value, statusText)
 		if loadingFinished then return end
 		loadingProgress = math.clamp(value, 0, 100)
@@ -951,7 +936,6 @@ function QuantomLib:CreateWindow(config)
 			LoadingStatus.Text = statusText
 		end
 	end
-
 	function Window:FinishLoading()
 		if loadingFinished then return end
 		loadingFinished = true
@@ -977,7 +961,6 @@ function QuantomLib:CreateWindow(config)
 		task.wait(0.45)
 		LoadingFrame.Visible = false
 	end
-
 	local function CreateHUD()
 		if HUDFrame then HUDFrame:Destroy() HUDFrame = nil end
 		if HUDConnection then HUDConnection:Disconnect() HUDConnection = nil end
@@ -1731,11 +1714,6 @@ function QuantomLib:CreateWindow(config)
 			local dropdownOpen = false
 			local dropdownTransitioning = false
 			local optionsListFrame = nil
-			local storedRelX = 0
-			local storedRelY = 0
-			local storedListW = 0
-			local storedListH = 0
-
 			local DropdownFrame = Instance.new("Frame")
 			DropdownFrame.Name = randomName(14)
 			DropdownFrame.Size = UDim2.new(1, 0, 0, isMobile and 36 or 32)
@@ -1842,21 +1820,13 @@ function QuantomLib:CreateWindow(config)
 				local maxVisible = isMobile and 4 or 5
 				local listH = math.min(optionCount, maxVisible) * optionH + 2
 				local listW = DropdownButton.AbsoluteSize.X
-
 				local abs = DropdownButton.AbsolutePosition
 				local mainAbs = MainContainer.AbsolutePosition
 				local relX = abs.X - mainAbs.X
 				local relY = abs.Y - mainAbs.Y + (isMobile and 26 or 22) + 4
-
 				if relY + listH > uiHeight - 10 then
 					relY = (abs.Y - mainAbs.Y) - listH - 4
 				end
-
-				storedRelX = relX
-				storedRelY = relY
-				storedListW = listW
-				storedListH = listH
-
 				optionsListFrame = Instance.new("Frame")
 				optionsListFrame.Name = randomName(13)
 				optionsListFrame.Size = UDim2.new(0, listW, 0, listH)
@@ -2518,6 +2488,17 @@ function QuantomLib:CreateWindow(config)
 				end
 			end
 		})
+
+		if not loadingFinished then
+			Window:SetLoadingProgress(100, "Concluído!")
+			task.wait(0.2)
+			Window:FinishLoading()
+		end
+
+		MainContainer.Visible = true
+		if isMobile then
+			FloatingButton.Visible = false
+		end
 	end)
 	return Window
 end
