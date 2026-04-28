@@ -949,14 +949,32 @@ function QuantomLib:CreateWindow(config)
 	AvatarImage.ScaleType = Enum.ScaleType.Crop
 	AvatarImage.ZIndex = 6
 	AvatarImage.Parent = AvatarFrame
+
+	local realDisplayName = Player.DisplayName
+	local realUserName = Player.Name
+	local realAvatarImage = "rbxassetid://7546875799"
+	local robloxAvatarImage = "rbxassetid://7546875799"
+	local anonymousMode = false
+
 	task.spawn(function()
 		local ok, imgId = pcall(function()
 			return Players:GetUserThumbnailAsync(Player.UserId, Enum.ThumbnailType.HeadShot, Enum.ThumbnailSize.Size100x100)
 		end)
 		if ok and imgId then
+			realAvatarImage = imgId
 			AvatarImage.Image = imgId
 		end
 	end)
+
+	task.spawn(function()
+		local ok, imgId = pcall(function()
+			return Players:GetUserThumbnailAsync(1, Enum.ThumbnailType.HeadShot, Enum.ThumbnailSize.Size100x100)
+		end)
+		if ok and imgId then
+			robloxAvatarImage = imgId
+		end
+	end)
+
 	local OnlineDot = Instance.new("Frame")
 	OnlineDot.Name = randomName(8)
 	OnlineDot.Size = UDim2.new(0, isMobile and 10 or 9, 0, isMobile and 10 or 9)
@@ -999,6 +1017,167 @@ function QuantomLib:CreateWindow(config)
 	PlayerUserName.TextTruncate = Enum.TextTruncate.AtEnd
 	PlayerUserName.ZIndex = 4
 	PlayerUserName.Parent = PlayerCard
+
+	local AnonBadge = Instance.new("Frame")
+	AnonBadge.Name = randomName(10)
+	AnonBadge.Size = UDim2.new(0, isMobile and 38 or 42, 0, isMobile and 12 or 13)
+	AnonBadge.Position = UDim2.new(0, textOffsetX, 0, isMobile and 46 or 43)
+	AnonBadge.BackgroundColor3 = Color3.fromRGB(80, 80, 100)
+	AnonBadge.BackgroundTransparency = 0.3
+	AnonBadge.BorderSizePixel = 0
+	AnonBadge.ZIndex = 5
+	AnonBadge.Visible = false
+	AnonBadge.Parent = PlayerCard
+	local AnonBadgeCorner = Instance.new("UICorner")
+	AnonBadgeCorner.CornerRadius = UDim.new(0, 3)
+	AnonBadgeCorner.Parent = AnonBadge
+	local AnonBadgeText = Instance.new("TextLabel")
+	AnonBadgeText.Size = UDim2.new(1, 0, 1, 0)
+	AnonBadgeText.BackgroundTransparency = 1
+	AnonBadgeText.Text = "ANON"
+	AnonBadgeText.Font = Enum.Font.GothamBold
+	AnonBadgeText.TextSize = isMobile and 7 or 8
+	AnonBadgeText.TextColor3 = Color3.fromRGB(180, 180, 200)
+	AnonBadgeText.ZIndex = 6
+	AnonBadgeText.Parent = AnonBadge
+
+	local AnonTooltip = Instance.new("Frame")
+	AnonTooltip.Name = randomName(12)
+	AnonTooltip.Size = UDim2.new(0, isMobile and 100 or 110, 0, isMobile and 26 or 24)
+	AnonTooltip.AnchorPoint = Vector2.new(0, 1)
+	AnonTooltip.Position = UDim2.new(0, isMobile and 6 or 8, 0, -4)
+	AnonTooltip.BackgroundColor3 = Color3.fromRGB(20, 20, 26)
+	AnonTooltip.BackgroundTransparency = 1
+	AnonTooltip.BorderSizePixel = 0
+	AnonTooltip.ZIndex = 20
+	AnonTooltip.Visible = false
+	AnonTooltip.Parent = PlayerCard
+	local AnonTooltipCorner = Instance.new("UICorner")
+	AnonTooltipCorner.CornerRadius = UDim.new(0, 5)
+	AnonTooltipCorner.Parent = AnonTooltip
+	local AnonTooltipStroke = Instance.new("UIStroke")
+	AnonTooltipStroke.Color = Theme.Border
+	AnonTooltipStroke.Thickness = 1
+	AnonTooltipStroke.Transparency = 0.4
+	AnonTooltipStroke.Parent = AnonTooltip
+	local AnonTooltipIcon = Instance.new("TextLabel")
+	AnonTooltipIcon.Size = UDim2.new(0, isMobile and 18 or 20, 1, 0)
+	AnonTooltipIcon.Position = UDim2.new(0, 6, 0, 0)
+	AnonTooltipIcon.BackgroundTransparency = 1
+	AnonTooltipIcon.Text = "🕵"
+	AnonTooltipIcon.Font = Enum.Font.GothamBold
+	AnonTooltipIcon.TextSize = isMobile and 11 or 12
+	AnonTooltipIcon.ZIndex = 21
+	AnonTooltipIcon.Parent = AnonTooltip
+	local AnonTooltipText = Instance.new("TextLabel")
+	AnonTooltipText.Size = UDim2.new(1, -(isMobile and 28 or 32), 1, 0)
+	AnonTooltipText.Position = UDim2.new(0, isMobile and 26 or 28, 0, 0)
+	AnonTooltipText.BackgroundTransparency = 1
+	AnonTooltipText.Text = "Modo Anônimo"
+	AnonTooltipText.Font = Enum.Font.GothamMedium
+	AnonTooltipText.TextSize = isMobile and 9 or 10
+	AnonTooltipText.TextColor3 = Theme.TextSecondary
+	AnonTooltipText.TextXAlignment = Enum.TextXAlignment.Left
+	AnonTooltipText.ZIndex = 21
+	AnonTooltipText.Parent = AnonTooltip
+
+	local AvatarClickButton = Instance.new("TextButton")
+	AvatarClickButton.Name = randomName(12)
+	AvatarClickButton.Size = UDim2.new(1, 0, 1, 0)
+	AvatarClickButton.BackgroundTransparency = 1
+	AvatarClickButton.Text = ""
+	AvatarClickButton.ZIndex = 8
+	AvatarClickButton.Parent = AvatarBorder
+
+	local function applyAnonymousMode(state)
+		anonymousMode = state
+		if state then
+			TweenService:Create(AvatarImage, TweenInfo.new(0.2), {ImageTransparency = 1}):Play()
+			task.delay(0.15, function()
+				AvatarImage.Image = robloxAvatarImage
+				TweenService:Create(AvatarImage, TweenInfo.new(0.2), {ImageTransparency = 0}):Play()
+			end)
+			TweenService:Create(PlayerDisplayName, TweenInfo.new(0.2), {TextTransparency = 1}):Play()
+			TweenService:Create(PlayerUserName, TweenInfo.new(0.2), {TextTransparency = 1}):Play()
+			task.delay(0.2, function()
+				PlayerDisplayName.Text = "Roblox"
+				PlayerUserName.Text = "@Roblox"
+				TweenService:Create(PlayerDisplayName, TweenInfo.new(0.2), {TextTransparency = 0}):Play()
+				TweenService:Create(PlayerUserName, TweenInfo.new(0.2), {TextTransparency = 0}):Play()
+			end)
+			TweenService:Create(AvatarBorder, TweenInfo.new(0.25), {
+				BackgroundColor3 = Color3.fromRGB(80, 80, 100)
+			}):Play()
+			TweenService:Create(OnlineDot, TweenInfo.new(0.2), {
+				BackgroundColor3 = Color3.fromRGB(120, 120, 140)
+			}):Play()
+			AnonBadge.Visible = true
+			TweenService:Create(AnonBadge, TweenInfo.new(0.2), {BackgroundTransparency = 0.3}):Play()
+			PlaySound(Sounds.ToggleOff, 0.3, 0.85)
+		else
+			TweenService:Create(AvatarImage, TweenInfo.new(0.2), {ImageTransparency = 1}):Play()
+			task.delay(0.15, function()
+				AvatarImage.Image = realAvatarImage
+				TweenService:Create(AvatarImage, TweenInfo.new(0.2), {ImageTransparency = 0}):Play()
+			end)
+			TweenService:Create(PlayerDisplayName, TweenInfo.new(0.2), {TextTransparency = 1}):Play()
+			TweenService:Create(PlayerUserName, TweenInfo.new(0.2), {TextTransparency = 1}):Play()
+			task.delay(0.2, function()
+				PlayerDisplayName.Text = realDisplayName
+				PlayerUserName.Text = "@" .. realUserName
+				TweenService:Create(PlayerDisplayName, TweenInfo.new(0.2), {TextTransparency = 0}):Play()
+				TweenService:Create(PlayerUserName, TweenInfo.new(0.2), {TextTransparency = 0}):Play()
+			end)
+			TweenService:Create(AvatarBorder, TweenInfo.new(0.25), {
+				BackgroundColor3 = Theme.Primary
+			}):Play()
+			TweenService:Create(OnlineDot, TweenInfo.new(0.2), {
+				BackgroundColor3 = Theme.Success
+			}):Play()
+			TweenService:Create(AnonBadge, TweenInfo.new(0.15), {BackgroundTransparency = 1}):Play()
+			task.delay(0.15, function()
+				AnonBadge.Visible = false
+			end)
+			PlaySound(Sounds.ToggleOn, 0.3, 1.1)
+		end
+	end
+
+	AvatarClickButton.MouseButton1Click:Connect(function()
+		applyAnonymousMode(not anonymousMode)
+	end)
+
+	PlayerCard.MouseEnter:Connect(function()
+		AnonTooltip.Visible = true
+		AnonTooltip.BackgroundTransparency = 1
+		for _, child in ipairs(AnonTooltip:GetDescendants()) do
+			if child:IsA("TextLabel") then child.TextTransparency = 1 end
+		end
+		TweenService:Create(AnonTooltip, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+			BackgroundTransparency = 0.05
+		}):Play()
+		for _, child in ipairs(AnonTooltip:GetDescendants()) do
+			if child:IsA("TextLabel") then
+				TweenService:Create(child, TweenInfo.new(0.2), {TextTransparency = 0}):Play()
+			end
+		end
+	end)
+
+	PlayerCard.MouseLeave:Connect(function()
+		TweenService:Create(AnonTooltip, TweenInfo.new(0.15, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {
+			BackgroundTransparency = 1
+		}):Play()
+		for _, child in ipairs(AnonTooltip:GetDescendants()) do
+			if child:IsA("TextLabel") then
+				TweenService:Create(child, TweenInfo.new(0.15), {TextTransparency = 1}):Play()
+			end
+		end
+		task.delay(0.15, function()
+			if AnonTooltip and AnonTooltip.Parent then
+				AnonTooltip.Visible = false
+			end
+		end)
+	end)
+
 	task.spawn(function()
 		while PlayerCard and PlayerCard.Parent do
 			TweenService:Create(AvatarBorder, TweenInfo.new(2.5, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut, -1, true), {
@@ -1011,6 +1190,7 @@ function QuantomLib:CreateWindow(config)
 			task.wait(2.5)
 		end
 	end)
+
 	local ContentArea = Instance.new("Frame")
 	ContentArea.Name = STEALTH_NAMES.ContentArea
 	ContentArea.Size = UDim2.new(1, -sidebarWidth, 1, -headerHeight)
@@ -2957,6 +3137,15 @@ function QuantomLib:CreateWindow(config)
 				else
 					HideHUD()
 				end
+			end
+		})
+		SettingsTab:AddSection("Perfil")
+		SettingsTab:AddToggle({
+			Name = "Modo Anônimo",
+			Default = false,
+			HideFromHUD = true,
+			Callback = function(state)
+				applyAnonymousMode(state)
 			end
 		})
 		if not loadingFinished then
