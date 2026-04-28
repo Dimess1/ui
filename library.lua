@@ -10,6 +10,7 @@ local Player = Players.LocalPlayer
 local PlayerGui = Player:WaitForChild("PlayerGui")
 local isMobile = UserInputService.TouchEnabled and not UserInputService.KeyboardEnabled
 local viewportSize = workspace.CurrentCamera.ViewportSize
+
 local function randomName(length)
 	length = length or 16
 	local chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
@@ -20,6 +21,7 @@ local function randomName(length)
 	end
 	return result
 end
+
 local STEALTH_NAMES = {
 	ScreenGui = randomName(12),
 	MainContainer = randomName(14),
@@ -29,6 +31,7 @@ local STEALTH_NAMES = {
 	FloatingButton = randomName(15),
 	Watermark = randomName(13)
 }
+
 local Theme = {
 	Background = Color3.fromRGB(12, 12, 14),
 	Surface = Color3.fromRGB(18, 18, 22),
@@ -49,6 +52,21 @@ local Theme = {
 	Info = Color3.fromRGB(80, 150, 255),
 	Toggle = Color3.fromRGB(70, 140, 230)
 }
+
+local ThemeElements = {}
+
+local function RegisterThemeElement(element, property)
+	table.insert(ThemeElements, {Element = element, Property = property})
+end
+
+local function RefreshTheme()
+	for _, data in ipairs(ThemeElements) do
+		if data.Element and data.Element.Parent then
+			data.Element[data.Property] = Theme.Primary
+		end
+	end
+end
+
 local Sounds = {
 	ToggleOn  = "6026984224",
 	ToggleOff = "6020793244",
@@ -57,6 +75,7 @@ local Sounds = {
 	Keybind   = "3716451793",
 	Hover     = "6026984224",
 }
+
 local function PlaySound(id, vol, pitch)
 	local s = Instance.new("Sound")
 	s.SoundId = "rbxassetid://" .. id
@@ -67,8 +86,10 @@ local function PlaySound(id, vol, pitch)
 	s:Play()
 	game:GetService("Debris"):AddItem(s, 4)
 end
+
 local NotificationQueue = {}
 local NotificationContainer = nil
+
 local function CreateNotificationContainer()
 	if NotificationContainer then return end
 	NotificationContainer = Instance.new("Frame")
@@ -91,6 +112,7 @@ local function CreateNotificationContainer()
 		NotificationContainer.Size = UDim2.new(0, isMobile and 280 or 320, 0, NotificationList.AbsoluteContentSize.Y)
 	end)
 end
+
 local function CreateNotification(config)
 	CreateNotificationContainer()
 	PlaySound(Sounds.Notify, 0.4, 1)
@@ -254,21 +276,36 @@ local function CreateNotification(config)
 		end
 	end)
 end
+
 local WatermarkData = {
 	Frame = nil,
 	Connection = nil,
+	TimeConnection = nil,
 	Visible = false,
 	FPS = 0,
 	Ping = 0,
 	FrameCount = 0,
 	LastFPSUpdate = 0,
 }
+
+local function GetFormattedDate()
+	local t = os.date("*t")
+	return string.format("%02d/%02d/%04d", t.day, t.month, t.year)
+end
+
+local function GetFormattedTime()
+	local t = os.date("*t")
+	return string.format("%02d:%02d:%02d", t.hour, t.min, t.sec)
+end
+
 local function CreateWatermark(screenGui)
 	if WatermarkData.Frame then return WatermarkData.Frame end
-	local wmHeight = isMobile and 28 or 26
+	local wmHeight = isMobile and 34 or 30
+	local wmWidth = isMobile and 340 or 420
+
 	local WatermarkFrame = Instance.new("Frame")
 	WatermarkFrame.Name = STEALTH_NAMES.Watermark
-	WatermarkFrame.Size = UDim2.new(0, isMobile and 260 or 320, 0, wmHeight)
+	WatermarkFrame.Size = UDim2.new(0, wmWidth, 0, wmHeight)
 	WatermarkFrame.Position = UDim2.new(0, isMobile and 8 or 12, 0, isMobile and 6 or 8)
 	WatermarkFrame.BackgroundColor3 = Color3.fromRGB(10, 10, 13)
 	WatermarkFrame.BackgroundTransparency = 0.15
@@ -276,14 +313,17 @@ local function CreateWatermark(screenGui)
 	WatermarkFrame.Visible = false
 	WatermarkFrame.ZIndex = 9990
 	WatermarkFrame.Parent = screenGui
+
 	local WmCorner = Instance.new("UICorner")
 	WmCorner.CornerRadius = UDim.new(0, isMobile and 6 or 5)
 	WmCorner.Parent = WatermarkFrame
+
 	local WmStroke = Instance.new("UIStroke")
 	WmStroke.Color = Theme.Primary
 	WmStroke.Thickness = 1
-	WmStroke.Transparency = 0.6
+	WmStroke.Transparency = 0.5
 	WmStroke.Parent = WatermarkFrame
+
 	local TopAccent = Instance.new("Frame")
 	TopAccent.Name = randomName(8)
 	TopAccent.Size = UDim2.new(1, 0, 0, 2)
@@ -292,9 +332,11 @@ local function CreateWatermark(screenGui)
 	TopAccent.BorderSizePixel = 0
 	TopAccent.ZIndex = 9992
 	TopAccent.Parent = WatermarkFrame
+
 	local TopAccentCorner = Instance.new("UICorner")
 	TopAccentCorner.CornerRadius = UDim.new(0, isMobile and 6 or 5)
 	TopAccentCorner.Parent = TopAccent
+
 	local AccentGradient = Instance.new("UIGradient")
 	AccentGradient.Color = ColorSequence.new{
 		ColorSequenceKeypoint.new(0, Theme.Primary),
@@ -302,6 +344,7 @@ local function CreateWatermark(screenGui)
 		ColorSequenceKeypoint.new(1, Theme.Primary)
 	}
 	AccentGradient.Parent = TopAccent
+
 	task.spawn(function()
 		while WatermarkFrame and WatermarkFrame.Parent do
 			TweenService:Create(AccentGradient, TweenInfo.new(3, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut), {
@@ -314,55 +357,96 @@ local function CreateWatermark(screenGui)
 			task.wait(3)
 		end
 	end)
-	local WmPadding = Instance.new("UIPadding")
-	WmPadding.PaddingLeft = UDim.new(0, isMobile and 8 or 10)
-	WmPadding.PaddingRight = UDim.new(0, isMobile and 8 or 10)
-	WmPadding.Parent = WatermarkFrame
-	local BrandLabel = Instance.new("TextLabel")
-	BrandLabel.Name = randomName(10)
-	BrandLabel.Size = UDim2.new(0, isMobile and 62 or 72, 1, 0)
-	BrandLabel.Position = UDim2.new(0, 0, 0, 0)
-	BrandLabel.BackgroundTransparency = 1
-	BrandLabel.Text = "Quantom.gg"
-	BrandLabel.Font = Enum.Font.GothamBold
-	BrandLabel.TextSize = isMobile and 10 or 11
-	BrandLabel.TextColor3 = Theme.Primary
-	BrandLabel.TextXAlignment = Enum.TextXAlignment.Left
-	BrandLabel.ZIndex = 9993
-	BrandLabel.Parent = WatermarkFrame
-	local Sep1 = Instance.new("Frame")
-	Sep1.Name = randomName(6)
-	Sep1.Size = UDim2.new(0, 1, 0, isMobile and 12 or 14)
-	Sep1.Position = UDim2.new(0, isMobile and 66 or 78, 0.5, isMobile and -6 or -7)
-	Sep1.BackgroundColor3 = Theme.Border
-	Sep1.BorderSizePixel = 0
-	Sep1.ZIndex = 9993
-	Sep1.Parent = WatermarkFrame
-	local NameLabel = Instance.new("TextLabel")
-	NameLabel.Name = randomName(11)
-	NameLabel.Size = UDim2.new(0, isMobile and 70 or 100, 1, 0)
-	NameLabel.Position = UDim2.new(0, isMobile and 72 or 86, 0, 0)
-	NameLabel.BackgroundTransparency = 1
-	NameLabel.Text = Player.DisplayName
-	NameLabel.Font = Enum.Font.GothamMedium
-	NameLabel.TextSize = isMobile and 9 or 10
-	NameLabel.TextColor3 = Theme.Text
-	NameLabel.TextXAlignment = Enum.TextXAlignment.Left
-	NameLabel.TextTruncate = Enum.TextTruncate.AtEnd
-	NameLabel.ZIndex = 9993
-	NameLabel.Parent = WatermarkFrame
-	local Sep2 = Instance.new("Frame")
-	Sep2.Name = randomName(6)
-	Sep2.Size = UDim2.new(0, 1, 0, isMobile and 12 or 14)
-	Sep2.Position = UDim2.new(0, isMobile and 146 or 192, 0.5, isMobile and -6 or -7)
-	Sep2.BackgroundColor3 = Theme.Border
-	Sep2.BorderSizePixel = 0
-	Sep2.ZIndex = 9993
-	Sep2.Parent = WatermarkFrame
+
+	local iconSize = isMobile and 22 or 20
+	local LogoIcon = Instance.new("ImageLabel")
+	LogoIcon.Name = randomName(10)
+	LogoIcon.Size = UDim2.new(0, iconSize, 0, iconSize)
+	LogoIcon.Position = UDim2.new(0, 6, 0.5, -iconSize/2)
+	LogoIcon.BackgroundTransparency = 1
+	LogoIcon.Image = "rbxassetid://6026984224"
+	LogoIcon.ScaleType = Enum.ScaleType.Fit
+	LogoIcon.ImageColor3 = Theme.Primary
+	LogoIcon.ZIndex = 9993
+	LogoIcon.Parent = WatermarkFrame
+
+	RegisterThemeElement(LogoIcon, "ImageColor3")
+
+	local sepX = 6 + iconSize + 6
+
+	local function MakeSep(xOffset)
+		local Sep = Instance.new("Frame")
+		Sep.Name = randomName(6)
+		Sep.Size = UDim2.new(0, 1, 0, isMobile and 14 or 16)
+		Sep.Position = UDim2.new(0, xOffset, 0.5, isMobile and -7 or -8)
+		Sep.BackgroundColor3 = Theme.Border
+		Sep.BorderSizePixel = 0
+		Sep.ZIndex = 9993
+		Sep.Parent = WatermarkFrame
+		return Sep
+	end
+
+	local Sep1 = MakeSep(sepX)
+
+	local nickW = isMobile and 80 or 100
+	local NickLabel = Instance.new("TextLabel")
+	NickLabel.Name = randomName(11)
+	NickLabel.Size = UDim2.new(0, nickW, 1, 0)
+	NickLabel.Position = UDim2.new(0, sepX + 6, 0, 0)
+	NickLabel.BackgroundTransparency = 1
+	NickLabel.Text = Player.DisplayName
+	NickLabel.Font = Enum.Font.GothamBold
+	NickLabel.TextSize = isMobile and 10 or 11
+	NickLabel.TextColor3 = Theme.Text
+	NickLabel.TextXAlignment = Enum.TextXAlignment.Left
+	NickLabel.TextTruncate = Enum.TextTruncate.AtEnd
+	NickLabel.ZIndex = 9993
+	NickLabel.Parent = WatermarkFrame
+
+	local sep2X = sepX + 6 + nickW + 4
+	local Sep2 = MakeSep(sep2X)
+
+	local dateW = isMobile and 68 or 80
+	local DateLabel = Instance.new("TextLabel")
+	DateLabel.Name = randomName(10)
+	DateLabel.Size = UDim2.new(0, dateW, 1, 0)
+	DateLabel.Position = UDim2.new(0, sep2X + 6, 0, 0)
+	DateLabel.BackgroundTransparency = 1
+	DateLabel.Text = GetFormattedDate()
+	DateLabel.Font = Enum.Font.GothamMedium
+	DateLabel.TextSize = isMobile and 9 or 10
+	DateLabel.TextColor3 = Theme.TextSecondary
+	DateLabel.TextXAlignment = Enum.TextXAlignment.Left
+	DateLabel.ZIndex = 9993
+	DateLabel.Parent = WatermarkFrame
+
+	local sep3X = sep2X + 6 + dateW + 4
+	local Sep3 = MakeSep(sep3X)
+
+	local timeW = isMobile and 56 or 66
+	local TimeLabel = Instance.new("TextLabel")
+	TimeLabel.Name = randomName(10)
+	TimeLabel.Size = UDim2.new(0, timeW, 1, 0)
+	TimeLabel.Position = UDim2.new(0, sep3X + 6, 0, 0)
+	TimeLabel.BackgroundTransparency = 1
+	TimeLabel.Text = GetFormattedTime()
+	TimeLabel.Font = Enum.Font.GothamMedium
+	TimeLabel.TextSize = isMobile and 9 or 10
+	TimeLabel.TextColor3 = Theme.Primary
+	TimeLabel.TextXAlignment = Enum.TextXAlignment.Left
+	TimeLabel.ZIndex = 9993
+	TimeLabel.Parent = WatermarkFrame
+
+	RegisterThemeElement(TimeLabel, "TextColor3")
+
+	local sep4X = sep3X + 6 + timeW + 4
+	local Sep4 = MakeSep(sep4X)
+
+	local fpsW = isMobile and 48 or 54
 	local FPSLabel = Instance.new("TextLabel")
 	FPSLabel.Name = randomName(10)
-	FPSLabel.Size = UDim2.new(0, isMobile and 42 or 48, 1, 0)
-	FPSLabel.Position = UDim2.new(0, isMobile and 152 or 200, 0, 0)
+	FPSLabel.Size = UDim2.new(0, fpsW, 1, 0)
+	FPSLabel.Position = UDim2.new(0, sep4X + 6, 0, 0)
 	FPSLabel.BackgroundTransparency = 1
 	FPSLabel.Text = "0 FPS"
 	FPSLabel.Font = Enum.Font.GothamMedium
@@ -371,18 +455,15 @@ local function CreateWatermark(screenGui)
 	FPSLabel.TextXAlignment = Enum.TextXAlignment.Left
 	FPSLabel.ZIndex = 9993
 	FPSLabel.Parent = WatermarkFrame
-	local Sep3 = Instance.new("Frame")
-	Sep3.Name = randomName(6)
-	Sep3.Size = UDim2.new(0, 1, 0, isMobile and 12 or 14)
-	Sep3.Position = UDim2.new(0, isMobile and 198 or 254, 0.5, isMobile and -6 or -7)
-	Sep3.BackgroundColor3 = Theme.Border
-	Sep3.BorderSizePixel = 0
-	Sep3.ZIndex = 9993
-	Sep3.Parent = WatermarkFrame
+
+	local sep5X = sep4X + 6 + fpsW + 4
+	local Sep5 = MakeSep(sep5X)
+
+	local pingW = isMobile and 48 or 54
 	local PingLabel = Instance.new("TextLabel")
 	PingLabel.Name = randomName(10)
-	PingLabel.Size = UDim2.new(0, isMobile and 50 or 52, 1, 0)
-	PingLabel.Position = UDim2.new(0, isMobile and 204 or 262, 0, 0)
+	PingLabel.Size = UDim2.new(0, pingW, 1, 0)
+	PingLabel.Position = UDim2.new(0, sep5X + 6, 0, 0)
 	PingLabel.BackgroundTransparency = 1
 	PingLabel.Text = "0ms"
 	PingLabel.Font = Enum.Font.GothamMedium
@@ -391,6 +472,7 @@ local function CreateWatermark(screenGui)
 	PingLabel.TextXAlignment = Enum.TextXAlignment.Left
 	PingLabel.ZIndex = 9993
 	PingLabel.Parent = WatermarkFrame
+
 	local wmDragging = false
 	local wmDragStart, wmStartPos
 	WatermarkFrame.InputBegan:Connect(function(input)
@@ -416,11 +498,10 @@ local function CreateWatermark(screenGui)
 			)
 		end
 	end)
+
 	WatermarkData.Connection = RunService.Heartbeat:Connect(function(dt)
 		if not WatermarkFrame or not WatermarkFrame.Parent then
-			if WatermarkData.Connection then
-				WatermarkData.Connection:Disconnect()
-			end
+			if WatermarkData.Connection then WatermarkData.Connection:Disconnect() end
 			return
 		end
 		WatermarkData.FrameCount = WatermarkData.FrameCount + 1
@@ -449,9 +530,20 @@ local function CreateWatermark(screenGui)
 			end
 		end
 	end)
+
+	WatermarkData.TimeConnection = RunService.Heartbeat:Connect(function()
+		if not WatermarkFrame or not WatermarkFrame.Parent then
+			if WatermarkData.TimeConnection then WatermarkData.TimeConnection:Disconnect() end
+			return
+		end
+		DateLabel.Text = GetFormattedDate()
+		TimeLabel.Text = GetFormattedTime()
+	end)
+
 	WatermarkData.Frame = WatermarkFrame
 	return WatermarkFrame
 end
+
 local function ShowWatermark(screenGui)
 	if not WatermarkData.Frame then
 		CreateWatermark(screenGui)
@@ -466,6 +558,9 @@ local function ShowWatermark(screenGui)
 		if child:IsA("TextLabel") then
 			child.TextTransparency = 1
 			TweenService:Create(child, TweenInfo.new(0.35), {TextTransparency = 0}):Play()
+		elseif child:IsA("ImageLabel") then
+			child.ImageTransparency = 1
+			TweenService:Create(child, TweenInfo.new(0.35), {ImageTransparency = 0}):Play()
 		elseif child:IsA("Frame") and child.BackgroundTransparency < 0.5 then
 			local target = child.BackgroundTransparency
 			child.BackgroundTransparency = 1
@@ -473,6 +568,7 @@ local function ShowWatermark(screenGui)
 		end
 	end
 end
+
 local function HideWatermark()
 	if not WatermarkData.Frame then return end
 	WatermarkData.Visible = false
@@ -482,6 +578,8 @@ local function HideWatermark()
 	for _, child in ipairs(WatermarkData.Frame:GetDescendants()) do
 		if child:IsA("TextLabel") then
 			TweenService:Create(child, TweenInfo.new(0.25), {TextTransparency = 1}):Play()
+		elseif child:IsA("ImageLabel") then
+			TweenService:Create(child, TweenInfo.new(0.25), {ImageTransparency = 1}):Play()
 		elseif child:IsA("Frame") and child.BackgroundTransparency < 0.5 then
 			TweenService:Create(child, TweenInfo.new(0.25), {BackgroundTransparency = 1}):Play()
 		end
@@ -492,6 +590,7 @@ local function HideWatermark()
 		end
 	end)
 end
+
 function QuantomLib:CreateWindow(config)
 	local Window = {}
 	Window.Name = config.Name or "QUANTOM.GG"
@@ -582,11 +681,13 @@ function QuantomLib:CreateWindow(config)
 			gui:Destroy()
 		end
 	end
+
 	local ScreenGui = Instance.new("ScreenGui")
 	ScreenGui.Name = STEALTH_NAMES.ScreenGui
 	ScreenGui.ResetOnSpawn = false
 	ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 	ScreenGui.Parent = PlayerGui
+
 	local uiWidth, uiHeight
 	if isMobile then
 		uiWidth = math.min(viewportSize.X * 0.95, 500)
@@ -595,6 +696,7 @@ function QuantomLib:CreateWindow(config)
 		uiWidth = 900
 		uiHeight = 580
 	end
+
 	local MainContainer = Instance.new("Frame")
 	MainContainer.Name = STEALTH_NAMES.MainContainer
 	MainContainer.Size = UDim2.new(0, uiWidth, 0, uiHeight)
@@ -604,6 +706,7 @@ function QuantomLib:CreateWindow(config)
 	MainContainer.ClipsDescendants = false
 	MainContainer.Visible = false
 	MainContainer.Parent = ScreenGui
+
 	local ClipFrame = Instance.new("Frame")
 	ClipFrame.Name = randomName(10)
 	ClipFrame.Size = UDim2.new(1, 0, 1, 0)
@@ -612,17 +715,21 @@ function QuantomLib:CreateWindow(config)
 	ClipFrame.ClipsDescendants = true
 	ClipFrame.ZIndex = 1
 	ClipFrame.Parent = MainContainer
+
 	local MainCorner = Instance.new("UICorner")
 	MainCorner.CornerRadius = UDim.new(0, isMobile and 8 or 6)
 	MainCorner.Parent = ClipFrame
+
 	local MainStroke = Instance.new("UIStroke")
 	MainStroke.Color = Theme.Border
 	MainStroke.Thickness = 1
 	MainStroke.Transparency = 0.3
 	MainStroke.Parent = MainContainer
+
 	local MainOuterCorner = Instance.new("UICorner")
 	MainOuterCorner.CornerRadius = UDim.new(0, isMobile and 8 or 6)
 	MainOuterCorner.Parent = MainContainer
+
 	local FloatingButton = Instance.new("ImageButton")
 	FloatingButton.Name = STEALTH_NAMES.FloatingButton
 	FloatingButton.Size = UDim2.new(0, isMobile and 60 or 50, 0, isMobile and 60 or 50)
@@ -632,9 +739,11 @@ function QuantomLib:CreateWindow(config)
 	FloatingButton.Visible = isMobile
 	FloatingButton.ZIndex = 1000
 	FloatingButton.Parent = ScreenGui
+
 	local FloatCorner = Instance.new("UICorner")
 	FloatCorner.CornerRadius = UDim.new(1, 0)
 	FloatCorner.Parent = FloatingButton
+
 	local FloatIcon = Instance.new("TextLabel")
 	FloatIcon.Name = randomName(10)
 	FloatIcon.Size = UDim2.new(1, 0, 1, 0)
@@ -645,15 +754,18 @@ function QuantomLib:CreateWindow(config)
 	FloatIcon.TextColor3 = Color3.fromRGB(255, 255, 255)
 	FloatIcon.ZIndex = 1001
 	FloatIcon.Parent = FloatingButton
+
 	local floatTween = TweenService:Create(FloatingButton,
 		TweenInfo.new(2, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut, -1, true),
 		{Size = UDim2.new(0, (isMobile and 60 or 50) + 5, 0, (isMobile and 60 or 50) + 5)}
 	)
 	floatTween:Play()
+
 	local floatDragging = false
 	local floatDragStart
 	local floatStartPos
 	local floatDragMoved = false
+
 	FloatingButton.InputBegan:Connect(function(input)
 		if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
 			floatDragging = true
@@ -670,9 +782,7 @@ function QuantomLib:CreateWindow(config)
 	UserInputService.InputChanged:Connect(function(input)
 		if floatDragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
 			local delta = input.Position - floatDragStart
-			if delta.Magnitude > 5 then
-				floatDragMoved = true
-			end
+			if delta.Magnitude > 5 then floatDragMoved = true end
 			FloatingButton.Position = UDim2.new(
 				floatStartPos.X.Scale,
 				floatStartPos.X.Offset + delta.X,
@@ -686,6 +796,7 @@ function QuantomLib:CreateWindow(config)
 		MainContainer.Visible = true
 		FloatingButton.Visible = false
 	end)
+
 	local BackgroundEffects = Instance.new("Frame")
 	BackgroundEffects.Name = randomName(12)
 	BackgroundEffects.Size = UDim2.new(1, 0, 1, 0)
@@ -693,6 +804,7 @@ function QuantomLib:CreateWindow(config)
 	BackgroundEffects.ClipsDescendants = true
 	BackgroundEffects.ZIndex = 0
 	BackgroundEffects.Parent = ClipFrame
+
 	for i = 1, isMobile and 8 or 15 do
 		local particle = Instance.new("Frame")
 		particle.Name = randomName(8)
@@ -714,6 +826,7 @@ function QuantomLib:CreateWindow(config)
 		)
 		tween:Play()
 	end
+
 	local BackgroundGradient = Instance.new("Frame")
 	BackgroundGradient.Name = randomName(14)
 	BackgroundGradient.Size = UDim2.new(1, 0, 1, 0)
@@ -722,6 +835,7 @@ function QuantomLib:CreateWindow(config)
 	BackgroundGradient.BorderSizePixel = 0
 	BackgroundGradient.ZIndex = 0
 	BackgroundGradient.Parent = BackgroundEffects
+
 	local bgGradient = Instance.new("UIGradient")
 	bgGradient.Color = ColorSequence.new{
 		ColorSequenceKeypoint.new(0, Theme.Primary),
@@ -730,6 +844,7 @@ function QuantomLib:CreateWindow(config)
 	}
 	bgGradient.Rotation = 45
 	bgGradient.Parent = BackgroundGradient
+
 	task.spawn(function()
 		while MainContainer.Parent do
 			TweenService:Create(bgGradient, TweenInfo.new(8, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut), {
@@ -738,7 +853,9 @@ function QuantomLib:CreateWindow(config)
 			task.wait(8)
 		end
 	end)
+
 	local headerHeight = isMobile and 50 or 45
+
 	local Header = Instance.new("Frame")
 	Header.Name = STEALTH_NAMES.Header
 	Header.Size = UDim2.new(1, 0, 0, headerHeight)
@@ -746,9 +863,11 @@ function QuantomLib:CreateWindow(config)
 	Header.BorderSizePixel = 0
 	Header.ZIndex = 2
 	Header.Parent = ClipFrame
+
 	local HeaderCorner = Instance.new("UICorner")
 	HeaderCorner.CornerRadius = UDim.new(0, isMobile and 8 or 6)
 	HeaderCorner.Parent = Header
+
 	local HeaderFix = Instance.new("Frame")
 	HeaderFix.Name = randomName(10)
 	HeaderFix.Size = UDim2.new(1, 0, 0, 6)
@@ -757,6 +876,7 @@ function QuantomLib:CreateWindow(config)
 	HeaderFix.BorderSizePixel = 0
 	HeaderFix.ZIndex = 2
 	HeaderFix.Parent = Header
+
 	local LogoText = Instance.new("TextLabel")
 	LogoText.Name = randomName(12)
 	LogoText.Size = UDim2.new(0, 120, 1, 0)
@@ -769,6 +889,7 @@ function QuantomLib:CreateWindow(config)
 	LogoText.TextXAlignment = Enum.TextXAlignment.Left
 	LogoText.ZIndex = 3
 	LogoText.Parent = Header
+
 	local StatusText = Instance.new("TextLabel")
 	StatusText.Name = randomName(11)
 	StatusText.Size = UDim2.new(0, 80, 1, 0)
@@ -781,6 +902,7 @@ function QuantomLib:CreateWindow(config)
 	StatusText.TextXAlignment = Enum.TextXAlignment.Right
 	StatusText.ZIndex = 3
 	StatusText.Parent = Header
+
 	if not isMobile then
 		local dragging = false
 		local dragInput
@@ -815,7 +937,9 @@ function QuantomLib:CreateWindow(config)
 			end
 		end)
 	end
+
 	local buttonSize = isMobile and 35 or 30
+
 	local MinimizeButton = Instance.new("TextButton")
 	MinimizeButton.Name = randomName(14)
 	MinimizeButton.Size = UDim2.new(0, buttonSize, 0, buttonSize)
@@ -828,9 +952,11 @@ function QuantomLib:CreateWindow(config)
 	MinimizeButton.AutoButtonColor = false
 	MinimizeButton.ZIndex = 3
 	MinimizeButton.Parent = Header
+
 	local MinCorner = Instance.new("UICorner")
 	MinCorner.CornerRadius = UDim.new(0, 4)
 	MinCorner.Parent = MinimizeButton
+
 	MinimizeButton.MouseEnter:Connect(function()
 		TweenService:Create(MinimizeButton, TweenInfo.new(0.2), {
 			BackgroundColor3 = Theme.SurfaceHover,
@@ -845,10 +971,9 @@ function QuantomLib:CreateWindow(config)
 	end)
 	MinimizeButton.MouseButton1Click:Connect(function()
 		MainContainer.Visible = false
-		if isMobile then
-			FloatingButton.Visible = true
-		end
+		if isMobile then FloatingButton.Visible = true end
 	end)
+
 	local CloseButton = Instance.new("TextButton")
 	CloseButton.Name = randomName(13)
 	CloseButton.Size = UDim2.new(0, buttonSize, 0, buttonSize)
@@ -861,9 +986,11 @@ function QuantomLib:CreateWindow(config)
 	CloseButton.AutoButtonColor = false
 	CloseButton.ZIndex = 3
 	CloseButton.Parent = Header
+
 	local CloseCorner = Instance.new("UICorner")
 	CloseCorner.CornerRadius = UDim.new(0, 4)
 	CloseCorner.Parent = CloseButton
+
 	CloseButton.MouseEnter:Connect(function()
 		TweenService:Create(CloseButton, TweenInfo.new(0.2), {
 			BackgroundColor3 = Color3.fromRGB(200, 50, 50),
@@ -878,12 +1005,12 @@ function QuantomLib:CreateWindow(config)
 	end)
 	CloseButton.MouseButton1Click:Connect(function()
 		MainContainer.Visible = false
-		if isMobile then
-			FloatingButton.Visible = true
-		end
+		if isMobile then FloatingButton.Visible = true end
 	end)
+
 	local sidebarWidth = isMobile and 100 or 160
 	local playerCardHeight = isMobile and 68 or 62
+
 	local Sidebar = Instance.new("Frame")
 	Sidebar.Name = STEALTH_NAMES.Sidebar
 	Sidebar.Size = UDim2.new(0, sidebarWidth, 1, -headerHeight)
@@ -892,14 +1019,17 @@ function QuantomLib:CreateWindow(config)
 	Sidebar.BorderSizePixel = 0
 	Sidebar.ZIndex = 2
 	Sidebar.Parent = ClipFrame
+
 	local SidebarList = Instance.new("UIListLayout")
 	SidebarList.Padding = UDim.new(0, 2)
 	SidebarList.SortOrder = Enum.SortOrder.LayoutOrder
 	SidebarList.Parent = Sidebar
+
 	local SidebarPadding = Instance.new("UIPadding")
 	SidebarPadding.PaddingTop = UDim.new(0, 8)
 	SidebarPadding.PaddingBottom = UDim.new(0, playerCardHeight + 4)
 	SidebarPadding.Parent = Sidebar
+
 	local PlayerCardDivider = Instance.new("Frame")
 	PlayerCardDivider.Name = randomName(10)
 	PlayerCardDivider.Size = UDim2.new(0, sidebarWidth, 0, 1)
@@ -908,6 +1038,7 @@ function QuantomLib:CreateWindow(config)
 	PlayerCardDivider.BorderSizePixel = 0
 	PlayerCardDivider.ZIndex = 3
 	PlayerCardDivider.Parent = ClipFrame
+
 	local PlayerCard = Instance.new("Frame")
 	PlayerCard.Name = randomName(14)
 	PlayerCard.Size = UDim2.new(0, sidebarWidth, 0, playerCardHeight)
@@ -916,7 +1047,9 @@ function QuantomLib:CreateWindow(config)
 	PlayerCard.BorderSizePixel = 0
 	PlayerCard.ZIndex = 3
 	PlayerCard.Parent = ClipFrame
+
 	local AvatarSize = isMobile and 38 or 36
+
 	local AvatarBorder = Instance.new("Frame")
 	AvatarBorder.Name = randomName(10)
 	AvatarBorder.Size = UDim2.new(0, AvatarSize + 4, 0, AvatarSize + 4)
@@ -926,9 +1059,11 @@ function QuantomLib:CreateWindow(config)
 	AvatarBorder.BorderSizePixel = 0
 	AvatarBorder.ZIndex = 4
 	AvatarBorder.Parent = PlayerCard
+
 	local AvatarBorderCorner = Instance.new("UICorner")
 	AvatarBorderCorner.CornerRadius = UDim.new(1, 0)
 	AvatarBorderCorner.Parent = AvatarBorder
+
 	local AvatarFrame = Instance.new("Frame")
 	AvatarFrame.Name = randomName(12)
 	AvatarFrame.Size = UDim2.new(0, AvatarSize, 0, AvatarSize)
@@ -938,9 +1073,11 @@ function QuantomLib:CreateWindow(config)
 	AvatarFrame.ZIndex = 5
 	AvatarFrame.ClipsDescendants = true
 	AvatarFrame.Parent = AvatarBorder
+
 	local AvatarFrameCorner = Instance.new("UICorner")
 	AvatarFrameCorner.CornerRadius = UDim.new(1, 0)
 	AvatarFrameCorner.Parent = AvatarFrame
+
 	local AvatarImage = Instance.new("ImageLabel")
 	AvatarImage.Name = randomName(11)
 	AvatarImage.Size = UDim2.new(1, 0, 1, 0)
@@ -970,9 +1107,7 @@ function QuantomLib:CreateWindow(config)
 		local ok, imgId = pcall(function()
 			return Players:GetUserThumbnailAsync(1, Enum.ThumbnailType.HeadShot, Enum.ThumbnailSize.Size100x100)
 		end)
-		if ok and imgId then
-			robloxAvatarImage = imgId
-		end
+		if ok and imgId then robloxAvatarImage = imgId end
 	end)
 
 	local OnlineDot = Instance.new("Frame")
@@ -983,14 +1118,18 @@ function QuantomLib:CreateWindow(config)
 	OnlineDot.BorderSizePixel = 0
 	OnlineDot.ZIndex = 7
 	OnlineDot.Parent = AvatarBorder
+
 	local OnlineDotCorner = Instance.new("UICorner")
 	OnlineDotCorner.CornerRadius = UDim.new(1, 0)
 	OnlineDotCorner.Parent = OnlineDot
+
 	local OnlineDotStroke = Instance.new("UIStroke")
 	OnlineDotStroke.Color = Color3.fromRGB(11, 11, 14)
 	OnlineDotStroke.Thickness = 2
 	OnlineDotStroke.Parent = OnlineDot
+
 	local textOffsetX = isMobile and (AvatarSize + 20) or (AvatarSize + 24)
+
 	local PlayerDisplayName = Instance.new("TextLabel")
 	PlayerDisplayName.Name = randomName(13)
 	PlayerDisplayName.Size = UDim2.new(1, -(textOffsetX + 6), 0, isMobile and 14 or 13)
@@ -1004,6 +1143,7 @@ function QuantomLib:CreateWindow(config)
 	PlayerDisplayName.TextTruncate = Enum.TextTruncate.AtEnd
 	PlayerDisplayName.ZIndex = 4
 	PlayerDisplayName.Parent = PlayerCard
+
 	local PlayerUserName = Instance.new("TextLabel")
 	PlayerUserName.Name = randomName(13)
 	PlayerUserName.Size = UDim2.new(1, -(textOffsetX + 6), 0, isMobile and 12 or 11)
@@ -1028,9 +1168,11 @@ function QuantomLib:CreateWindow(config)
 	AnonBadge.ZIndex = 5
 	AnonBadge.Visible = false
 	AnonBadge.Parent = PlayerCard
+
 	local AnonBadgeCorner = Instance.new("UICorner")
 	AnonBadgeCorner.CornerRadius = UDim.new(0, 3)
 	AnonBadgeCorner.Parent = AnonBadge
+
 	local AnonBadgeText = Instance.new("TextLabel")
 	AnonBadgeText.Size = UDim2.new(1, 0, 1, 0)
 	AnonBadgeText.BackgroundTransparency = 1
@@ -1052,14 +1194,17 @@ function QuantomLib:CreateWindow(config)
 	AnonTooltip.ZIndex = 20
 	AnonTooltip.Visible = false
 	AnonTooltip.Parent = PlayerCard
+
 	local AnonTooltipCorner = Instance.new("UICorner")
 	AnonTooltipCorner.CornerRadius = UDim.new(0, 5)
 	AnonTooltipCorner.Parent = AnonTooltip
+
 	local AnonTooltipStroke = Instance.new("UIStroke")
 	AnonTooltipStroke.Color = Theme.Border
 	AnonTooltipStroke.Thickness = 1
 	AnonTooltipStroke.Transparency = 0.4
 	AnonTooltipStroke.Parent = AnonTooltip
+
 	local AnonTooltipIcon = Instance.new("TextLabel")
 	AnonTooltipIcon.Size = UDim2.new(0, isMobile and 18 or 20, 1, 0)
 	AnonTooltipIcon.Position = UDim2.new(0, 6, 0, 0)
@@ -1069,6 +1214,7 @@ function QuantomLib:CreateWindow(config)
 	AnonTooltipIcon.TextSize = isMobile and 11 or 12
 	AnonTooltipIcon.ZIndex = 21
 	AnonTooltipIcon.Parent = AnonTooltip
+
 	local AnonTooltipText = Instance.new("TextLabel")
 	AnonTooltipText.Size = UDim2.new(1, -(isMobile and 28 or 32), 1, 0)
 	AnonTooltipText.Position = UDim2.new(0, isMobile and 26 or 28, 0, 0)
@@ -1105,12 +1251,8 @@ function QuantomLib:CreateWindow(config)
 				TweenService:Create(PlayerDisplayName, TweenInfo.new(0.2), {TextTransparency = 0}):Play()
 				TweenService:Create(PlayerUserName, TweenInfo.new(0.2), {TextTransparency = 0}):Play()
 			end)
-			TweenService:Create(AvatarBorder, TweenInfo.new(0.25), {
-				BackgroundColor3 = Color3.fromRGB(80, 80, 100)
-			}):Play()
-			TweenService:Create(OnlineDot, TweenInfo.new(0.2), {
-				BackgroundColor3 = Color3.fromRGB(120, 120, 140)
-			}):Play()
+			TweenService:Create(AvatarBorder, TweenInfo.new(0.25), {BackgroundColor3 = Color3.fromRGB(80, 80, 100)}):Play()
+			TweenService:Create(OnlineDot, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(120, 120, 140)}):Play()
 			AnonBadge.Visible = true
 			TweenService:Create(AnonBadge, TweenInfo.new(0.2), {BackgroundTransparency = 0.3}):Play()
 			PlaySound(Sounds.ToggleOff, 0.3, 0.85)
@@ -1128,16 +1270,10 @@ function QuantomLib:CreateWindow(config)
 				TweenService:Create(PlayerDisplayName, TweenInfo.new(0.2), {TextTransparency = 0}):Play()
 				TweenService:Create(PlayerUserName, TweenInfo.new(0.2), {TextTransparency = 0}):Play()
 			end)
-			TweenService:Create(AvatarBorder, TweenInfo.new(0.25), {
-				BackgroundColor3 = Theme.Primary
-			}):Play()
-			TweenService:Create(OnlineDot, TweenInfo.new(0.2), {
-				BackgroundColor3 = Theme.Success
-			}):Play()
+			TweenService:Create(AvatarBorder, TweenInfo.new(0.25), {BackgroundColor3 = Theme.Primary}):Play()
+			TweenService:Create(OnlineDot, TweenInfo.new(0.2), {BackgroundColor3 = Theme.Success}):Play()
 			TweenService:Create(AnonBadge, TweenInfo.new(0.15), {BackgroundTransparency = 1}):Play()
-			task.delay(0.15, function()
-				AnonBadge.Visible = false
-			end)
+			task.delay(0.15, function() AnonBadge.Visible = false end)
 			PlaySound(Sounds.ToggleOn, 0.3, 1.1)
 		end
 	end
@@ -1152,9 +1288,7 @@ function QuantomLib:CreateWindow(config)
 		for _, child in ipairs(AnonTooltip:GetDescendants()) do
 			if child:IsA("TextLabel") then child.TextTransparency = 1 end
 		end
-		TweenService:Create(AnonTooltip, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
-			BackgroundTransparency = 0.05
-		}):Play()
+		TweenService:Create(AnonTooltip, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {BackgroundTransparency = 0.05}):Play()
 		for _, child in ipairs(AnonTooltip:GetDescendants()) do
 			if child:IsA("TextLabel") then
 				TweenService:Create(child, TweenInfo.new(0.2), {TextTransparency = 0}):Play()
@@ -1163,30 +1297,22 @@ function QuantomLib:CreateWindow(config)
 	end)
 
 	PlayerCard.MouseLeave:Connect(function()
-		TweenService:Create(AnonTooltip, TweenInfo.new(0.15, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {
-			BackgroundTransparency = 1
-		}):Play()
+		TweenService:Create(AnonTooltip, TweenInfo.new(0.15, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {BackgroundTransparency = 1}):Play()
 		for _, child in ipairs(AnonTooltip:GetDescendants()) do
 			if child:IsA("TextLabel") then
 				TweenService:Create(child, TweenInfo.new(0.15), {TextTransparency = 1}):Play()
 			end
 		end
 		task.delay(0.15, function()
-			if AnonTooltip and AnonTooltip.Parent then
-				AnonTooltip.Visible = false
-			end
+			if AnonTooltip and AnonTooltip.Parent then AnonTooltip.Visible = false end
 		end)
 	end)
 
 	task.spawn(function()
 		while PlayerCard and PlayerCard.Parent do
-			TweenService:Create(AvatarBorder, TweenInfo.new(2.5, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut, -1, true), {
-				BackgroundTransparency = 0.7
-			}):Play()
+			TweenService:Create(AvatarBorder, TweenInfo.new(2.5, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut, -1, true), {BackgroundTransparency = 0.7}):Play()
 			task.wait(2.5)
-			TweenService:Create(AvatarBorder, TweenInfo.new(2.5, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut, -1, true), {
-				BackgroundTransparency = 0.2
-			}):Play()
+			TweenService:Create(AvatarBorder, TweenInfo.new(2.5, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut, -1, true), {BackgroundTransparency = 0.2}):Play()
 			task.wait(2.5)
 		end
 	end)
@@ -1200,6 +1326,7 @@ function QuantomLib:CreateWindow(config)
 	ContentArea.BorderSizePixel = 0
 	ContentArea.ZIndex = 2
 	ContentArea.Parent = ClipFrame
+
 	local DropdownOverlay = Instance.new("Frame")
 	DropdownOverlay.Name = randomName(12)
 	DropdownOverlay.Size = UDim2.new(1, 0, 1, 0)
@@ -1207,8 +1334,10 @@ function QuantomLib:CreateWindow(config)
 	DropdownOverlay.BorderSizePixel = 0
 	DropdownOverlay.ZIndex = 50
 	DropdownOverlay.Parent = MainContainer
+
 	local currentOpenDropdown = nil
 	local currentTab = nil
+
 	local LoadingFrame = Instance.new("Frame")
 	LoadingFrame.Name = randomName(14)
 	LoadingFrame.Size = UDim2.new(1, 0, 1, 0)
@@ -1216,9 +1345,11 @@ function QuantomLib:CreateWindow(config)
 	LoadingFrame.BorderSizePixel = 0
 	LoadingFrame.ZIndex = 300
 	LoadingFrame.Parent = ClipFrame
+
 	local LoadingCorner = Instance.new("UICorner")
 	LoadingCorner.CornerRadius = UDim.new(0, isMobile and 8 or 6)
 	LoadingCorner.Parent = LoadingFrame
+
 	local LoadingGlow = Instance.new("Frame")
 	LoadingGlow.Name = randomName(10)
 	LoadingGlow.Size = UDim2.new(1, 0, 1, 0)
@@ -1227,6 +1358,7 @@ function QuantomLib:CreateWindow(config)
 	LoadingGlow.BorderSizePixel = 0
 	LoadingGlow.ZIndex = 301
 	LoadingGlow.Parent = LoadingFrame
+
 	local LoadingGlowGrad = Instance.new("UIGradient")
 	LoadingGlowGrad.Color = ColorSequence.new{
 		ColorSequenceKeypoint.new(0, Theme.Primary),
@@ -1235,6 +1367,7 @@ function QuantomLib:CreateWindow(config)
 	}
 	LoadingGlowGrad.Rotation = 45
 	LoadingGlowGrad.Parent = LoadingGlow
+
 	local LoadingImage = Instance.new("ImageLabel")
 	LoadingImage.Name = randomName(12)
 	LoadingImage.Size = UDim2.new(0, isMobile and 120 or 160, 0, isMobile and 120 or 160)
@@ -1245,6 +1378,7 @@ function QuantomLib:CreateWindow(config)
 	LoadingImage.ScaleType = Enum.ScaleType.Fit
 	LoadingImage.ZIndex = 302
 	LoadingImage.Parent = LoadingFrame
+
 	local LoadingTitle = Instance.new("TextLabel")
 	LoadingTitle.Name = randomName(11)
 	LoadingTitle.Size = UDim2.new(1, 0, 0, 22)
@@ -1257,6 +1391,7 @@ function QuantomLib:CreateWindow(config)
 	LoadingTitle.TextColor3 = Theme.Text
 	LoadingTitle.ZIndex = 302
 	LoadingTitle.Parent = LoadingFrame
+
 	local LoadingBarBG = Instance.new("Frame")
 	LoadingBarBG.Name = randomName(10)
 	LoadingBarBG.Size = UDim2.new(0, isMobile and 200 or 280, 0, isMobile and 5 or 4)
@@ -1266,9 +1401,11 @@ function QuantomLib:CreateWindow(config)
 	LoadingBarBG.BorderSizePixel = 0
 	LoadingBarBG.ZIndex = 302
 	LoadingBarBG.Parent = LoadingFrame
+
 	local LoadingBarBGCorner = Instance.new("UICorner")
 	LoadingBarBGCorner.CornerRadius = UDim.new(1, 0)
 	LoadingBarBGCorner.Parent = LoadingBarBG
+
 	local LoadingBarFill = Instance.new("Frame")
 	LoadingBarFill.Name = randomName(10)
 	LoadingBarFill.Size = UDim2.new(0, 0, 1, 0)
@@ -1276,15 +1413,18 @@ function QuantomLib:CreateWindow(config)
 	LoadingBarFill.BorderSizePixel = 0
 	LoadingBarFill.ZIndex = 303
 	LoadingBarFill.Parent = LoadingBarBG
+
 	local LoadingBarFillCorner = Instance.new("UICorner")
 	LoadingBarFillCorner.CornerRadius = UDim.new(1, 0)
 	LoadingBarFillCorner.Parent = LoadingBarFill
+
 	local LoadingBarFillGrad = Instance.new("UIGradient")
 	LoadingBarFillGrad.Color = ColorSequence.new{
 		ColorSequenceKeypoint.new(0, Theme.Primary),
 		ColorSequenceKeypoint.new(1, Theme.Accent)
 	}
 	LoadingBarFillGrad.Parent = LoadingBarFill
+
 	local LoadingPercent = Instance.new("TextLabel")
 	LoadingPercent.Name = randomName(11)
 	LoadingPercent.Size = UDim2.new(1, 0, 0, 18)
@@ -1297,6 +1437,7 @@ function QuantomLib:CreateWindow(config)
 	LoadingPercent.TextColor3 = Theme.Primary
 	LoadingPercent.ZIndex = 302
 	LoadingPercent.Parent = LoadingFrame
+
 	local LoadingStatus = Instance.new("TextLabel")
 	LoadingStatus.Name = randomName(11)
 	LoadingStatus.Size = UDim2.new(1, 0, 0, 16)
@@ -1309,8 +1450,10 @@ function QuantomLib:CreateWindow(config)
 	LoadingStatus.TextColor3 = Theme.TextMuted
 	LoadingStatus.ZIndex = 302
 	LoadingStatus.Parent = LoadingFrame
+
 	local loadingProgress = 0
 	local loadingFinished = false
+
 	function Window:SetLoadingProgress(value, statusText)
 		if loadingFinished then return end
 		loadingProgress = math.clamp(value, 0, 100)
@@ -1319,10 +1462,9 @@ function QuantomLib:CreateWindow(config)
 			Size = UDim2.new(pct, 0, 1, 0)
 		}):Play()
 		LoadingPercent.Text = math.floor(loadingProgress) .. "%"
-		if statusText then
-			LoadingStatus.Text = statusText
-		end
+		if statusText then LoadingStatus.Text = statusText end
 	end
+
 	function Window:FinishLoading()
 		if loadingFinished then return end
 		loadingFinished = true
@@ -1348,6 +1490,7 @@ function QuantomLib:CreateWindow(config)
 		LoadingFrame.Visible = false
 		LoadingFrame:Destroy()
 	end
+
 	local function CreateHUD()
 		if HUDFrame then HUDFrame:Destroy() HUDFrame = nil end
 		if HUDConnection then HUDConnection:Disconnect() HUDConnection = nil end
@@ -1356,6 +1499,7 @@ function QuantomLib:CreateWindow(config)
 		local headerH = isMobile and 30 or 28
 		local count = #HUDRegistry
 		local hudH = headerH + math.max(count, 1) * rowH + 8
+
 		local HUD = Instance.new("Frame")
 		HUD.Name = randomName(12)
 		HUD.Size = UDim2.new(0, hudW, 0, hudH)
@@ -1365,23 +1509,28 @@ function QuantomLib:CreateWindow(config)
 		HUD.BorderSizePixel = 0
 		HUD.ZIndex = 8000
 		HUD.Parent = ScreenGui
+
 		local HUDCorner = Instance.new("UICorner")
 		HUDCorner.CornerRadius = UDim.new(0, 6)
 		HUDCorner.Parent = HUD
+
 		local HUDStroke = Instance.new("UIStroke")
 		HUDStroke.Color = Theme.Primary
 		HUDStroke.Thickness = 1
 		HUDStroke.Transparency = 0.5
 		HUDStroke.Parent = HUD
+
 		local HUDAccent = Instance.new("Frame")
 		HUDAccent.Size = UDim2.new(1, 0, 0, 2)
 		HUDAccent.BackgroundColor3 = Theme.Primary
 		HUDAccent.BorderSizePixel = 0
 		HUDAccent.ZIndex = 8001
 		HUDAccent.Parent = HUD
+
 		local HUDAccentCorner = Instance.new("UICorner")
 		HUDAccentCorner.CornerRadius = UDim.new(0, 6)
 		HUDAccentCorner.Parent = HUDAccent
+
 		local HUDAccentGrad = Instance.new("UIGradient")
 		HUDAccentGrad.Color = ColorSequence.new{
 			ColorSequenceKeypoint.new(0, Theme.Primary),
@@ -1389,6 +1538,7 @@ function QuantomLib:CreateWindow(config)
 			ColorSequenceKeypoint.new(1, Theme.Primary)
 		}
 		HUDAccentGrad.Parent = HUDAccent
+
 		local HUDHeader = Instance.new("Frame")
 		HUDHeader.Size = UDim2.new(1, 0, 0, headerH)
 		HUDHeader.BackgroundColor3 = Color3.fromRGB(15, 15, 20)
@@ -1396,9 +1546,11 @@ function QuantomLib:CreateWindow(config)
 		HUDHeader.BorderSizePixel = 0
 		HUDHeader.ZIndex = 8001
 		HUDHeader.Parent = HUD
+
 		local HUDHeaderCorner = Instance.new("UICorner")
 		HUDHeaderCorner.CornerRadius = UDim.new(0, 6)
 		HUDHeaderCorner.Parent = HUDHeader
+
 		local HUDHeaderFix = Instance.new("Frame")
 		HUDHeaderFix.Size = UDim2.new(1, 0, 0, 6)
 		HUDHeaderFix.Position = UDim2.new(0, 0, 1, -6)
@@ -1407,6 +1559,7 @@ function QuantomLib:CreateWindow(config)
 		HUDHeaderFix.BorderSizePixel = 0
 		HUDHeaderFix.ZIndex = 8001
 		HUDHeaderFix.Parent = HUDHeader
+
 		local HUDBrandDot = Instance.new("Frame")
 		HUDBrandDot.Size = UDim2.new(0, 6, 0, 6)
 		HUDBrandDot.Position = UDim2.new(0, 10, 0.5, -3)
@@ -1415,6 +1568,7 @@ function QuantomLib:CreateWindow(config)
 		HUDBrandDot.ZIndex = 8002
 		HUDBrandDot.Parent = HUDHeader
 		Instance.new("UICorner", HUDBrandDot).CornerRadius = UDim.new(1, 0)
+
 		local HUDTitle = Instance.new("TextLabel")
 		HUDTitle.Size = UDim2.new(1, -50, 1, 0)
 		HUDTitle.Position = UDim2.new(0, 22, 0, 0)
@@ -1426,6 +1580,7 @@ function QuantomLib:CreateWindow(config)
 		HUDTitle.TextXAlignment = Enum.TextXAlignment.Left
 		HUDTitle.ZIndex = 8002
 		HUDTitle.Parent = HUDHeader
+
 		local HUDHide = Instance.new("TextButton")
 		HUDHide.Size = UDim2.new(0, 22, 0, 22)
 		HUDHide.Position = UDim2.new(1, -26, 0.5, -11)
@@ -1438,6 +1593,7 @@ function QuantomLib:CreateWindow(config)
 		HUDHide.ZIndex = 8002
 		HUDHide.Parent = HUDHeader
 		Instance.new("UICorner", HUDHide).CornerRadius = UDim.new(0, 4)
+
 		HUDHide.MouseEnter:Connect(function()
 			TweenService:Create(HUDHide, TweenInfo.new(0.15), {BackgroundColor3 = Theme.SurfaceHover, TextColor3 = Theme.Text}):Play()
 		end)
@@ -1454,6 +1610,7 @@ function QuantomLib:CreateWindow(config)
 				if HUD and HUD.Parent then HUD.Visible = false end
 			end)
 		end)
+
 		local hudDragging, hudDragStart, hudStartPos = false, nil, nil
 		HUDHeader.InputBegan:Connect(function(input)
 			if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
@@ -1473,6 +1630,7 @@ function QuantomLib:CreateWindow(config)
 				HUD.Position = UDim2.new(hudStartPos.X.Scale, hudStartPos.X.Offset + delta.X, hudStartPos.Y.Scale, hudStartPos.Y.Offset + delta.Y)
 			end
 		end)
+
 		local HUDContent = Instance.new("Frame")
 		HUDContent.Name = randomName(10)
 		HUDContent.Size = UDim2.new(1, 0, 1, -headerH)
@@ -1480,15 +1638,18 @@ function QuantomLib:CreateWindow(config)
 		HUDContent.BackgroundTransparency = 1
 		HUDContent.ZIndex = 8001
 		HUDContent.Parent = HUD
+
 		local HUDList = Instance.new("UIListLayout")
 		HUDList.SortOrder = Enum.SortOrder.LayoutOrder
 		HUDList.Parent = HUDContent
+
 		local HUDPad = Instance.new("UIPadding")
 		HUDPad.PaddingTop = UDim.new(0, 4)
 		HUDPad.PaddingBottom = UDim.new(0, 4)
 		HUDPad.PaddingLeft = UDim.new(0, 8)
 		HUDPad.PaddingRight = UDim.new(0, 8)
 		HUDPad.Parent = HUDContent
+
 		local rowRefs = {}
 		for i, entry in ipairs(HUDRegistry) do
 			local Row = Instance.new("Frame")
@@ -1499,6 +1660,7 @@ function QuantomLib:CreateWindow(config)
 			Row.LayoutOrder = i
 			Row.ZIndex = 8002
 			Row.Parent = HUDContent
+
 			local Dot = Instance.new("Frame")
 			Dot.Size = UDim2.new(0, isMobile and 7 or 6, 0, isMobile and 7 or 6)
 			Dot.Position = UDim2.new(0, 0, 0.5, isMobile and -3.5 or -3)
@@ -1507,6 +1669,7 @@ function QuantomLib:CreateWindow(config)
 			Dot.ZIndex = 8003
 			Dot.Parent = Row
 			Instance.new("UICorner", Dot).CornerRadius = UDim.new(1, 0)
+
 			local NameLabel = Instance.new("TextLabel")
 			NameLabel.Size = UDim2.new(1, -(isMobile and 70 or 80), 1, 0)
 			NameLabel.Position = UDim2.new(0, isMobile and 13 or 12, 0, 0)
@@ -1519,12 +1682,14 @@ function QuantomLib:CreateWindow(config)
 			NameLabel.TextTruncate = Enum.TextTruncate.AtEnd
 			NameLabel.ZIndex = 8003
 			NameLabel.Parent = Row
+
 			local RightFrame = Instance.new("Frame")
 			RightFrame.Size = UDim2.new(0, isMobile and 62 or 72, 1, 0)
 			RightFrame.Position = UDim2.new(1, -(isMobile and 62 or 72), 0, 0)
 			RightFrame.BackgroundTransparency = 1
 			RightFrame.ZIndex = 8003
 			RightFrame.Parent = Row
+
 			local KeyTag = Instance.new("Frame")
 			KeyTag.Size = UDim2.new(0, isMobile and 28 or 32, 0, isMobile and 16 or 14)
 			KeyTag.Position = UDim2.new(0, 0, 0.5, isMobile and -8 or -7)
@@ -1533,10 +1698,12 @@ function QuantomLib:CreateWindow(config)
 			KeyTag.ZIndex = 8004
 			KeyTag.Parent = RightFrame
 			Instance.new("UICorner", KeyTag).CornerRadius = UDim.new(0, 3)
+
 			local KeyTagStroke = Instance.new("UIStroke")
 			KeyTagStroke.Color = Theme.Border
 			KeyTagStroke.Thickness = 1
 			KeyTagStroke.Parent = KeyTag
+
 			local KeyTagText = Instance.new("TextLabel")
 			KeyTagText.Size = UDim2.new(1, 0, 1, 0)
 			KeyTagText.BackgroundTransparency = 1
@@ -1545,6 +1712,7 @@ function QuantomLib:CreateWindow(config)
 			KeyTagText.TextColor3 = Theme.TextSecondary
 			KeyTagText.ZIndex = 8005
 			KeyTagText.Parent = KeyTag
+
 			local StateTag = Instance.new("Frame")
 			StateTag.Size = UDim2.new(0, isMobile and 28 or 34, 0, isMobile and 16 or 14)
 			StateTag.Position = UDim2.new(1, -(isMobile and 28 or 34), 0.5, isMobile and -8 or -7)
@@ -1554,6 +1722,7 @@ function QuantomLib:CreateWindow(config)
 			StateTag.ZIndex = 8004
 			StateTag.Parent = RightFrame
 			Instance.new("UICorner", StateTag).CornerRadius = UDim.new(0, 3)
+
 			local StateText = Instance.new("TextLabel")
 			StateText.Size = UDim2.new(1, 0, 1, 0)
 			StateText.BackgroundTransparency = 1
@@ -1561,6 +1730,7 @@ function QuantomLib:CreateWindow(config)
 			StateText.TextSize = isMobile and 7 or 8
 			StateText.ZIndex = 8005
 			StateText.Parent = StateTag
+
 			rowRefs[i] = {
 				Row = Row,
 				Dot = Dot,
@@ -1572,6 +1742,7 @@ function QuantomLib:CreateWindow(config)
 				visible = false
 			}
 		end
+
 		local lastVisibleCount = -1
 		HUDConnection = RunService.Heartbeat:Connect(function()
 			if not HUD or not HUD.Parent then
@@ -1623,6 +1794,7 @@ function QuantomLib:CreateWindow(config)
 				TweenService:Create(HUD, TweenInfo.new(0.2), {Size = UDim2.new(0, hudW, 0, newH)}):Play()
 			end
 		end)
+
 		HUD.BackgroundTransparency = 1
 		HUD.Position = UDim2.new(HUD.Position.X.Scale, HUD.Position.X.Offset - 20, HUD.Position.Y.Scale, HUD.Position.Y.Offset)
 		for _, child in ipairs(HUD:GetDescendants()) do
@@ -1642,6 +1814,7 @@ function QuantomLib:CreateWindow(config)
 		HUDFrame = HUD
 		HUDVisible = true
 	end
+
 	local function ShowHUD()
 		if HUDFrame and HUDFrame.Parent then
 			HUDFrame.Visible = true
@@ -1654,6 +1827,7 @@ function QuantomLib:CreateWindow(config)
 		end
 		CreateHUD()
 	end
+
 	local function HideHUD()
 		if not HUDFrame or not HUDFrame.Parent then return end
 		HUDVisible = false
@@ -1666,14 +1840,17 @@ function QuantomLib:CreateWindow(config)
 			if HUDFrame and HUDFrame.Parent then HUDFrame.Visible = false end
 		end)
 	end
+
 	function Window:Notify(config)
 		CreateNotification(config)
 	end
+
 	function Window:CreateTab(config)
 		local Tab = {}
 		Tab.Name = config.Name or "Tab"
 		Tab.Icon = config.Icon or "📁"
 		local catHeight = isMobile and 36 or 38
+
 		local CategoryButton = Instance.new("TextButton")
 		CategoryButton.Name = randomName(15)
 		CategoryButton.Size = UDim2.new(1, 0, 0, catHeight)
@@ -1685,6 +1862,7 @@ function QuantomLib:CreateWindow(config)
 		CategoryButton.LayoutOrder = config._order or (config._settingsTab and 9999 or (#Window.Categories + 1))
 		CategoryButton.ZIndex = 3
 		CategoryButton.Parent = Sidebar
+
 		local iconSize = isMobile and 14 or 18
 		local Icon = Instance.new("TextLabel")
 		Icon.Name = randomName(10)
@@ -1697,6 +1875,7 @@ function QuantomLib:CreateWindow(config)
 		Icon.TextColor3 = Theme.TextMuted
 		Icon.ZIndex = 4
 		Icon.Parent = CategoryButton
+
 		local Label = Instance.new("TextLabel")
 		Label.Name = randomName(11)
 		Label.Size = UDim2.new(1, isMobile and -32 or -45, 1, 0)
@@ -1709,6 +1888,7 @@ function QuantomLib:CreateWindow(config)
 		Label.TextXAlignment = Enum.TextXAlignment.Left
 		Label.ZIndex = 4
 		Label.Parent = CategoryButton
+
 		local Indicator = Instance.new("Frame")
 		Indicator.Name = randomName(9)
 		Indicator.Size = UDim2.new(0, 0, 0, catHeight)
@@ -1717,7 +1897,9 @@ function QuantomLib:CreateWindow(config)
 		Indicator.BorderSizePixel = 0
 		Indicator.ZIndex = 3
 		Indicator.Parent = CategoryButton
+
 		local contentPadding = isMobile and 8 or 10
+
 		local ContentScroll = Instance.new("ScrollingFrame")
 		ContentScroll.Name = randomName(16)
 		ContentScroll.Size = UDim2.new(1, -contentPadding*2, 1, -contentPadding*2)
@@ -1731,21 +1913,26 @@ function QuantomLib:CreateWindow(config)
 		ContentScroll.Visible = false
 		ContentScroll.ZIndex = 3
 		ContentScroll.Parent = ContentArea
+
 		local ContentFrame = Instance.new("Frame")
 		ContentFrame.Name = randomName(14)
 		ContentFrame.Size = UDim2.new(1, 0, 1, 0)
 		ContentFrame.BackgroundTransparency = 1
 		ContentFrame.ZIndex = 3
 		ContentFrame.Parent = ContentScroll
+
 		local ContentList = Instance.new("UIListLayout")
 		ContentList.Padding = UDim.new(0, isMobile and 8 or 10)
 		ContentList.SortOrder = Enum.SortOrder.LayoutOrder
 		ContentList.Parent = ContentFrame
+
 		ContentList:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
 			ContentScroll.CanvasSize = UDim2.new(0, 0, 0, ContentList.AbsoluteContentSize.Y + 20)
 		end)
+
 		Tab.ContentScroll = ContentScroll
 		Tab.ContentFrame = ContentFrame
+
 		CategoryButton.MouseEnter:Connect(function()
 			if currentTab ~= Tab then
 				TweenService:Create(CategoryButton, TweenInfo.new(0.15), {BackgroundTransparency = 0.5}):Play()
@@ -1758,6 +1945,7 @@ function QuantomLib:CreateWindow(config)
 				TweenService:Create(Label, TweenInfo.new(0.15), {TextColor3 = Theme.TextSecondary}):Play()
 			end
 		end)
+
 		local function activateTab()
 			if currentOpenDropdown then
 				currentOpenDropdown()
@@ -1789,7 +1977,9 @@ function QuantomLib:CreateWindow(config)
 			TweenService:Create(Indicator, TweenInfo.new(0.2), {Size = UDim2.new(0, 3, 0, catHeight)}):Play()
 			if Tab._onActivate then Tab._onActivate() end
 		end
+
 		CategoryButton.MouseButton1Click:Connect(activateTab)
+
 		function Tab:AddSection(title)
 			local SectionLabel = Instance.new("TextLabel")
 			SectionLabel.Name = randomName(13)
@@ -1803,8 +1993,10 @@ function QuantomLib:CreateWindow(config)
 			SectionLabel.ZIndex = 3
 			SectionLabel.Parent = ContentFrame
 		end
+
 		function Tab:AddToggle(config)
 			local toggleState = config.Default or false
+
 			local ToggleFrame = Instance.new("Frame")
 			ToggleFrame.Name = randomName(14)
 			ToggleFrame.Size = UDim2.new(1, 0, 0, isMobile and 36 or 32)
@@ -1812,9 +2004,11 @@ function QuantomLib:CreateWindow(config)
 			ToggleFrame.BorderSizePixel = 0
 			ToggleFrame.ZIndex = 3
 			ToggleFrame.Parent = ContentFrame
+
 			local ToggleCorner = Instance.new("UICorner")
 			ToggleCorner.CornerRadius = UDim.new(0, 4)
 			ToggleCorner.Parent = ToggleFrame
+
 			local ToggleLabel = Instance.new("TextLabel")
 			ToggleLabel.Name = randomName(12)
 			ToggleLabel.Size = UDim2.new(1, -60, 1, 0)
@@ -1827,6 +2021,7 @@ function QuantomLib:CreateWindow(config)
 			ToggleLabel.TextXAlignment = Enum.TextXAlignment.Left
 			ToggleLabel.ZIndex = 4
 			ToggleLabel.Parent = ToggleFrame
+
 			local ToggleButton = Instance.new("TextButton")
 			ToggleButton.Name = randomName(13)
 			ToggleButton.Size = UDim2.new(0, isMobile and 42 or 38, 0, isMobile and 22 or 18)
@@ -1836,9 +2031,11 @@ function QuantomLib:CreateWindow(config)
 			ToggleButton.AutoButtonColor = false
 			ToggleButton.ZIndex = 4
 			ToggleButton.Parent = ToggleFrame
+
 			local ToggleBtnCorner = Instance.new("UICorner")
 			ToggleBtnCorner.CornerRadius = UDim.new(1, 0)
 			ToggleBtnCorner.Parent = ToggleButton
+
 			local ToggleCircle = Instance.new("Frame")
 			ToggleCircle.Name = randomName(10)
 			ToggleCircle.Size = UDim2.new(0, isMobile and 18 or 14, 0, isMobile and 18 or 14)
@@ -1847,9 +2044,11 @@ function QuantomLib:CreateWindow(config)
 			ToggleCircle.BorderSizePixel = 0
 			ToggleCircle.ZIndex = 5
 			ToggleCircle.Parent = ToggleButton
+
 			local CircleCorner = Instance.new("UICorner")
 			CircleCorner.CornerRadius = UDim.new(1, 0)
 			CircleCorner.Parent = ToggleCircle
+
 			local function applyToggleVisual(state)
 				TweenService:Create(ToggleButton, TweenInfo.new(0.2), {
 					BackgroundColor3 = state and Theme.Toggle or Theme.Border
@@ -1857,23 +2056,27 @@ function QuantomLib:CreateWindow(config)
 				local endPos = state and UDim2.new(1, isMobile and -20 or -16, 0.5, isMobile and -9 or -7) or UDim2.new(0, 2, 0.5, isMobile and -9 or -7)
 				TweenService:Create(ToggleCircle, TweenInfo.new(0.2, Enum.EasingStyle.Quad), {Position = endPos}):Play()
 			end
+
 			ToggleButton.MouseButton1Click:Connect(function()
 				toggleState = not toggleState
 				applyToggleVisual(toggleState)
-				if config.Callback then
-					config.Callback(toggleState)
+				if toggleState then
+					PlaySound(Sounds.ToggleOn, 0.35, 1)
+				else
+					PlaySound(Sounds.ToggleOff, 0.35, 1)
 				end
+				if config.Callback then config.Callback(toggleState) end
 			end)
+
 			if not config.HideFromHUD then
 				table.insert(HUDRegistry, {
 					Name = config.Name or "Toggle",
 					Type = "Toggle",
 					GetState = function() return toggleState end,
-					GetKey = function()
-						return config.HUDKey or "—"
-					end
+					GetKey = function() return config.HUDKey or "—" end
 				})
 			end
+
 			if config.Flag then
 				Window.Flags[config.Flag] = {
 					Type = "Toggle",
@@ -1885,6 +2088,7 @@ function QuantomLib:CreateWindow(config)
 					end
 				}
 			end
+
 			return {
 				SetValue = function(self, value)
 					toggleState = value
@@ -1893,8 +2097,10 @@ function QuantomLib:CreateWindow(config)
 				end
 			}
 		end
+
 		function Tab:AddButton(config)
 			local isPressed = false
+
 			local ButtonFrame = Instance.new("Frame")
 			ButtonFrame.Name = randomName(14)
 			ButtonFrame.Size = UDim2.new(1, 0, 0, isMobile and 36 or 32)
@@ -1902,9 +2108,11 @@ function QuantomLib:CreateWindow(config)
 			ButtonFrame.BorderSizePixel = 0
 			ButtonFrame.ZIndex = 3
 			ButtonFrame.Parent = ContentFrame
+
 			local ButtonCorner = Instance.new("UICorner")
 			ButtonCorner.CornerRadius = UDim.new(0, 4)
 			ButtonCorner.Parent = ButtonFrame
+
 			local ButtonClickable = Instance.new("TextButton")
 			ButtonClickable.Name = randomName(15)
 			ButtonClickable.Size = UDim2.new(1, 0, 1, 0)
@@ -1912,6 +2120,7 @@ function QuantomLib:CreateWindow(config)
 			ButtonClickable.Text = ""
 			ButtonClickable.ZIndex = 5
 			ButtonClickable.Parent = ButtonFrame
+
 			local ButtonLabel = Instance.new("TextLabel")
 			ButtonLabel.Name = randomName(12)
 			ButtonLabel.Size = UDim2.new(1, -24, 1, 0)
@@ -1924,6 +2133,7 @@ function QuantomLib:CreateWindow(config)
 			ButtonLabel.TextXAlignment = Enum.TextXAlignment.Left
 			ButtonLabel.ZIndex = 4
 			ButtonLabel.Parent = ButtonFrame
+
 			local ButtonIcon = Instance.new("TextLabel")
 			ButtonIcon.Name = randomName(10)
 			ButtonIcon.Size = UDim2.new(0, 16, 0, 16)
@@ -1935,6 +2145,7 @@ function QuantomLib:CreateWindow(config)
 			ButtonIcon.TextColor3 = Theme.Primary
 			ButtonIcon.ZIndex = 4
 			ButtonIcon.Parent = ButtonFrame
+
 			ButtonClickable.MouseEnter:Connect(function()
 				if not isPressed then
 					TweenService:Create(ButtonFrame, TweenInfo.new(0.15), {BackgroundColor3 = Theme.SurfaceHover}):Play()
@@ -1961,13 +2172,13 @@ function QuantomLib:CreateWindow(config)
 				TweenService:Create(ButtonIcon, TweenInfo.new(0.15), {TextColor3 = Theme.Primary}):Play()
 			end)
 			ButtonClickable.MouseButton1Click:Connect(function()
-				if config.Callback then
-					task.spawn(config.Callback)
-				end
+				if config.Callback then task.spawn(config.Callback) end
 			end)
 		end
+
 		function Tab:AddSlider(config)
 			local sliderValue = config.Default or config.Min or 0
+
 			local SliderFrame = Instance.new("Frame")
 			SliderFrame.Name = randomName(14)
 			SliderFrame.Size = UDim2.new(1, 0, 0, isMobile and 50 or 46)
@@ -1975,9 +2186,11 @@ function QuantomLib:CreateWindow(config)
 			SliderFrame.BorderSizePixel = 0
 			SliderFrame.ZIndex = 3
 			SliderFrame.Parent = ContentFrame
+
 			local SliderCorner = Instance.new("UICorner")
 			SliderCorner.CornerRadius = UDim.new(0, 4)
 			SliderCorner.Parent = SliderFrame
+
 			local SliderLabel = Instance.new("TextLabel")
 			SliderLabel.Name = randomName(12)
 			SliderLabel.Size = UDim2.new(0.6, 0, 0, 18)
@@ -1990,6 +2203,7 @@ function QuantomLib:CreateWindow(config)
 			SliderLabel.TextXAlignment = Enum.TextXAlignment.Left
 			SliderLabel.ZIndex = 4
 			SliderLabel.Parent = SliderFrame
+
 			local ValueLabel = Instance.new("TextLabel")
 			ValueLabel.Name = randomName(11)
 			ValueLabel.Size = UDim2.new(0, 40, 0, 18)
@@ -2002,6 +2216,7 @@ function QuantomLib:CreateWindow(config)
 			ValueLabel.TextXAlignment = Enum.TextXAlignment.Right
 			ValueLabel.ZIndex = 4
 			ValueLabel.Parent = SliderFrame
+
 			local SliderTrack = Instance.new("Frame")
 			SliderTrack.Name = randomName(13)
 			SliderTrack.Size = UDim2.new(1, -24, 0, isMobile and 5 or 4)
@@ -2010,9 +2225,11 @@ function QuantomLib:CreateWindow(config)
 			SliderTrack.BorderSizePixel = 0
 			SliderTrack.ZIndex = 4
 			SliderTrack.Parent = SliderFrame
+
 			local TrackCorner = Instance.new("UICorner")
 			TrackCorner.CornerRadius = UDim.new(1, 0)
 			TrackCorner.Parent = SliderTrack
+
 			local SliderFill = Instance.new("Frame")
 			SliderFill.Name = randomName(11)
 			SliderFill.Size = UDim2.new((sliderValue - config.Min) / (config.Max - config.Min), 0, 1, 0)
@@ -2020,10 +2237,13 @@ function QuantomLib:CreateWindow(config)
 			SliderFill.BorderSizePixel = 0
 			SliderFill.ZIndex = 5
 			SliderFill.Parent = SliderTrack
+
 			local FillCorner = Instance.new("UICorner")
 			FillCorner.CornerRadius = UDim.new(1, 0)
 			FillCorner.Parent = SliderFill
+
 			local dragging = false
+
 			local function updateSlider(input)
 				local mouse = input.Position
 				local pos = SliderTrack.AbsolutePosition.X
@@ -2033,10 +2253,9 @@ function QuantomLib:CreateWindow(config)
 				sliderValue = math.floor(config.Min + ((config.Max - config.Min) * percentage))
 				ValueLabel.Text = tostring(sliderValue)
 				TweenService:Create(SliderFill, TweenInfo.new(0.1), {Size = UDim2.new(percentage, 0, 1, 0)}):Play()
-				if config.Callback then
-					config.Callback(sliderValue)
-				end
+				if config.Callback then config.Callback(sliderValue) end
 			end
+
 			SliderTrack.InputBegan:Connect(function(input)
 				if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
 					dragging = true
@@ -2054,6 +2273,7 @@ function QuantomLib:CreateWindow(config)
 					updateSlider(input)
 				end
 			end)
+
 			if config.Flag then
 				Window.Flags[config.Flag] = {
 					Type = "Slider",
@@ -2067,6 +2287,7 @@ function QuantomLib:CreateWindow(config)
 					end
 				}
 			end
+
 			return {
 				SetValue = function(self, value)
 					sliderValue = math.clamp(value, config.Min, config.Max)
@@ -2076,6 +2297,7 @@ function QuantomLib:CreateWindow(config)
 				end
 			}
 		end
+
 		function Tab:AddTextbox(config)
 			local TextboxFrame = Instance.new("Frame")
 			TextboxFrame.Name = randomName(14)
@@ -2084,9 +2306,11 @@ function QuantomLib:CreateWindow(config)
 			TextboxFrame.BorderSizePixel = 0
 			TextboxFrame.ZIndex = 3
 			TextboxFrame.Parent = ContentFrame
+
 			local TextboxCorner = Instance.new("UICorner")
 			TextboxCorner.CornerRadius = UDim.new(0, 4)
 			TextboxCorner.Parent = TextboxFrame
+
 			local TextboxLabel = Instance.new("TextLabel")
 			TextboxLabel.Name = randomName(12)
 			TextboxLabel.Size = UDim2.new(0, 80, 1, 0)
@@ -2099,6 +2323,7 @@ function QuantomLib:CreateWindow(config)
 			TextboxLabel.TextXAlignment = Enum.TextXAlignment.Left
 			TextboxLabel.ZIndex = 4
 			TextboxLabel.Parent = TextboxFrame
+
 			local TextboxInput = Instance.new("TextBox")
 			TextboxInput.Name = randomName(13)
 			TextboxInput.Size = UDim2.new(1, -110, 0, isMobile and 26 or 22)
@@ -2113,9 +2338,11 @@ function QuantomLib:CreateWindow(config)
 			TextboxInput.PlaceholderColor3 = Theme.TextMuted
 			TextboxInput.ZIndex = 4
 			TextboxInput.Parent = TextboxFrame
+
 			local InputCorner = Instance.new("UICorner")
 			InputCorner.CornerRadius = UDim.new(0, 4)
 			InputCorner.Parent = TextboxInput
+
 			TextboxInput.Focused:Connect(function()
 				PlaySound(Sounds.Click, 0.2, 1.1)
 			end)
@@ -2125,6 +2352,7 @@ function QuantomLib:CreateWindow(config)
 					config.Callback(TextboxInput.Text)
 				end
 			end)
+
 			if config.Flag then
 				Window.Flags[config.Flag] = {
 					Type = "Textbox",
@@ -2135,20 +2363,19 @@ function QuantomLib:CreateWindow(config)
 					end
 				}
 			end
+
 			return {
-				SetValue = function(self, value)
-					TextboxInput.Text = value
-				end,
-				GetValue = function(self)
-					return TextboxInput.Text
-				end
+				SetValue = function(self, value) TextboxInput.Text = value end,
+				GetValue = function(self) return TextboxInput.Text end
 			}
 		end
+
 		function Tab:AddDropdown(config)
 			local selectedOption = config.Default or (config.Options and config.Options[1]) or ""
 			local dropdownOpen = false
 			local dropdownTransitioning = false
 			local optionsListFrame = nil
+
 			local DropdownFrame = Instance.new("Frame")
 			DropdownFrame.Name = randomName(14)
 			DropdownFrame.Size = UDim2.new(1, 0, 0, isMobile and 36 or 32)
@@ -2156,9 +2383,11 @@ function QuantomLib:CreateWindow(config)
 			DropdownFrame.BorderSizePixel = 0
 			DropdownFrame.ZIndex = 3
 			DropdownFrame.Parent = ContentFrame
+
 			local DropdownCorner = Instance.new("UICorner")
 			DropdownCorner.CornerRadius = UDim.new(0, 4)
 			DropdownCorner.Parent = DropdownFrame
+
 			local DropdownLabel = Instance.new("TextLabel")
 			DropdownLabel.Name = randomName(12)
 			DropdownLabel.Size = UDim2.new(0, 100, 1, 0)
@@ -2171,6 +2400,7 @@ function QuantomLib:CreateWindow(config)
 			DropdownLabel.TextXAlignment = Enum.TextXAlignment.Left
 			DropdownLabel.ZIndex = 4
 			DropdownLabel.Parent = DropdownFrame
+
 			local DropdownButton = Instance.new("TextButton")
 			DropdownButton.Name = randomName(13)
 			DropdownButton.Size = UDim2.new(1, -120, 0, isMobile and 26 or 22)
@@ -2184,12 +2414,15 @@ function QuantomLib:CreateWindow(config)
 			DropdownButton.AutoButtonColor = false
 			DropdownButton.ZIndex = 4
 			DropdownButton.Parent = DropdownFrame
+
 			local DropdownBtnCorner = Instance.new("UICorner")
 			DropdownBtnCorner.CornerRadius = UDim.new(0, 4)
 			DropdownBtnCorner.Parent = DropdownButton
+
 			local DropdownPadding = Instance.new("UIPadding")
 			DropdownPadding.PaddingLeft = UDim.new(0, 8)
 			DropdownPadding.Parent = DropdownButton
+
 			local Arrow = Instance.new("TextLabel")
 			Arrow.Name = randomName(8)
 			Arrow.Size = UDim2.new(0, 20, 1, 0)
@@ -2201,6 +2434,7 @@ function QuantomLib:CreateWindow(config)
 			Arrow.TextColor3 = Theme.TextMuted
 			Arrow.ZIndex = 5
 			Arrow.Parent = DropdownButton
+
 			DropdownButton.MouseEnter:Connect(function()
 				TweenService:Create(DropdownButton, TweenInfo.new(0.15), {BackgroundColor3 = Theme.SurfaceHover}):Play()
 			end)
@@ -2209,6 +2443,7 @@ function QuantomLib:CreateWindow(config)
 					TweenService:Create(DropdownButton, TweenInfo.new(0.15), {BackgroundColor3 = Theme.SurfaceLight}):Play()
 				end
 			end)
+
 			local function closeDropdown()
 				if not dropdownOpen then return end
 				dropdownOpen = false
@@ -2218,9 +2453,7 @@ function QuantomLib:CreateWindow(config)
 				local frameToDestroy = optionsListFrame
 				optionsListFrame = nil
 				if frameToDestroy and frameToDestroy.Parent then
-					TweenService:Create(frameToDestroy, TweenInfo.new(0.15, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {
-						BackgroundTransparency = 1
-					}):Play()
+					TweenService:Create(frameToDestroy, TweenInfo.new(0.15, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {BackgroundTransparency = 1}):Play()
 					for _, c in ipairs(frameToDestroy:GetDescendants()) do
 						if c:IsA("TextLabel") or c:IsA("TextButton") then
 							TweenService:Create(c, TweenInfo.new(0.1), {TextTransparency = 1}):Play()
@@ -2229,23 +2462,18 @@ function QuantomLib:CreateWindow(config)
 						end
 					end
 					task.delay(0.15, function()
-						if frameToDestroy and frameToDestroy.Parent then
-							frameToDestroy:Destroy()
-						end
+						if frameToDestroy and frameToDestroy.Parent then frameToDestroy:Destroy() end
 						dropdownTransitioning = false
 					end)
 				else
 					dropdownTransitioning = false
 				end
-				if currentOpenDropdown == closeDropdown then
-					currentOpenDropdown = nil
-				end
+				if currentOpenDropdown == closeDropdown then currentOpenDropdown = nil end
 			end
+
 			local function openDropdown()
 				if dropdownTransitioning then return end
-				if currentOpenDropdown and currentOpenDropdown ~= closeDropdown then
-					currentOpenDropdown()
-				end
+				if currentOpenDropdown and currentOpenDropdown ~= closeDropdown then currentOpenDropdown() end
 				PlaySound(Sounds.Click, 0.25, 0.95)
 				dropdownOpen = true
 				currentOpenDropdown = closeDropdown
@@ -2260,9 +2488,7 @@ function QuantomLib:CreateWindow(config)
 				local mainAbs = MainContainer.AbsolutePosition
 				local relX = abs.X - mainAbs.X
 				local relY = abs.Y - mainAbs.Y + (isMobile and 26 or 22) + 4
-				if relY + listH > uiHeight - 10 then
-					relY = (abs.Y - mainAbs.Y) - listH - 4
-				end
+				if relY + listH > uiHeight - 10 then relY = (abs.Y - mainAbs.Y) - listH - 4 end
 				optionsListFrame = Instance.new("Frame")
 				optionsListFrame.Name = randomName(13)
 				optionsListFrame.Size = UDim2.new(0, listW, 0, listH)
@@ -2360,23 +2586,17 @@ function QuantomLib:CreateWindow(config)
 						DropdownButton.Text = option
 						PlaySound(Sounds.Click, 0.28, 1.15)
 						closeDropdown()
-						if config.Callback then
-							config.Callback(option)
-						end
+						if config.Callback then config.Callback(option) end
 					end)
 				end
-				TweenService:Create(optionsListFrame, TweenInfo.new(0.2, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {
-					BackgroundTransparency = 0
-				}):Play()
+				TweenService:Create(optionsListFrame, TweenInfo.new(0.2, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {BackgroundTransparency = 0}):Play()
 			end
+
 			DropdownButton.MouseButton1Click:Connect(function()
 				if dropdownTransitioning then return end
-				if dropdownOpen then
-					closeDropdown()
-				else
-					openDropdown()
-				end
+				if dropdownOpen then closeDropdown() else openDropdown() end
 			end)
+
 			UserInputService.InputBegan:Connect(function(input)
 				if input.UserInputType == Enum.UserInputType.MouseButton1 and dropdownOpen and not dropdownTransitioning then
 					local mousePos = UserInputService:GetMouseLocation()
@@ -2384,18 +2604,15 @@ function QuantomLib:CreateWindow(config)
 					if currentFrame and currentFrame.Parent then
 						local abs = currentFrame.AbsolutePosition
 						local sz = currentFrame.AbsoluteSize
-						local insideList = mousePos.X >= abs.X and mousePos.X <= abs.X + sz.X and
-							mousePos.Y >= abs.Y and mousePos.Y <= abs.Y + sz.Y
+						local insideList = mousePos.X >= abs.X and mousePos.X <= abs.X + sz.X and mousePos.Y >= abs.Y and mousePos.Y <= abs.Y + sz.Y
 						local btnAbs = DropdownButton.AbsolutePosition
 						local btnSz = DropdownButton.AbsoluteSize
-						local insideBtn = mousePos.X >= btnAbs.X and mousePos.X <= btnAbs.X + btnSz.X and
-							mousePos.Y >= btnAbs.Y and mousePos.Y <= btnAbs.Y + btnSz.Y
-						if not insideList and not insideBtn then
-							closeDropdown()
-						end
+						local insideBtn = mousePos.X >= btnAbs.X and mousePos.X <= btnAbs.X + btnSz.X and mousePos.Y >= btnAbs.Y and mousePos.Y <= btnAbs.Y + btnSz.Y
+						if not insideList and not insideBtn then closeDropdown() end
 					end
 				end
 			end)
+
 			if config.Flag then
 				Window.Flags[config.Flag] = {
 					Type = "Dropdown",
@@ -2407,16 +2624,16 @@ function QuantomLib:CreateWindow(config)
 					end
 				}
 			end
+
 			return {
 				SetValue = function(self, value)
 					selectedOption = value
 					DropdownButton.Text = value
 				end,
-				GetValue = function(self)
-					return selectedOption
-				end
+				GetValue = function(self) return selectedOption end
 			}
 		end
+
 		function Tab:AddKeybind(config)
 			local currentKey = config.Default or Enum.KeyCode.E
 			local blacklistedKeys = {
@@ -2424,6 +2641,7 @@ function QuantomLib:CreateWindow(config)
 				Enum.KeyCode.Space, Enum.KeyCode.LeftShift, Enum.KeyCode.LeftControl
 			}
 			local keybindChanging = false
+
 			local KeybindFrame = Instance.new("Frame")
 			KeybindFrame.Name = randomName(14)
 			KeybindFrame.Size = UDim2.new(1, 0, 0, isMobile and 36 or 32)
@@ -2431,9 +2649,11 @@ function QuantomLib:CreateWindow(config)
 			KeybindFrame.BorderSizePixel = 0
 			KeybindFrame.ZIndex = 3
 			KeybindFrame.Parent = ContentFrame
+
 			local KeybindCorner = Instance.new("UICorner")
 			KeybindCorner.CornerRadius = UDim.new(0, 6)
 			KeybindCorner.Parent = KeybindFrame
+
 			local KeybindLabel = Instance.new("TextLabel")
 			KeybindLabel.Name = randomName(12)
 			KeybindLabel.Size = UDim2.new(0.55, 0, 1, 0)
@@ -2446,6 +2666,7 @@ function QuantomLib:CreateWindow(config)
 			KeybindLabel.TextXAlignment = Enum.TextXAlignment.Left
 			KeybindLabel.ZIndex = 4
 			KeybindLabel.Parent = KeybindFrame
+
 			local KeybindButton = Instance.new("TextButton")
 			KeybindButton.Name = randomName(13)
 			KeybindButton.Size = UDim2.new(0, isMobile and 75 or 70, 0, isMobile and 26 or 22)
@@ -2458,14 +2679,17 @@ function QuantomLib:CreateWindow(config)
 			KeybindButton.AutoButtonColor = false
 			KeybindButton.ZIndex = 4
 			KeybindButton.Parent = KeybindFrame
+
 			local KeybindBtnCorner = Instance.new("UICorner")
 			KeybindBtnCorner.CornerRadius = UDim.new(0, 6)
 			KeybindBtnCorner.Parent = KeybindButton
+
 			local KeybindStroke = Instance.new("UIStroke")
 			KeybindStroke.Color = Theme.Primary
 			KeybindStroke.Thickness = 0
 			KeybindStroke.Transparency = 0.5
 			KeybindStroke.Parent = KeybindButton
+
 			KeybindButton.MouseEnter:Connect(function()
 				if not keybindChanging then
 					TweenService:Create(KeybindButton, TweenInfo.new(0.2), {BackgroundColor3 = Theme.SurfaceHover}):Play()
@@ -2492,7 +2716,7 @@ function QuantomLib:CreateWindow(config)
 						local key = input.KeyCode
 						local isBlacklisted = false
 						for _, blacklisted in ipairs(blacklistedKeys) do
-							if key == blacklisted then isBlacklisted = true; break end
+							if key == blacklisted then isBlacklisted = true break end
 						end
 						if isBlacklisted then
 							PlaySound(Sounds.ToggleOff, 0.4, 0.8)
@@ -2516,6 +2740,7 @@ function QuantomLib:CreateWindow(config)
 					end
 				end)
 			end)
+
 			UserInputService.InputBegan:Connect(function(input, gameProcessed)
 				if input.UserInputType == Enum.UserInputType.Keyboard and input.KeyCode == currentKey then
 					if not gameProcessed and config.Callback then
@@ -2530,16 +2755,16 @@ function QuantomLib:CreateWindow(config)
 					end
 				end
 			end)
+
 			if not config._internal and not config.HideFromHUD then
 				table.insert(HUDRegistry, {
 					Name = config.Name or "Keybind",
 					Type = config.HUDType or "Action",
 					GetState = config.GetState or nil,
-					GetKey = function()
-						return currentKey.Name
-					end
+					GetKey = function() return currentKey.Name end
 				})
 			end
+
 			if config.Flag then
 				Window.Flags[config.Flag] = {
 					Type = "Keybind",
@@ -2550,16 +2775,16 @@ function QuantomLib:CreateWindow(config)
 					end
 				}
 			end
+
 			return {
 				SetKey = function(self, key)
 					currentKey = key
 					KeybindButton.Text = key.Name
 				end,
-				GetKey = function(self)
-					return currentKey
-				end
+				GetKey = function(self) return currentKey end
 			}
 		end
+
 		function Tab:AddColorPicker(config)
 			local h, s, v = (config.Default or Color3.fromRGB(255,255,255)):ToHSV()
 			local a = config.Alpha or 1
@@ -2567,6 +2792,7 @@ function QuantomLib:CreateWindow(config)
 			local draggingSV = false
 			local draggingHue = false
 			local draggingAlpha = false
+
 			local PickerRow = Instance.new("Frame")
 			PickerRow.Name = randomName(14)
 			PickerRow.Size = UDim2.new(1, 0, 0, isMobile and 36 or 32)
@@ -2574,9 +2800,11 @@ function QuantomLib:CreateWindow(config)
 			PickerRow.BorderSizePixel = 0
 			PickerRow.ZIndex = 3
 			PickerRow.Parent = ContentFrame
+
 			local PickerRowCorner = Instance.new("UICorner")
 			PickerRowCorner.CornerRadius = UDim.new(0, 4)
 			PickerRowCorner.Parent = PickerRow
+
 			local PickerLabel = Instance.new("TextLabel")
 			PickerLabel.Name = randomName(12)
 			PickerLabel.Size = UDim2.new(1, -60, 1, 0)
@@ -2589,6 +2817,7 @@ function QuantomLib:CreateWindow(config)
 			PickerLabel.TextXAlignment = Enum.TextXAlignment.Left
 			PickerLabel.ZIndex = 4
 			PickerLabel.Parent = PickerRow
+
 			local ColorBtn = Instance.new("TextButton")
 			ColorBtn.Name = randomName(13)
 			ColorBtn.Size = UDim2.new(0, isMobile and 42 or 36, 0, isMobile and 22 or 18)
@@ -2598,15 +2827,19 @@ function QuantomLib:CreateWindow(config)
 			ColorBtn.AutoButtonColor = false
 			ColorBtn.ZIndex = 4
 			ColorBtn.Parent = PickerRow
+
 			local ColorBtnCorner = Instance.new("UICorner")
 			ColorBtnCorner.CornerRadius = UDim.new(0, 4)
 			ColorBtnCorner.Parent = ColorBtn
+
 			local ColorBtnStroke = Instance.new("UIStroke")
 			ColorBtnStroke.Color = Theme.Border
 			ColorBtnStroke.Thickness = 1
 			ColorBtnStroke.Parent = ColorBtn
+
 			local pickerW = isMobile and 220 or 240
 			local pickerH = isMobile and 230 or 245
+
 			local PickerPopup = Instance.new("Frame")
 			PickerPopup.Name = randomName(15)
 			PickerPopup.Size = UDim2.new(0, pickerW, 0, pickerH)
@@ -2615,15 +2848,19 @@ function QuantomLib:CreateWindow(config)
 			PickerPopup.Visible = false
 			PickerPopup.ZIndex = 100
 			PickerPopup.Parent = ContentScroll
+
 			local PopupCorner = Instance.new("UICorner")
 			PopupCorner.CornerRadius = UDim.new(0, 6)
 			PopupCorner.Parent = PickerPopup
+
 			local PopupStroke = Instance.new("UIStroke")
 			PopupStroke.Color = Theme.Border
 			PopupStroke.Thickness = 1
 			PopupStroke.Transparency = 0.3
 			PopupStroke.Parent = PickerPopup
+
 			local svSize = isMobile and 160 or 175
+
 			local SVBox = Instance.new("Frame")
 			SVBox.Name = randomName(12)
 			SVBox.Size = UDim2.new(0, svSize, 0, svSize)
@@ -2633,9 +2870,11 @@ function QuantomLib:CreateWindow(config)
 			SVBox.ZIndex = 101
 			SVBox.ClipsDescendants = true
 			SVBox.Parent = PickerPopup
+
 			local SVCorner = Instance.new("UICorner")
 			SVCorner.CornerRadius = UDim.new(0, 4)
 			SVCorner.Parent = SVBox
+
 			local WhiteGrad = Instance.new("UIGradient")
 			WhiteGrad.Color = ColorSequence.new{
 				ColorSequenceKeypoint.new(0, Color3.fromRGB(255,255,255)),
@@ -2647,6 +2886,7 @@ function QuantomLib:CreateWindow(config)
 			}
 			WhiteGrad.Rotation = 0
 			WhiteGrad.Parent = SVBox
+
 			local BlackLayer = Instance.new("Frame")
 			BlackLayer.Name = randomName(10)
 			BlackLayer.Size = UDim2.new(1, 0, 1, 0)
@@ -2654,6 +2894,7 @@ function QuantomLib:CreateWindow(config)
 			BlackLayer.BorderSizePixel = 0
 			BlackLayer.ZIndex = 102
 			BlackLayer.Parent = SVBox
+
 			local BlackGrad = Instance.new("UIGradient")
 			BlackGrad.Color = ColorSequence.new{
 				ColorSequenceKeypoint.new(0, Color3.fromRGB(0,0,0)),
@@ -2665,6 +2906,7 @@ function QuantomLib:CreateWindow(config)
 			}
 			BlackGrad.Rotation = 270
 			BlackGrad.Parent = BlackLayer
+
 			local SVHandle = Instance.new("Frame")
 			SVHandle.Name = randomName(9)
 			SVHandle.Size = UDim2.new(0, 10, 0, 10)
@@ -2673,14 +2915,18 @@ function QuantomLib:CreateWindow(config)
 			SVHandle.BorderSizePixel = 0
 			SVHandle.ZIndex = 103
 			SVHandle.Parent = SVBox
+
 			local SVHandleCorner = Instance.new("UICorner")
 			SVHandleCorner.CornerRadius = UDim.new(1, 0)
 			SVHandleCorner.Parent = SVHandle
+
 			local SVHandleStroke = Instance.new("UIStroke")
 			SVHandleStroke.Color = Color3.fromRGB(0,0,0)
 			SVHandleStroke.Thickness = 1
 			SVHandleStroke.Parent = SVHandle
+
 			local hueBarW = isMobile and 16 or 18
+
 			local HueBar = Instance.new("Frame")
 			HueBar.Name = randomName(11)
 			HueBar.Size = UDim2.new(0, hueBarW, 0, svSize)
@@ -2690,9 +2936,11 @@ function QuantomLib:CreateWindow(config)
 			HueBar.ZIndex = 101
 			HueBar.ClipsDescendants = true
 			HueBar.Parent = PickerPopup
+
 			local HueCorner = Instance.new("UICorner")
 			HueCorner.CornerRadius = UDim.new(0, 4)
 			HueCorner.Parent = HueBar
+
 			local HueGrad = Instance.new("UIGradient")
 			HueGrad.Color = ColorSequence.new{
 				ColorSequenceKeypoint.new(0,    Color3.fromRGB(255, 0,   0)),
@@ -2705,6 +2953,7 @@ function QuantomLib:CreateWindow(config)
 			}
 			HueGrad.Rotation = 90
 			HueGrad.Parent = HueBar
+
 			local HueHandle = Instance.new("Frame")
 			HueHandle.Name = randomName(9)
 			HueHandle.Size = UDim2.new(1, 4, 0, 4)
@@ -2714,10 +2963,13 @@ function QuantomLib:CreateWindow(config)
 			HueHandle.BorderSizePixel = 0
 			HueHandle.ZIndex = 102
 			HueHandle.Parent = HueBar
+
 			local HueHandleCorner = Instance.new("UICorner")
 			HueHandleCorner.CornerRadius = UDim.new(0, 2)
 			HueHandleCorner.Parent = HueHandle
+
 			local alphaBarY = svSize + 20
+
 			local AlphaBar = Instance.new("Frame")
 			AlphaBar.Name = randomName(11)
 			AlphaBar.Size = UDim2.new(0, svSize + hueBarW + 6, 0, hueBarW)
@@ -2727,27 +2979,25 @@ function QuantomLib:CreateWindow(config)
 			AlphaBar.ZIndex = 101
 			AlphaBar.ClipsDescendants = true
 			AlphaBar.Parent = PickerPopup
+
 			local AlphaCorner = Instance.new("UICorner")
 			AlphaCorner.CornerRadius = UDim.new(0, 4)
 			AlphaCorner.Parent = AlphaBar
-			local CheckerLabel = Instance.new("TextLabel")
-			CheckerLabel.Size = UDim2.new(1,0,1,0)
-			CheckerLabel.BackgroundTransparency = 1
-			CheckerLabel.Text = ""
-			CheckerLabel.ZIndex = 101
-			CheckerLabel.Parent = AlphaBar
+
 			local AlphaColor = Instance.new("Frame")
 			AlphaColor.Size = UDim2.new(1,0,1,0)
 			AlphaColor.BackgroundColor3 = Color3.fromHSV(h,s,v)
 			AlphaColor.BorderSizePixel = 0
 			AlphaColor.ZIndex = 102
 			AlphaColor.Parent = AlphaBar
+
 			local AlphaGrad = Instance.new("UIGradient")
 			AlphaGrad.Transparency = NumberSequence.new{
 				NumberSequenceKeypoint.new(0, 1),
 				NumberSequenceKeypoint.new(1, 0)
 			}
 			AlphaGrad.Parent = AlphaColor
+
 			local AlphaHandle = Instance.new("Frame")
 			AlphaHandle.Name = randomName(9)
 			AlphaHandle.Size = UDim2.new(0, 4, 1, 4)
@@ -2757,10 +3007,13 @@ function QuantomLib:CreateWindow(config)
 			AlphaHandle.BorderSizePixel = 0
 			AlphaHandle.ZIndex = 103
 			AlphaHandle.Parent = AlphaBar
+
 			local AlphaHandleCorner = Instance.new("UICorner")
 			AlphaHandleCorner.CornerRadius = UDim.new(0, 2)
 			AlphaHandleCorner.Parent = AlphaHandle
+
 			local previewY = alphaBarY + hueBarW + 10
+
 			local PreviewRow = Instance.new("Frame")
 			PreviewRow.Name = randomName(10)
 			PreviewRow.Size = UDim2.new(1, -20, 0, isMobile and 22 or 20)
@@ -2768,6 +3021,7 @@ function QuantomLib:CreateWindow(config)
 			PreviewRow.BackgroundTransparency = 1
 			PreviewRow.ZIndex = 101
 			PreviewRow.Parent = PickerPopup
+
 			local PreviewSwatch = Instance.new("Frame")
 			PreviewSwatch.Name = randomName(10)
 			PreviewSwatch.Size = UDim2.new(0, isMobile and 36 or 32, 1, 0)
@@ -2775,9 +3029,11 @@ function QuantomLib:CreateWindow(config)
 			PreviewSwatch.BorderSizePixel = 0
 			PreviewSwatch.ZIndex = 102
 			PreviewSwatch.Parent = PreviewRow
+
 			local PreviewSwatchCorner = Instance.new("UICorner")
 			PreviewSwatchCorner.CornerRadius = UDim.new(0, 4)
 			PreviewSwatchCorner.Parent = PreviewSwatch
+
 			local HexLabel = Instance.new("TextLabel")
 			HexLabel.Name = randomName(11)
 			HexLabel.Size = UDim2.new(1, -(isMobile and 46 or 42), 1, 0)
@@ -2789,9 +3045,11 @@ function QuantomLib:CreateWindow(config)
 			HexLabel.TextXAlignment = Enum.TextXAlignment.Left
 			HexLabel.ZIndex = 102
 			HexLabel.Parent = PreviewRow
+
 			local function getColor()
 				return Color3.fromHSV(h, s, v)
 			end
+
 			local function updateAll()
 				local col = getColor()
 				SVBox.BackgroundColor3 = Color3.fromHSV(h, 1, 1)
@@ -2804,23 +3062,28 @@ function QuantomLib:CreateWindow(config)
 				HexLabel.Text = "#" .. col:ToHex():upper() .. string.format("  A:%.0f%%", a * 100)
 				if config.Callback then config.Callback(col, a) end
 			end
+
 			updateAll()
+
 			local function updateFromSVInput(input)
 				local rel = input.Position - SVBox.AbsolutePosition
 				s = math.clamp(rel.X / SVBox.AbsoluteSize.X, 0, 1)
 				v = 1 - math.clamp(rel.Y / SVBox.AbsoluteSize.Y, 0, 1)
 				updateAll()
 			end
+
 			local function updateFromHueInput(input)
 				local rel = input.Position.Y - HueBar.AbsolutePosition.Y
 				h = 1 - math.clamp(rel / HueBar.AbsoluteSize.Y, 0, 1)
 				updateAll()
 			end
+
 			local function updateFromAlphaInput(input)
 				local rel = input.Position.X - AlphaBar.AbsolutePosition.X
 				a = math.clamp(rel / AlphaBar.AbsoluteSize.X, 0, 1)
 				updateAll()
 			end
+
 			BlackLayer.InputBegan:Connect(function(input)
 				if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
 					draggingSV = true
@@ -2853,6 +3116,7 @@ function QuantomLib:CreateWindow(config)
 					elseif draggingAlpha then updateFromAlphaInput(input) end
 				end
 			end)
+
 			ColorBtn.MouseButton1Click:Connect(function()
 				pickerOpen = not pickerOpen
 				PlaySound(Sounds.Click, 0.25, 1.05)
@@ -2870,6 +3134,7 @@ function QuantomLib:CreateWindow(config)
 					PickerPopup.Visible = false
 				end
 			end)
+
 			if config.Flag then
 				Window.Flags[config.Flag] = {
 					Type = "ColorPicker",
@@ -2881,6 +3146,7 @@ function QuantomLib:CreateWindow(config)
 					end
 				}
 			end
+
 			return {
 				SetValue = function(self, color, alpha)
 					if color then h, s, v = color:ToHSV() end
@@ -2892,36 +3158,37 @@ function QuantomLib:CreateWindow(config)
 				end
 			}
 		end
+
 		table.insert(Window.Categories, Tab)
 		if #Window.Categories == 1 then
 			task.wait(0.1)
 			activateTab()
 		end
+
 		return Tab
 	end
+
 	function Window:Show()
 		MainContainer.Visible = true
-		if isMobile then
-			FloatingButton.Visible = false
-		end
+		if isMobile then FloatingButton.Visible = false end
 	end
+
 	function Window:Hide()
 		MainContainer.Visible = false
-		if isMobile then
-			FloatingButton.Visible = true
-		end
+		if isMobile then FloatingButton.Visible = true end
 	end
+
 	function Window:Toggle()
 		MainContainer.Visible = not MainContainer.Visible
-		if isMobile then
-			FloatingButton.Visible = not MainContainer.Visible
-		end
+		if isMobile then FloatingButton.Visible = not MainContainer.Visible end
 	end
+
 	UserInputService.InputBegan:Connect(function(input, gameProcessed)
 		if not gameProcessed and input.KeyCode == minimizeKey then
 			Window:Toggle()
 		end
 	end)
+
 	task.defer(function()
 		local ConfigsTab = Window:CreateTab({Name = "Configs", Icon = "📁", _order = 9998})
 		local configListContainer = nil
@@ -3016,9 +3283,7 @@ function QuantomLib:CreateWindow(config)
 		local function refreshConfigList()
 			if not configListContainer then return end
 			for _, child in ipairs(configListContainer:GetChildren()) do
-				if child:IsA("Frame") then
-					child:Destroy()
-				end
+				if child:IsA("Frame") then child:Destroy() end
 			end
 			local configs = Window:GetConfigList()
 			if #configs == 0 then
@@ -3102,19 +3367,36 @@ function QuantomLib:CreateWindow(config)
 		refreshConfigList()
 
 		local SettingsTab = Window:CreateTab({Name = "Settings", Icon = "⚙", _order = 9999})
+
 		SettingsTab:AddSection("Watermark")
 		SettingsTab:AddToggle({
 			Name = "Mostrar Watermark",
 			Default = false,
 			HideFromHUD = true,
 			Callback = function(state)
-				if state then
-					ShowWatermark(ScreenGui)
-				else
-					HideWatermark()
+				if state then ShowWatermark(ScreenGui) else HideWatermark() end
+			end
+		})
+
+		SettingsTab:AddSection("Cor de Destaque")
+		SettingsTab:AddColorPicker({
+			Name = "Cor Principal",
+			Default = Theme.Primary,
+			Alpha = 1,
+			HideFromHUD = true,
+			Callback = function(color, alpha)
+				Theme.Primary = color
+				local h2, s2, v2 = color:ToHSV()
+				Theme.Accent = Color3.fromHSV(h2, s2, math.min(v2 + 0.1, 1))
+				Theme.Toggle = Color3.fromHSV(h2, s2, math.max(v2 - 0.05, 0))
+				RefreshTheme()
+				if WatermarkData.Frame then
+					local wmStroke = WatermarkData.Frame:FindFirstChildWhichIsA("UIStroke")
+					if wmStroke then wmStroke.Color = color end
 				end
 			end
 		})
+
 		SettingsTab:AddSection("Atalhos do Script")
 		SettingsTab:AddKeybind({
 			Name = "Minimizar / Abrir",
@@ -3124,6 +3406,7 @@ function QuantomLib:CreateWindow(config)
 				minimizeKey = newKey
 			end,
 		})
+
 		SettingsTab:AddSection("Lista de Keybinds")
 		SettingsTab:AddToggle({
 			Name = "KeyBind List",
@@ -3139,6 +3422,7 @@ function QuantomLib:CreateWindow(config)
 				end
 			end
 		})
+
 		SettingsTab:AddSection("Perfil")
 		SettingsTab:AddToggle({
 			Name = "Modo Anônimo",
@@ -3148,6 +3432,7 @@ function QuantomLib:CreateWindow(config)
 				applyAnonymousMode(state)
 			end
 		})
+
 		if not loadingFinished then
 			local fakeSteps = {
 				{ progress = 12,  status = "Iniciando módulos...",        delay = 0.40 },
@@ -3164,11 +3449,12 @@ function QuantomLib:CreateWindow(config)
 			end
 			Window:FinishLoading()
 		end
+
 		MainContainer.Visible = true
-		if isMobile then
-			FloatingButton.Visible = false
-		end
+		if isMobile then FloatingButton.Visible = false end
 	end)
+
 	return Window
 end
+
 return QuantomLib
