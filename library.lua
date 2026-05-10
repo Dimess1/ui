@@ -603,6 +603,9 @@ function QuantomLib:CreateWindow(config)
 	local HUDVisible = false
 	local HUDConnection = nil
 
+	local floatBtnSize = isMobile and 60 or 50
+	local floatBtnVisible = true
+
 	local configDir = "QuantomLib"
 	local configSubDir = configDir .. "/" .. Window.Name:gsub("[^%w]", "_")
 
@@ -732,7 +735,7 @@ function QuantomLib:CreateWindow(config)
 
 	local FloatingButton = Instance.new("ImageButton")
 	FloatingButton.Name = STEALTH_NAMES.FloatingButton
-	FloatingButton.Size = UDim2.new(0, isMobile and 60 or 50, 0, isMobile and 60 or 50)
+	FloatingButton.Size = UDim2.new(0, floatBtnSize, 0, floatBtnSize)
 	FloatingButton.Position = UDim2.new(1, -70, 0, 100)
 	FloatingButton.BackgroundColor3 = Theme.Primary
 	FloatingButton.BorderSizePixel = 0
@@ -757,7 +760,7 @@ function QuantomLib:CreateWindow(config)
 
 	local floatTween = TweenService:Create(FloatingButton,
 		TweenInfo.new(2, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut, -1, true),
-		{Size = UDim2.new(0, (isMobile and 60 or 50) + 5, 0, (isMobile and 60 or 50) + 5)}
+		{Size = UDim2.new(0, floatBtnSize + 5, 0, floatBtnSize + 5)}
 	)
 	floatTween:Play()
 
@@ -971,7 +974,7 @@ function QuantomLib:CreateWindow(config)
 	end)
 	MinimizeButton.MouseButton1Click:Connect(function()
 		MainContainer.Visible = false
-		if isMobile then FloatingButton.Visible = true end
+		if isMobile and floatBtnVisible then FloatingButton.Visible = true end
 	end)
 
 	local CloseButton = Instance.new("TextButton")
@@ -1005,7 +1008,7 @@ function QuantomLib:CreateWindow(config)
 	end)
 	CloseButton.MouseButton1Click:Connect(function()
 		MainContainer.Visible = false
-		if isMobile then FloatingButton.Visible = true end
+		if isMobile and floatBtnVisible then FloatingButton.Visible = true end
 	end)
 
 	local sidebarWidth = isMobile and 100 or 160
@@ -3175,12 +3178,14 @@ function QuantomLib:CreateWindow(config)
 
 	function Window:Hide()
 		MainContainer.Visible = false
-		if isMobile then FloatingButton.Visible = true end
+		if isMobile and floatBtnVisible then FloatingButton.Visible = true end
 	end
 
 	function Window:Toggle()
 		MainContainer.Visible = not MainContainer.Visible
-		if isMobile then FloatingButton.Visible = not MainContainer.Visible end
+		if isMobile then
+			FloatingButton.Visible = not MainContainer.Visible and floatBtnVisible
+		end
 	end
 
 	UserInputService.InputBegan:Connect(function(input, gameProcessed)
@@ -3432,6 +3437,47 @@ function QuantomLib:CreateWindow(config)
 				applyAnonymousMode(state)
 			end
 		})
+
+		if isMobile then
+			SettingsTab:AddSection("Botão Flutuante")
+
+			SettingsTab:AddToggle({
+				Name = "Visível ao Minimizar",
+				Default = true,
+				HideFromHUD = true,
+				Callback = function(state)
+					floatBtnVisible = state
+					if not state then
+						FloatingButton.Visible = false
+					else
+						if not MainContainer.Visible then
+							FloatingButton.Visible = true
+						end
+					end
+				end
+			})
+
+			SettingsTab:AddSlider({
+				Name = "Tamanho da Bola",
+				Min = 30,
+				Max = 90,
+				Default = floatBtnSize,
+				HideFromHUD = true,
+				Callback = function(value)
+					floatBtnSize = value
+					floatTween:Cancel()
+					FloatingButton.Size = UDim2.new(0, value, 0, value)
+					FloatIcon.TextSize = math.floor(value * 0.45)
+					floatTween = TweenService:Create(FloatingButton,
+						TweenInfo.new(2, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut, -1, true),
+						{Size = UDim2.new(0, value + 5, 0, value + 5)}
+					)
+					if not MainContainer.Visible and floatBtnVisible then
+						floatTween:Play()
+					end
+				end
+			})
+		end
 
 		if not loadingFinished then
 			local fakeSteps = {
