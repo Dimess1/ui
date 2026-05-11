@@ -1,4 +1,3 @@
---feito por jusbenaldo ia
 local QuantomLib = {}
 local TweenService = game:GetService("TweenService")
 local UserInputService = game:GetService("UserInputService")
