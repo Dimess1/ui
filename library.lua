@@ -12,14 +12,6 @@ local PlayerGui = Player:WaitForChild("PlayerGui")
 local isMobile = UserInputService.TouchEnabled and not UserInputService.KeyboardEnabled
 local viewportSize = workspace.CurrentCamera.ViewportSize
 
-local ZWS = "\u{200B}"
-local function T(str)
-	if type(str) ~= "string" or #str == 0 then return str end
-	local t = table.create(#str)
-	for i = 1, #str do t[i] = str:sub(i, i) end
-	return table.concat(t, ZWS)
-end
-
 local function randomName(length)
 	length = length or 16
 	local chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
@@ -127,16 +119,16 @@ local function CreateNotification(config)
 	PlaySound(Sounds.Notify, 0.4, 1)
 	local notifType = config.Type or "Info"
 	local notifColor = Theme.Info
-	local notifIcon = T("ℹ")
+	local notifIcon = "ℹ"
 	if notifType == "Success" then
 		notifColor = Theme.Success
-		notifIcon = T("✓")
+		notifIcon = "✓"
 	elseif notifType == "Warning" then
 		notifColor = Theme.Warning
-		notifIcon = T("⚠")
+		notifIcon = "⚠"
 	elseif notifType == "Error" then
 		notifColor = Theme.Error
-		notifIcon = T("✕")
+		notifIcon = "✕"
 	end
 	local NotificationFrame = Instance.new("Frame")
 	NotificationFrame.Name = randomName(12)
@@ -190,7 +182,7 @@ local function CreateNotification(config)
 	TitleLabel.Size = UDim2.new(1, -(isMobile and 90 or 95), 0, 18)
 	TitleLabel.Position = UDim2.new(0, isMobile and 52 or 56, 0, isMobile and 12 or 10)
 	TitleLabel.BackgroundTransparency = 1
-	TitleLabel.Text = T(config.Title or "Notification")
+	TitleLabel.Text = config.Title or "Notification"
 	TitleLabel.Font = Enum.Font.GothamBold
 	TitleLabel.TextSize = isMobile and 12 or 13
 	TitleLabel.TextColor3 = Theme.Text
@@ -203,7 +195,7 @@ local function CreateNotification(config)
 	MessageLabel.Size = UDim2.new(1, -(isMobile and 90 or 95), 0, isMobile and 32 or 30)
 	MessageLabel.Position = UDim2.new(0, isMobile and 52 or 56, 0, isMobile and 28 or 26)
 	MessageLabel.BackgroundTransparency = 1
-	MessageLabel.Text = T(config.Message or "")
+	MessageLabel.Text = config.Message or ""
 	MessageLabel.Font = Enum.Font.Gotham
 	MessageLabel.TextSize = isMobile and 10 or 11
 	MessageLabel.TextColor3 = Theme.TextSecondary
@@ -217,7 +209,7 @@ local function CreateNotification(config)
 	CloseButton.Size = UDim2.new(0, isMobile and 28 or 24, 0, isMobile and 28 or 24)
 	CloseButton.Position = UDim2.new(1, -(isMobile and 34 or 30), 0, isMobile and 6 or 6)
 	CloseButton.BackgroundTransparency = 1
-	CloseButton.Text = T("×")
+	CloseButton.Text = "×"
 	CloseButton.Font = Enum.Font.GothamBold
 	CloseButton.TextSize = isMobile and 18 or 16
 	CloseButton.TextColor3 = Theme.TextMuted
@@ -403,7 +395,7 @@ local function CreateWatermark(screenGui)
 	NickLabel.Size = UDim2.new(0, nickW, 1, 0)
 	NickLabel.Position = UDim2.new(0, sepX + 6, 0, 0)
 	NickLabel.BackgroundTransparency = 1
-	NickLabel.Text = T(Player.DisplayName)
+	NickLabel.Text = Player.DisplayName
 	NickLabel.Font = Enum.Font.GothamBold
 	NickLabel.TextSize = isMobile and 10 or 11
 	NickLabel.TextColor3 = Theme.Text
@@ -457,7 +449,7 @@ local function CreateWatermark(screenGui)
 	FPSLabel.Size = UDim2.new(0, fpsW, 1, 0)
 	FPSLabel.Position = UDim2.new(0, sep4X + 6, 0, 0)
 	FPSLabel.BackgroundTransparency = 1
-	FPSLabel.Text = T("0 FPS")
+	FPSLabel.Text = "0 FPS"
 	FPSLabel.Font = Enum.Font.GothamMedium
 	FPSLabel.TextSize = isMobile and 9 or 10
 	FPSLabel.TextColor3 = Theme.Success
@@ -474,7 +466,7 @@ local function CreateWatermark(screenGui)
 	PingLabel.Size = UDim2.new(0, pingW, 1, 0)
 	PingLabel.Position = UDim2.new(0, sep5X + 6, 0, 0)
 	PingLabel.BackgroundTransparency = 1
-	PingLabel.Text = T("0ms")
+	PingLabel.Text = "0ms"
 	PingLabel.Font = Enum.Font.GothamMedium
 	PingLabel.TextSize = isMobile and 9 or 10
 	PingLabel.TextColor3 = Theme.Info
@@ -521,7 +513,7 @@ local function CreateWatermark(screenGui)
 			WatermarkData.LastFPSUpdate = 0
 			local ping = math.floor(Stats.Network.ServerStatsItem["Data Ping"]:GetValue())
 			WatermarkData.Ping = ping
-			FPSLabel.Text = T(WatermarkData.FPS .. " FPS")
+			FPSLabel.Text = WatermarkData.FPS .. " FPS"
 			if WatermarkData.FPS >= 55 then
 				FPSLabel.TextColor3 = Theme.Success
 			elseif WatermarkData.FPS >= 30 then
@@ -529,7 +521,7 @@ local function CreateWatermark(screenGui)
 			else
 				FPSLabel.TextColor3 = Theme.Error
 			end
-			PingLabel.Text = T(ping .. "ms")
+			PingLabel.Text = ping .. "ms"
 			if ping <= 80 then
 				PingLabel.TextColor3 = Theme.Success
 			elseif ping <= 150 then
@@ -760,7 +752,7 @@ function QuantomLib:CreateWindow(config)
 	FloatIcon.Name = randomName(10)
 	FloatIcon.Size = UDim2.new(1, 0, 1, 0)
 	FloatIcon.BackgroundTransparency = 1
-	FloatIcon.Text = T("Q")
+	FloatIcon.Text = "Q"
 	FloatIcon.Font = Enum.Font.GothamBold
 	FloatIcon.TextSize = isMobile and 28 or 24
 	FloatIcon.TextColor3 = Color3.fromRGB(255, 255, 255)
@@ -894,7 +886,7 @@ function QuantomLib:CreateWindow(config)
 	LogoText.Size = UDim2.new(0, 120, 1, 0)
 	LogoText.Position = UDim2.new(0, 15, 0, 0)
 	LogoText.BackgroundTransparency = 1
-	LogoText.Text = T(Window.Name)
+	LogoText.Text = Window.Name
 	LogoText.Font = Enum.Font.GothamBold
 	LogoText.TextSize = isMobile and 13 or 14
 	LogoText.TextColor3 = Theme.Text
@@ -907,7 +899,7 @@ function QuantomLib:CreateWindow(config)
 	StatusText.Size = UDim2.new(0, 80, 1, 0)
 	StatusText.Position = UDim2.new(1, isMobile and -155 or -165, 0, 0)
 	StatusText.BackgroundTransparency = 1
-	StatusText.Text = T(Window.Version)
+	StatusText.Text = Window.Version
 	StatusText.Font = Enum.Font.GothamBold
 	StatusText.TextSize = isMobile and 10 or 11
 	StatusText.TextColor3 = Theme.Success
@@ -957,7 +949,7 @@ function QuantomLib:CreateWindow(config)
 	MinimizeButton.Size = UDim2.new(0, buttonSize, 0, buttonSize)
 	MinimizeButton.Position = UDim2.new(1, isMobile and -80 or -76, 0.5, -buttonSize/2)
 	MinimizeButton.BackgroundColor3 = Theme.Surface
-	MinimizeButton.Text = T("−")
+	MinimizeButton.Text = "−"
 	MinimizeButton.Font = Enum.Font.GothamBold
 	MinimizeButton.TextSize = isMobile and 20 or 18
 	MinimizeButton.TextColor3 = Theme.TextMuted
@@ -991,7 +983,7 @@ function QuantomLib:CreateWindow(config)
 	CloseButton.Size = UDim2.new(0, buttonSize, 0, buttonSize)
 	CloseButton.Position = UDim2.new(1, isMobile and -38 or -38, 0.5, -buttonSize/2)
 	CloseButton.BackgroundColor3 = Theme.Surface
-	CloseButton.Text = T("×")
+	CloseButton.Text = "×"
 	CloseButton.Font = Enum.Font.GothamBold
 	CloseButton.TextSize = isMobile and 20 or 18
 	CloseButton.TextColor3 = Theme.TextMuted
@@ -1147,7 +1139,7 @@ function QuantomLib:CreateWindow(config)
 	PlayerDisplayName.Size = UDim2.new(1, -(textOffsetX + 6), 0, isMobile and 14 or 13)
 	PlayerDisplayName.Position = UDim2.new(0, textOffsetX, 0, isMobile and 14 or 13)
 	PlayerDisplayName.BackgroundTransparency = 1
-	PlayerDisplayName.Text = T(Player.DisplayName)
+	PlayerDisplayName.Text = Player.DisplayName
 	PlayerDisplayName.Font = Enum.Font.GothamBold
 	PlayerDisplayName.TextSize = isMobile and 10 or 11
 	PlayerDisplayName.TextColor3 = Theme.Text
@@ -1161,7 +1153,7 @@ function QuantomLib:CreateWindow(config)
 	PlayerUserName.Size = UDim2.new(1, -(textOffsetX + 6), 0, isMobile and 12 or 11)
 	PlayerUserName.Position = UDim2.new(0, textOffsetX, 0, isMobile and 30 or 28)
 	PlayerUserName.BackgroundTransparency = 1
-	PlayerUserName.Text = T("@" .. Player.Name)
+	PlayerUserName.Text = "@" .. Player.Name
 	PlayerUserName.Font = Enum.Font.Gotham
 	PlayerUserName.TextSize = isMobile and 9 or 10
 	PlayerUserName.TextColor3 = Theme.TextMuted
@@ -1188,7 +1180,7 @@ function QuantomLib:CreateWindow(config)
 	local AnonBadgeText = Instance.new("TextLabel")
 	AnonBadgeText.Size = UDim2.new(1, 0, 1, 0)
 	AnonBadgeText.BackgroundTransparency = 1
-	AnonBadgeText.Text = T("ANON")
+	AnonBadgeText.Text = "ANON"
 	AnonBadgeText.Font = Enum.Font.GothamBold
 	AnonBadgeText.TextSize = isMobile and 7 or 8
 	AnonBadgeText.TextColor3 = Color3.fromRGB(180, 180, 200)
@@ -1221,7 +1213,7 @@ function QuantomLib:CreateWindow(config)
 	AnonTooltipIcon.Size = UDim2.new(0, isMobile and 18 or 20, 1, 0)
 	AnonTooltipIcon.Position = UDim2.new(0, 6, 0, 0)
 	AnonTooltipIcon.BackgroundTransparency = 1
-	AnonTooltipIcon.Text = T("🕵")
+	AnonTooltipIcon.Text = "🕵"
 	AnonTooltipIcon.Font = Enum.Font.GothamBold
 	AnonTooltipIcon.TextSize = isMobile and 11 or 12
 	AnonTooltipIcon.ZIndex = 21
@@ -1231,7 +1223,7 @@ function QuantomLib:CreateWindow(config)
 	AnonTooltipText.Size = UDim2.new(1, -(isMobile and 28 or 32), 1, 0)
 	AnonTooltipText.Position = UDim2.new(0, isMobile and 26 or 28, 0, 0)
 	AnonTooltipText.BackgroundTransparency = 1
-	AnonTooltipText.Text = T("Modo Anônimo")
+	AnonTooltipText.Text = "Modo Anônimo"
 	AnonTooltipText.Font = Enum.Font.GothamMedium
 	AnonTooltipText.TextSize = isMobile and 9 or 10
 	AnonTooltipText.TextColor3 = Theme.TextSecondary
@@ -1258,8 +1250,8 @@ function QuantomLib:CreateWindow(config)
 			TweenService:Create(PlayerDisplayName, TweenInfo.new(0.2), {TextTransparency = 1}):Play()
 			TweenService:Create(PlayerUserName, TweenInfo.new(0.2), {TextTransparency = 1}):Play()
 			task.delay(0.2, function()
-				PlayerDisplayName.Text = T("Roblox")
-				PlayerUserName.Text = T("@Roblox")
+				PlayerDisplayName.Text = "Roblox"
+				PlayerUserName.Text = "@Roblox"
 				TweenService:Create(PlayerDisplayName, TweenInfo.new(0.2), {TextTransparency = 0}):Play()
 				TweenService:Create(PlayerUserName, TweenInfo.new(0.2), {TextTransparency = 0}):Play()
 			end)
@@ -1277,8 +1269,8 @@ function QuantomLib:CreateWindow(config)
 			TweenService:Create(PlayerDisplayName, TweenInfo.new(0.2), {TextTransparency = 1}):Play()
 			TweenService:Create(PlayerUserName, TweenInfo.new(0.2), {TextTransparency = 1}):Play()
 			task.delay(0.2, function()
-				PlayerDisplayName.Text = T(realDisplayName)
-				PlayerUserName.Text = T("@" .. realUserName)
+				PlayerDisplayName.Text = realDisplayName
+				PlayerUserName.Text = "@" .. realUserName
 				TweenService:Create(PlayerDisplayName, TweenInfo.new(0.2), {TextTransparency = 0}):Play()
 				TweenService:Create(PlayerUserName, TweenInfo.new(0.2), {TextTransparency = 0}):Play()
 			end)
@@ -1397,7 +1389,7 @@ function QuantomLib:CreateWindow(config)
 	LoadingTitle.AnchorPoint = Vector2.new(0.5, 0)
 	LoadingTitle.Position = UDim2.new(0.5, 0, 0.42 + (isMobile and 120 or 160)/(2*uiHeight) + 0.03, 0)
 	LoadingTitle.BackgroundTransparency = 1
-	LoadingTitle.Text = T(Window.Name)
+	LoadingTitle.Text = Window.Name
 	LoadingTitle.Font = Enum.Font.GothamBold
 	LoadingTitle.TextSize = isMobile and 14 or 16
 	LoadingTitle.TextColor3 = Theme.Text
@@ -1443,7 +1435,7 @@ function QuantomLib:CreateWindow(config)
 	LoadingPercent.AnchorPoint = Vector2.new(0.5, 0)
 	LoadingPercent.Position = UDim2.new(0.5, 0, 0.42 + (isMobile and 120 or 160)/(2*uiHeight) + 0.155, 0)
 	LoadingPercent.BackgroundTransparency = 1
-	LoadingPercent.Text = T("0%")
+	LoadingPercent.Text = "0%"
 	LoadingPercent.Font = Enum.Font.GothamBold
 	LoadingPercent.TextSize = isMobile and 10 or 11
 	LoadingPercent.TextColor3 = Theme.Primary
@@ -1456,7 +1448,7 @@ function QuantomLib:CreateWindow(config)
 	LoadingStatus.AnchorPoint = Vector2.new(0.5, 0)
 	LoadingStatus.Position = UDim2.new(0.5, 0, 0.42 + (isMobile and 120 or 160)/(2*uiHeight) + 0.195, 0)
 	LoadingStatus.BackgroundTransparency = 1
-	LoadingStatus.Text = T("Carregando...")
+	LoadingStatus.Text = "Carregando..."
 	LoadingStatus.Font = Enum.Font.Gotham
 	LoadingStatus.TextSize = isMobile and 9 or 10
 	LoadingStatus.TextColor3 = Theme.TextMuted
@@ -1473,8 +1465,8 @@ function QuantomLib:CreateWindow(config)
 		TweenService:Create(LoadingBarFill, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
 			Size = UDim2.new(pct, 0, 1, 0)
 		}):Play()
-		LoadingPercent.Text = T(math.floor(loadingProgress) .. "%")
-		if statusText then LoadingStatus.Text = T(statusText) end
+		LoadingPercent.Text = math.floor(loadingProgress) .. "%"
+		if statusText then LoadingStatus.Text = statusText end
 	end
 
 	function Window:FinishLoading()
@@ -1483,8 +1475,8 @@ function QuantomLib:CreateWindow(config)
 		TweenService:Create(LoadingBarFill, TweenInfo.new(0.4, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
 			Size = UDim2.new(1, 0, 1, 0)
 		}):Play()
-		LoadingPercent.Text = T("100%")
-		LoadingStatus.Text = T("Concluído!")
+		LoadingPercent.Text = "100%"
+		LoadingStatus.Text = "Concluído!"
 		task.wait(0.5)
 		TweenService:Create(LoadingFrame, TweenInfo.new(0.45, Enum.EasingStyle.Quint, Enum.EasingDirection.InOut), {
 			BackgroundTransparency = 1
@@ -1585,7 +1577,7 @@ function QuantomLib:CreateWindow(config)
 		HUDTitle.Size = UDim2.new(1, -50, 1, 0)
 		HUDTitle.Position = UDim2.new(0, 22, 0, 0)
 		HUDTitle.BackgroundTransparency = 1
-		HUDTitle.Text = T("KEYBIND LIST")
+		HUDTitle.Text = "KEYBIND LIST"
 		HUDTitle.Font = Enum.Font.GothamBold
 		HUDTitle.TextSize = isMobile and 9 or 10
 		HUDTitle.TextColor3 = Theme.TextMuted
@@ -1597,7 +1589,7 @@ function QuantomLib:CreateWindow(config)
 		HUDHide.Size = UDim2.new(0, 22, 0, 22)
 		HUDHide.Position = UDim2.new(1, -26, 0.5, -11)
 		HUDHide.BackgroundColor3 = Color3.fromRGB(20, 20, 26)
-		HUDHide.Text = T("−")
+		HUDHide.Text = "−"
 		HUDHide.Font = Enum.Font.GothamBold
 		HUDHide.TextSize = isMobile and 14 or 13
 		HUDHide.TextColor3 = Theme.TextMuted
@@ -1686,7 +1678,7 @@ function QuantomLib:CreateWindow(config)
 			NameLabel.Size = UDim2.new(1, -(isMobile and 70 or 80), 1, 0)
 			NameLabel.Position = UDim2.new(0, isMobile and 13 or 12, 0, 0)
 			NameLabel.BackgroundTransparency = 1
-			NameLabel.Text = T(entry.Name)
+			NameLabel.Text = entry.Name
 			NameLabel.Font = Enum.Font.GothamMedium
 			NameLabel.TextSize = isMobile and 10 or 10
 			NameLabel.TextColor3 = Theme.Text
@@ -1774,20 +1766,20 @@ function QuantomLib:CreateWindow(config)
 						TweenService:Create(ref.Row, TweenInfo.new(0.15), {Size = UDim2.new(1, 0, 0, rowH)}):Play()
 					end
 					local key = entry.GetKey and entry.GetKey() or "—"
-					ref.KeyTagText.Text = T(#key > 4 and key:sub(1,4) or key)
+					ref.KeyTagText.Text = #key > 4 and key:sub(1,4) or key
 					if eType == "Hold" then
 						ref.StateTag.BackgroundColor3 = Theme.Warning
-						ref.StateText.Text = T("HOLD")
+						ref.StateText.Text = "HOLD"
 						ref.StateText.TextColor3 = Theme.Warning
 						ref.Dot.BackgroundColor3 = Theme.Warning
 					elseif eType == "Action" then
 						ref.StateTag.BackgroundColor3 = Theme.Info
-						ref.StateText.Text = T("ACT")
+						ref.StateText.Text = "ACT"
 						ref.StateText.TextColor3 = Theme.Info
 						ref.Dot.BackgroundColor3 = Theme.Info
 					else
 						ref.StateTag.BackgroundColor3 = Theme.Success
-						ref.StateText.Text = T("ON")
+						ref.StateText.Text = "ON"
 						ref.StateText.TextColor3 = Theme.Success
 						ref.Dot.BackgroundColor3 = Theme.Success
 						ref.NameLabel.TextColor3 = Theme.Text
@@ -1881,7 +1873,7 @@ function QuantomLib:CreateWindow(config)
 		Icon.Size = UDim2.new(0, iconSize, 0, iconSize)
 		Icon.Position = UDim2.new(0, isMobile and 10 or 15, 0.5, -iconSize/2)
 		Icon.BackgroundTransparency = 1
-		Icon.Text = T(Tab.Icon)
+		Icon.Text = Tab.Icon
 		Icon.Font = Enum.Font.GothamBold
 		Icon.TextSize = isMobile and 11 or 13
 		Icon.TextColor3 = Theme.TextMuted
@@ -1893,7 +1885,7 @@ function QuantomLib:CreateWindow(config)
 		Label.Size = UDim2.new(1, isMobile and -32 or -45, 1, 0)
 		Label.Position = UDim2.new(0, isMobile and 28 or 40, 0, 0)
 		Label.BackgroundTransparency = 1
-		Label.Text = isMobile and T(Tab.Name:sub(1, 6)) or T(Tab.Name)
+		Label.Text = isMobile and Tab.Name:sub(1, 6) or Tab.Name
 		Label.Font = Enum.Font.Gotham
 		Label.TextSize = isMobile and 10 or 12
 		Label.TextColor3 = Theme.TextSecondary
@@ -1997,7 +1989,7 @@ function QuantomLib:CreateWindow(config)
 			SectionLabel.Name = randomName(13)
 			SectionLabel.Size = UDim2.new(1, 0, 0, isMobile and 20 or 22)
 			SectionLabel.BackgroundTransparency = 1
-			SectionLabel.Text = T(title:upper())
+			SectionLabel.Text = title:upper()
 			SectionLabel.Font = Enum.Font.GothamBold
 			SectionLabel.TextSize = isMobile and 10 or 11
 			SectionLabel.TextColor3 = Theme.TextMuted
@@ -2026,7 +2018,7 @@ function QuantomLib:CreateWindow(config)
 			ToggleLabel.Size = UDim2.new(1, -60, 1, 0)
 			ToggleLabel.Position = UDim2.new(0, 12, 0, 0)
 			ToggleLabel.BackgroundTransparency = 1
-			ToggleLabel.Text = T(config.Name or "Toggle")
+			ToggleLabel.Text = config.Name or "Toggle"
 			ToggleLabel.Font = Enum.Font.Gotham
 			ToggleLabel.TextSize = isMobile and 11 or 12
 			ToggleLabel.TextColor3 = Theme.Text
@@ -2138,7 +2130,7 @@ function QuantomLib:CreateWindow(config)
 			ButtonLabel.Size = UDim2.new(1, -24, 1, 0)
 			ButtonLabel.Position = UDim2.new(0, 12, 0, 0)
 			ButtonLabel.BackgroundTransparency = 1
-			ButtonLabel.Text = T(config.Name or "Button")
+			ButtonLabel.Text = config.Name or "Button"
 			ButtonLabel.Font = Enum.Font.Gotham
 			ButtonLabel.TextSize = isMobile and 11 or 12
 			ButtonLabel.TextColor3 = Theme.Text
@@ -2151,7 +2143,7 @@ function QuantomLib:CreateWindow(config)
 			ButtonIcon.Size = UDim2.new(0, 16, 0, 16)
 			ButtonIcon.Position = UDim2.new(1, -28, 0.5, -8)
 			ButtonIcon.BackgroundTransparency = 1
-			ButtonIcon.Text = T("›")
+			ButtonIcon.Text = "›"
 			ButtonIcon.Font = Enum.Font.GothamBold
 			ButtonIcon.TextSize = 20
 			ButtonIcon.TextColor3 = Theme.Primary
@@ -2208,7 +2200,7 @@ function QuantomLib:CreateWindow(config)
 			SliderLabel.Size = UDim2.new(0.6, 0, 0, 18)
 			SliderLabel.Position = UDim2.new(0, 12, 0, 8)
 			SliderLabel.BackgroundTransparency = 1
-			SliderLabel.Text = T(config.Name or "Slider")
+			SliderLabel.Text = config.Name or "Slider"
 			SliderLabel.Font = Enum.Font.Gotham
 			SliderLabel.TextSize = isMobile and 10 or 11
 			SliderLabel.TextColor3 = Theme.TextSecondary
@@ -2221,7 +2213,7 @@ function QuantomLib:CreateWindow(config)
 			ValueLabel.Size = UDim2.new(0, 40, 0, 18)
 			ValueLabel.Position = UDim2.new(1, -52, 0, 8)
 			ValueLabel.BackgroundTransparency = 1
-			ValueLabel.Text = T(tostring(sliderValue))
+			ValueLabel.Text = tostring(sliderValue)
 			ValueLabel.Font = Enum.Font.GothamBold
 			ValueLabel.TextSize = isMobile and 10 or 11
 			ValueLabel.TextColor3 = Theme.Primary
@@ -2263,7 +2255,7 @@ function QuantomLib:CreateWindow(config)
 				local relativePos = math.clamp(mouse.X - pos, 0, size)
 				local percentage = relativePos / size
 				sliderValue = math.floor(config.Min + ((config.Max - config.Min) * percentage))
-				ValueLabel.Text = T(tostring(sliderValue))
+				ValueLabel.Text = tostring(sliderValue)
 				TweenService:Create(SliderFill, TweenInfo.new(0.1), {Size = UDim2.new(percentage, 0, 1, 0)}):Play()
 				if config.Callback then config.Callback(sliderValue) end
 			end
@@ -2292,7 +2284,7 @@ function QuantomLib:CreateWindow(config)
 					GetValue = function() return sliderValue end,
 					SetValue = function(v)
 						sliderValue = math.clamp(v, config.Min, config.Max)
-						ValueLabel.Text = T(tostring(sliderValue))
+						ValueLabel.Text = tostring(sliderValue)
 						local pct = (sliderValue - config.Min) / (config.Max - config.Min)
 						SliderFill.Size = UDim2.new(pct, 0, 1, 0)
 						if config.Callback then config.Callback(sliderValue) end
@@ -2303,7 +2295,7 @@ function QuantomLib:CreateWindow(config)
 			return {
 				SetValue = function(self, value)
 					sliderValue = math.clamp(value, config.Min, config.Max)
-					ValueLabel.Text = T(tostring(sliderValue))
+					ValueLabel.Text = tostring(sliderValue)
 					local percentage = (sliderValue - config.Min) / (config.Max - config.Min)
 					SliderFill.Size = UDim2.new(percentage, 0, 1, 0)
 				end
@@ -2328,7 +2320,7 @@ function QuantomLib:CreateWindow(config)
 			TextboxLabel.Size = UDim2.new(0, 80, 1, 0)
 			TextboxLabel.Position = UDim2.new(0, 12, 0, 0)
 			TextboxLabel.BackgroundTransparency = 1
-			TextboxLabel.Text = T(config.Name or "Textbox")
+			TextboxLabel.Text = config.Name or "Textbox"
 			TextboxLabel.Font = Enum.Font.Gotham
 			TextboxLabel.TextSize = isMobile and 11 or 12
 			TextboxLabel.TextColor3 = Theme.Text
@@ -2343,7 +2335,7 @@ function QuantomLib:CreateWindow(config)
 			TextboxInput.BackgroundColor3 = Theme.SurfaceLight
 			TextboxInput.BorderSizePixel = 0
 			TextboxInput.Text = config.Default or ""
-			TextboxInput.PlaceholderText = config.Placeholder or ""
+			TextboxInput.PlaceholderText = config.Placeholder or "Digite aqui..."
 			TextboxInput.Font = Enum.Font.Gotham
 			TextboxInput.TextSize = isMobile and 10 or 11
 			TextboxInput.TextColor3 = Theme.Text
@@ -2405,7 +2397,7 @@ function QuantomLib:CreateWindow(config)
 			DropdownLabel.Size = UDim2.new(0, 100, 1, 0)
 			DropdownLabel.Position = UDim2.new(0, 12, 0, 0)
 			DropdownLabel.BackgroundTransparency = 1
-			DropdownLabel.Text = T(config.Name or "Dropdown")
+			DropdownLabel.Text = config.Name or "Dropdown"
 			DropdownLabel.Font = Enum.Font.Gotham
 			DropdownLabel.TextSize = isMobile and 11 or 12
 			DropdownLabel.TextColor3 = Theme.Text
@@ -2418,7 +2410,7 @@ function QuantomLib:CreateWindow(config)
 			DropdownButton.Size = UDim2.new(1, -120, 0, isMobile and 26 or 22)
 			DropdownButton.Position = UDim2.new(0, 110, 0.5, isMobile and -13 or -11)
 			DropdownButton.BackgroundColor3 = Theme.SurfaceLight
-			DropdownButton.Text = T(selectedOption)
+			DropdownButton.Text = selectedOption
 			DropdownButton.Font = Enum.Font.Gotham
 			DropdownButton.TextSize = isMobile and 10 or 11
 			DropdownButton.TextColor3 = Theme.Text
@@ -2440,7 +2432,7 @@ function QuantomLib:CreateWindow(config)
 			Arrow.Size = UDim2.new(0, 20, 1, 0)
 			Arrow.Position = UDim2.new(1, -24, 0, 0)
 			Arrow.BackgroundTransparency = 1
-			Arrow.Text = T("▼")
+			Arrow.Text = "▼"
 			Arrow.Font = Enum.Font.Gotham
 			Arrow.TextSize = isMobile and 8 or 9
 			Arrow.TextColor3 = Theme.TextMuted
@@ -2550,7 +2542,7 @@ function QuantomLib:CreateWindow(config)
 					local OptionText = Instance.new("TextLabel")
 					OptionText.Size = UDim2.new(1, isSelected and -20 or 0, 1, 0)
 					OptionText.BackgroundTransparency = 1
-					OptionText.Text = T(option)
+					OptionText.Text = option
 					OptionText.Font = isSelected and Enum.Font.GothamBold or Enum.Font.Gotham
 					OptionText.TextSize = isMobile and 10 or 11
 					OptionText.TextColor3 = isSelected and Theme.Primary or Theme.Text
@@ -2563,7 +2555,7 @@ function QuantomLib:CreateWindow(config)
 						CheckMark.Size = UDim2.new(0, 16, 1, 0)
 						CheckMark.Position = UDim2.new(1, -20, 0, 0)
 						CheckMark.BackgroundTransparency = 1
-						CheckMark.Text = T("✓")
+						CheckMark.Text = "✓"
 						CheckMark.Font = Enum.Font.GothamBold
 						CheckMark.TextSize = isMobile and 10 or 11
 						CheckMark.TextColor3 = Theme.Primary
@@ -2595,7 +2587,7 @@ function QuantomLib:CreateWindow(config)
 					end)
 					OptionButton.MouseButton1Click:Connect(function()
 						selectedOption = option
-						DropdownButton.Text = T(option)
+						DropdownButton.Text = option
 						PlaySound(Sounds.Click, 0.28, 1.15)
 						closeDropdown()
 						if config.Callback then config.Callback(option) end
@@ -2631,7 +2623,7 @@ function QuantomLib:CreateWindow(config)
 					GetValue = function() return selectedOption end,
 					SetValue = function(v)
 						selectedOption = v
-						DropdownButton.Text = T(v)
+						DropdownButton.Text = v
 						if config.Callback then config.Callback(v) end
 					end
 				}
@@ -2640,7 +2632,7 @@ function QuantomLib:CreateWindow(config)
 			return {
 				SetValue = function(self, value)
 					selectedOption = value
-					DropdownButton.Text = T(value)
+					DropdownButton.Text = value
 				end,
 				GetValue = function(self) return selectedOption end
 			}
@@ -2671,7 +2663,7 @@ function QuantomLib:CreateWindow(config)
 			KeybindLabel.Size = UDim2.new(0.55, 0, 1, 0)
 			KeybindLabel.Position = UDim2.new(0, 12, 0, 0)
 			KeybindLabel.BackgroundTransparency = 1
-			KeybindLabel.Text = T(config.Name or "Keybind")
+			KeybindLabel.Text = config.Name or "Keybind"
 			KeybindLabel.Font = Enum.Font.GothamMedium
 			KeybindLabel.TextSize = isMobile and 11 or 12
 			KeybindLabel.TextColor3 = Theme.Text
@@ -2684,7 +2676,7 @@ function QuantomLib:CreateWindow(config)
 			KeybindButton.Size = UDim2.new(0, isMobile and 75 or 70, 0, isMobile and 26 or 22)
 			KeybindButton.Position = UDim2.new(1, isMobile and -85 or -80, 0.5, isMobile and -13 or -11)
 			KeybindButton.BackgroundColor3 = Theme.SurfaceLight
-			KeybindButton.Text = T(currentKey.Name)
+			KeybindButton.Text = currentKey.Name
 			KeybindButton.Font = Enum.Font.GothamBold
 			KeybindButton.TextSize = isMobile and 10 or 11
 			KeybindButton.TextColor3 = Theme.Primary
@@ -2718,7 +2710,7 @@ function QuantomLib:CreateWindow(config)
 				if keybindChanging then return end
 				keybindChanging = true
 				PlaySound(Sounds.Click, 0.3, 0.9)
-				KeybindButton.Text = T("...")
+				KeybindButton.Text = "..."
 				KeybindButton.TextColor3 = Theme.Warning
 				TweenService:Create(KeybindButton, TweenInfo.new(0.2), {BackgroundColor3 = Theme.Primary}):Play()
 				TweenService:Create(KeybindStroke, TweenInfo.new(0.2), {Thickness = 2, Color = Theme.Warning}):Play()
@@ -2732,16 +2724,16 @@ function QuantomLib:CreateWindow(config)
 						end
 						if isBlacklisted then
 							PlaySound(Sounds.ToggleOff, 0.4, 0.8)
-							CreateNotification({Title = "Keybind", Message = "Tecla bloqueada!", Type = "Error", Duration = 2})
-							KeybindButton.Text = T(currentKey.Name)
+							CreateNotification({Title = "Keybind Inválido", Message = "Essa tecla não pode ser usada!", Type = "Error", Duration = 2})
+							KeybindButton.Text = currentKey.Name
 							KeybindButton.TextColor3 = Theme.Primary
 						else
 							currentKey = key
-							KeybindButton.Text = T(key.Name)
+							KeybindButton.Text = key.Name
 							if config.KeyChanged then config.KeyChanged(key) end
 							PlaySound(Sounds.Keybind, 0.4, 1)
 							KeybindButton.TextColor3 = Theme.Success
-							CreateNotification({Title = "Keybind", Message = T(key.Name), Type = "Success", Duration = 2})
+							CreateNotification({Title = "Keybind Alterado", Message = "Nova tecla: " .. key.Name, Type = "Success", Duration = 2})
 							task.wait(0.5)
 							KeybindButton.TextColor3 = Theme.Primary
 						end
@@ -2783,7 +2775,7 @@ function QuantomLib:CreateWindow(config)
 					GetValue = function() return currentKey end,
 					SetValue = function(key)
 						currentKey = key
-						KeybindButton.Text = T(key.Name)
+						KeybindButton.Text = key.Name
 					end
 				}
 			end
@@ -2791,7 +2783,7 @@ function QuantomLib:CreateWindow(config)
 			return {
 				SetKey = function(self, key)
 					currentKey = key
-					KeybindButton.Text = T(key.Name)
+					KeybindButton.Text = key.Name
 				end,
 				GetKey = function(self) return currentKey end
 			}
@@ -2822,7 +2814,7 @@ function QuantomLib:CreateWindow(config)
 			PickerLabel.Size = UDim2.new(1, -60, 1, 0)
 			PickerLabel.Position = UDim2.new(0, 12, 0, 0)
 			PickerLabel.BackgroundTransparency = 1
-			PickerLabel.Text = T(config.Name or "Color")
+			PickerLabel.Text = config.Name or "Color"
 			PickerLabel.Font = Enum.Font.Gotham
 			PickerLabel.TextSize = isMobile and 11 or 12
 			PickerLabel.TextColor3 = Theme.Text
@@ -3071,7 +3063,7 @@ function QuantomLib:CreateWindow(config)
 				AlphaColor.BackgroundColor3 = col
 				ColorBtn.BackgroundColor3 = col
 				PreviewSwatch.BackgroundColor3 = col
-				HexLabel.Text = T("#" .. col:ToHex():upper() .. string.format("  A:%.0f%%", a * 100))
+				HexLabel.Text = "#" .. col:ToHex():upper() .. string.format("  A:%.0f%%", a * 100)
 				if config.Callback then config.Callback(col, a) end
 			end
 
@@ -3239,7 +3231,7 @@ function QuantomLib:CreateWindow(config)
 			NameLabel.Size = UDim2.new(1, -130, 1, 0)
 			NameLabel.Position = UDim2.new(0, 12, 0, 0)
 			NameLabel.BackgroundTransparency = 1
-			NameLabel.Text = T(name)
+			NameLabel.Text = name
 			NameLabel.Font = Enum.Font.GothamMedium
 			NameLabel.TextSize = isMobile and 10 or 11
 			NameLabel.TextColor3 = Theme.Text
@@ -3254,7 +3246,7 @@ function QuantomLib:CreateWindow(config)
 			LoadBtn.Position = UDim2.new(1, -(btnW * 2 + 14), 0.5, -btnH / 2)
 			LoadBtn.BackgroundColor3 = Theme.Primary
 			LoadBtn.BackgroundTransparency = 0.2
-			LoadBtn.Text = T("Load")
+			LoadBtn.Text = "Carregar"
 			LoadBtn.Font = Enum.Font.GothamBold
 			LoadBtn.TextSize = isMobile and 8 or 9
 			LoadBtn.TextColor3 = Theme.Text
@@ -3269,7 +3261,7 @@ function QuantomLib:CreateWindow(config)
 			DelBtn.Position = UDim2.new(1, -(btnW + 6), 0.5, -btnH / 2)
 			DelBtn.BackgroundColor3 = Theme.Error
 			DelBtn.BackgroundTransparency = 0.3
-			DelBtn.Text = T("Del")
+			DelBtn.Text = "Deletar"
 			DelBtn.Font = Enum.Font.GothamBold
 			DelBtn.TextSize = isMobile and 8 or 9
 			DelBtn.TextColor3 = Theme.Text
@@ -3304,7 +3296,7 @@ function QuantomLib:CreateWindow(config)
 				local EmptyLabel = Instance.new("TextLabel")
 				EmptyLabel.Size = UDim2.new(1, 0, 0, isMobile and 32 or 28)
 				EmptyLabel.BackgroundTransparency = 1
-				EmptyLabel.Text = T("Nenhum config.")
+				EmptyLabel.Text = "Nenhum config salvo."
 				EmptyLabel.Font = Enum.Font.Gotham
 				EmptyLabel.TextSize = isMobile and 10 or 11
 				EmptyLabel.TextColor3 = Theme.TextMuted
@@ -3317,15 +3309,15 @@ function QuantomLib:CreateWindow(config)
 						PlaySound(Sounds.ToggleOn, 0.3, 1)
 						local ok = Window:LoadConfig(cfgName)
 						if ok then
-							CreateNotification({Title = "Config", Message = T(cfgName), Type = "Success", Duration = 3})
+							CreateNotification({Title = "Configs", Message = "Config \"" .. cfgName .. "\" carregado!", Type = "Success", Duration = 3})
 						else
-							CreateNotification({Title = "Config", Message = T("Falha ao carregar."), Type = "Error", Duration = 3})
+							CreateNotification({Title = "Configs", Message = "Falha ao carregar \"" .. cfgName .. "\".", Type = "Error", Duration = 3})
 						end
 					end)
 					DelBtn.MouseButton1Click:Connect(function()
 						PlaySound(Sounds.ToggleOff, 0.3, 0.9)
 						Window:DeleteConfig(cfgName)
-						CreateNotification({Title = "Config", Message = T(cfgName), Type = "Warning", Duration = 3})
+						CreateNotification({Title = "Configs", Message = "Config \"" .. cfgName .. "\" deletado.", Type = "Warning", Duration = 3})
 						refreshConfigList()
 					end)
 				end
@@ -3334,33 +3326,33 @@ function QuantomLib:CreateWindow(config)
 
 		ConfigsTab._onActivate = refreshConfigList
 
-		ConfigsTab:AddSection("Save Config")
+		ConfigsTab:AddSection("Salvar Config")
 
 		configNameInput = ConfigsTab:AddTextbox({
-			Name = "Name",
-			Placeholder = "",
+			Name = "Nome",
+			Placeholder = "Nome do config...",
 			Default = ""
 		})
 
 		ConfigsTab:AddButton({
-			Name = "Save",
+			Name = "💾  Salvar Config",
 			Callback = function()
 				local name = configNameInput:GetValue()
 				if not name or name == "" then
-					CreateNotification({Title = "Config", Message = T("Digite um nome."), Type = "Warning", Duration = 3})
+					CreateNotification({Title = "Configs", Message = "Digite um nome para o config.", Type = "Warning", Duration = 3})
 					return
 				end
 				local ok = Window:SaveConfig(name)
 				if ok then
-					CreateNotification({Title = "Config", Message = T(name), Type = "Success", Duration = 3})
+					CreateNotification({Title = "Configs", Message = "Config \"" .. name .. "\" salvo!", Type = "Success", Duration = 3})
 					refreshConfigList()
 				else
-					CreateNotification({Title = "Config", Message = T("Falha ao salvar."), Type = "Error", Duration = 3})
+					CreateNotification({Title = "Configs", Message = "Falha ao salvar config.", Type = "Error", Duration = 3})
 				end
 			end
 		})
 
-		ConfigsTab:AddSection("Saved")
+		ConfigsTab:AddSection("Configs Salvos")
 
 		configListContainer = Instance.new("Frame")
 		configListContainer.Name = randomName(14)
@@ -3384,7 +3376,7 @@ function QuantomLib:CreateWindow(config)
 
 		SettingsTab:AddSection("Watermark")
 		SettingsTab:AddToggle({
-			Name = "Show Watermark",
+			Name = "Mostrar Watermark",
 			Default = false,
 			HideFromHUD = true,
 			Callback = function(state)
@@ -3392,9 +3384,9 @@ function QuantomLib:CreateWindow(config)
 			end
 		})
 
-		SettingsTab:AddSection("Theme")
+		SettingsTab:AddSection("Cor de Destaque")
 		SettingsTab:AddColorPicker({
-			Name = "Primary Color",
+			Name = "Cor Principal",
 			Default = Theme.Primary,
 			Alpha = 1,
 			HideFromHUD = true,
@@ -3411,9 +3403,9 @@ function QuantomLib:CreateWindow(config)
 			end
 		})
 
-		SettingsTab:AddSection("Hotkeys")
+		SettingsTab:AddSection("Atalhos do Script")
 		SettingsTab:AddKeybind({
-			Name = "Toggle UI",
+			Name = "Minimizar / Abrir",
 			Default = minimizeKey,
 			_internal = true,
 			KeyChanged = function(newKey)
@@ -3421,9 +3413,9 @@ function QuantomLib:CreateWindow(config)
 			end,
 		})
 
-		SettingsTab:AddSection("Keybind List")
+		SettingsTab:AddSection("Lista de Keybinds")
 		SettingsTab:AddToggle({
-			Name = "Show Keybind List",
+			Name = "KeyBind List",
 			Default = false,
 			HideFromHUD = true,
 			Callback = function(state)
@@ -3437,9 +3429,9 @@ function QuantomLib:CreateWindow(config)
 			end
 		})
 
-		SettingsTab:AddSection("Profile")
+		SettingsTab:AddSection("Perfil")
 		SettingsTab:AddToggle({
-			Name = "Anonymous Mode",
+			Name = "Modo Anônimo",
 			Default = false,
 			HideFromHUD = true,
 			Callback = function(state)
@@ -3448,10 +3440,10 @@ function QuantomLib:CreateWindow(config)
 		})
 
 		if isMobile then
-			SettingsTab:AddSection("Float Button")
+			SettingsTab:AddSection("Botão Flutuante")
 
 			SettingsTab:AddToggle({
-				Name = "Visible on Hide",
+				Name = "Visível ao Minimizar",
 				Default = true,
 				HideFromHUD = true,
 				Callback = function(state)
@@ -3467,7 +3459,7 @@ function QuantomLib:CreateWindow(config)
 			})
 
 			SettingsTab:AddSlider({
-				Name = "Button Size",
+				Name = "Tamanho da Bola",
 				Min = 30,
 				Max = 90,
 				Default = floatBtnSize,
@@ -3490,13 +3482,13 @@ function QuantomLib:CreateWindow(config)
 
 		if not loadingFinished then
 			local fakeSteps = {
-				{ progress = 12,  status = "Initializing...",   delay = 0.40 },
-				{ progress = 28,  status = "Loading...",        delay = 0.50 },
-				{ progress = 45,  status = "Connecting...",     delay = 0.55 },
-				{ progress = 60,  status = "Authenticating...", delay = 0.50 },
-				{ progress = 74,  status = "Applying...",       delay = 0.45 },
-				{ progress = 88,  status = "Almost done...",    delay = 0.40 },
-				{ progress = 96,  status = "Finishing...",      delay = 0.35 },
+				{ progress = 12,  status = "Iniciando módulos...",        delay = 0.40 },
+				{ progress = 28,  status = "Carregando recursos...",       delay = 0.50 },
+				{ progress = 45,  status = "Conectando ao servidor...",    delay = 0.55 },
+				{ progress = 60,  status = "Verificando autenticação...",  delay = 0.50 },
+				{ progress = 74,  status = "Aplicando configurações...",   delay = 0.45 },
+				{ progress = 88,  status = "Quase lá...",                  delay = 0.40 },
+				{ progress = 96,  status = "Finalizando...",               delay = 0.35 },
 			}
 			for _, step in ipairs(fakeSteps) do
 				Window:SetLoadingProgress(step.progress, step.status)
